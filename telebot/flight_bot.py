@@ -3,6 +3,9 @@ import telebot
 import webbrowser
 import baza as baza
 from telebot import types
+import requests
+import datetime
+from random import choice
 
 bot = telebot.TeleBot('1366677314:AAH3AlfnwN_mo2M8pWcFCK6rHORKu3A4BK4')
 
@@ -11,6 +14,8 @@ bot = telebot.TeleBot('1366677314:AAH3AlfnwN_mo2M8pWcFCK6rHORKu3A4BK4')
 
 @bot.message_handler(commands=['start'])  # приветсвенный стикер и приветственный текст при вступлении в группу
 def welcome(message):
+    """При первом подключении пользователя к боту - выводит приветсвенный стикер, приветсвенную речь. Также в этой
+    функции обозначены кнопки, которые будут всегда отображаться под полем ввода запроса."""
     sti = open('static/AnimatedSticker.tgs', 'rb')
     bot.send_sticker(message.chat.id, sti)
 
@@ -21,7 +26,7 @@ def welcome(message):
 
     markup.add(item1, item2)
 
-    bot.send_message(message.chat.id, 'Привет, {0.first_name}!'
+    bot.send_message(message.chat.id, 'Привет, {0.first_name}!' # имя пользователя и другие его учетные данные извлекаются только при помощи 0.first_name}. и format(message.from_user, bot.get_me())
                                       '\nЯ  - <b>{1.first_name}</b>, бот созданный отвечать на вопросы бортпроводников: '
                                       'подготовиться к МКК, КПК? узнать номер телефона, явка по форме или нет? и т.д.\n'
                                       'Задавай свой первый вопрос.'
@@ -30,34 +35,67 @@ def welcome(message):
 
 @bot.message_handler(content_types=["text"])  # эта функция будет вызываться каждый раз, когда боту напишут текст
 def lalala(message):
+    """Модуль для общения и взаимодействия с пользователем."""
 
-    def button(action):
+    def details_button(action):
+        """Кнопка "подробнее", при нажатии которой будет выводиться более подробная информация по уже полученному ответу."""
         global keyboard
         keyboard = types.InlineKeyboardMarkup()
-        url_button = types.InlineKeyboardButton(text=action, url="https://ya.ru")
+        url_button = types.InlineKeyboardButton(text=action, url="https://ya.ru") # адрес, по которому будет открываться более подробная информация
         keyboard.add(url_button)
 
     def text(text):
         """Видоизменяет текст поступающего запроса от пользователя и искомого текста в базе для успешного поиска:
         переводит регистр всех букв в нижний, у каждого слова убирает окончание."""
-        lower_text_without_ends = [item[:-2].lower() for item in text.split()]
+        lower_text_without_ends = [word[:-2].lower() for word in text.split()]
         return ' '.join(lower_text_without_ends)
 
+    # ПРОБЛЕМА: если к искомому слово добавляется какая-то буква в качестве оконочания (телефон - телефона), то он не может это найти
+    # ПРОБЛЕМА №2: выводит много ненужных ответов если написать слишком простой запрос:
+
     found_result = False  # результат поиска - стоит значение по умолчанию, что ничего не найдено
+                        # чтобы потом при False выводил сообщение что он не смог ничего найти и написать разработчику
+
+    # now = datetime.datetime.now() # на случай использования в дальнейшем текущей даты и времени пользователя
+    # today = now.day
+    # hour = now.hour
+
+    greetings = ('привет', 'хай', 'здарова', "добрый день", "добрый вечер", "доброе утро", "здравствуйте", "здравствуй")
+    good_bye = ("пока", "удачи", "спасибо", "большое спасибо", "круто", "супер", "огонь")
+    best_wishes = ('Буду вопросы - пиши! Успехов!', 'Рад был помочь! Я всегда на связи.')
+
     if message.chat.type == 'private':
+
         if message.text == 'Перейти в OpenSky':
             bot.send_message(message.chat.id, webbrowser.open('https://edu.rossiya-airlines.com/docs/'))
             found_result = True
         if message.text == 'Написать разработчику':
             bot.send_message(message.chat.id, webbrowser.open('https://t.me/letchikazarov'))
             found_result = True
+        if message.text.lower() in greetings:
+            bot.send_message(message.chat.id, 'Привет! Буду рад тебе помочь, задавай свой вопрос.')
+            return
+        if message.text.lower() in good_bye:
+            bot.send_message(message.chat.id, choice(best_wishes))
+            return
 
-    for id in baza.dictionary:  # для каждой связки ключ-значение
-        if text(message.text) in text(baza.dictionary[id]['question']):  # если в каждом вложенном словаре, а конкретно ключ name равна запросу
-            if 'Открыть подробную информацию?' not in baza.dictionary[id]['answer']:  # то распечать мне надо из из вложенного словаря другой соответсвующий ключ
+        # if message.text.lower() in greetings and today == now.day and 6 <= hour < 12:
+        #     bot.send_message(message.chat.id, 'Доброе утро!')
+        #
+        # elif message.text.lower() in greetings and today == now.day and 12 <= hour < 17:
+        #     bot.send_message(message.chat.id, 'Добрый день!}')
+        #
+        #
+        # elif message.text.lower() in greetings and today == now.day and 17 <= hour < 23:
+        #     bot.send_message(message.chat.id, 'Добрый вечер!')
+
+
+    for id in baza.dictionary:
+        if text(message.text) in text(baza.dictionary[id]['question']):
+            if 'Открыть подробную информацию?' not in baza.dictionary[id]['answer']:
                 bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
             if 'Открыть подробную информацию?' in baza.dictionary[id]['answer']:
-                button('Да, рассказать подробнее...')
+                details_button('Да, рассказать подробнее...')
                 bot.send_message(message.chat.id, baza.dictionary[id]['answer'],
                                  reply_markup=keyboard)
             found_result = True
@@ -65,7 +103,8 @@ def lalala(message):
 
     if not found_result:
         bot.send_message(message.chat.id, 'Я не знаю что на это ответить. Напишите свой вопрос разработчику'
-                                          ' @letchikazarov, он внесет ответ на вопрос в базу данных.')
+                                          ' @letchikazarov, он внесет ответ на вопрос в базу данных. Либо попробуйте '
+                                          'упростить свой запрос.')
 
 
 #   # bot.reply_to(message, message.text) - ответить переслав сообщение обратно
