@@ -16,6 +16,7 @@ def text(text):
     lower_text_without_ends = [word[:-2].lower() for word in text.split()]
     return ' '.join(lower_text_without_ends)
 
+ # TODO: при добавлении букв в оеончание слова в запросе (телефон - телефона) - он не может найти это слово в словаре
 
 flag = True
 
