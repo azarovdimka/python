@@ -97,7 +97,7 @@ def lalala(message):
 
     for id in baza.dictionary:
         # TODO условие на поиск в строгом соответсвии не работает
-        if message.text in baza.dictionary[id]['question']:     # выдает ответ, если найдено в строгом соответсвии
+        if message.text == baza.dictionary[id]['question']:     # выдает ответ, если найдено в строгом соответсвии
             bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
 
         if text(message.text) in text(baza.dictionary[id]['question']):     # выдает ответ если найдено не в строгом соответсвии
