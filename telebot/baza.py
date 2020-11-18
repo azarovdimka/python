@@ -1387,8 +1387,8 @@ dictionary = {
                     'Come this way! Hurry! Jump!'},
     251: {'question': '...',
         'answer': '....'},
-    245: {'question': '...',
+    252: {'question': '...',
         'answer': '...'},
-    246: {'question': '...',
+    253: {'question': '...',
           'answer': '...'}
 }
