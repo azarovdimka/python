@@ -1359,5 +1359,36 @@ dictionary = {
                   'СБ разъясняет владельцу устройства, что ПЭУ будет снято с ВС аварийными службами\n'
                   'Дальнейшие действия, связанные с данным событием определяются ПРАПИ-98'},
     246: {'question': 'Предложить вино на английском языке',
-          'answer': 'I suggest you a Bruni Montepulchano dry red wine, it goes well to meet plate and it has the long fruits aftertaste.'}
+          'answer': 'I suggest you a Bruni Montepulchano dry red wine, it goes well to meet plate and it has the long fruits aftertaste.'},
+
+    247: {'question': 'Команды эвакуация на воду А319/320',
+          'answer': 'Команды эвакуация на воду А319/320:\n'
+                    'Эвакуация! Эвакуация! Расстегнуть ремни, оставить всё на выход! Надеть спасательный жилет! Открыть люки, выбросить их наружу!\n'
+                    'Evacuation! Evacuation! Seats belts off, leave everything! Get out! Put on your lifevest! Open the hatches, trow them out\n'
+                    'Ко мне, быстрее! Надуть спасательный жилет! Прыгайте!\n'
+                    'Come this way! Hurry, inflate your lifevest! Jump!'},
+    248: {'question': 'Команды эвакуация на сушу А319/320',
+          'answer': 'Команды эвакуация на сушу А319/320:\n'
+                    'Эвакуация! Эвакуация! Расстегнуть ремни, оставить всё на выход! Открыть люки, выбросить их наружу!\n'
+                    'Evacuation! Evacuation! Seats belts off, leave everything! Get out! Open the hatches, trow them out\n'
+                    'Ко мне, быстрее! Прыгайте!\n'
+                    'Come this way! Hurry! Jump!'},
+    249: {'question': 'Команды эвакуация на воду В737',
+          'answer': 'Команды эвакуация на воду В737:\n'
+                    'Эвакуация! Эвакуация! Расстегнуть ремни, оставить всё на выход! Надеть спасательный жилет! Открыть люки!\n'
+                    'Evacuation! Evacuation! Seats belts off, leave everything! Get out! Put on your lifevest! Open the hatches!\n'
+                    'Ко мне, быстрее! Надуть спасательный жилет! Прыгайте!\n'
+                    'Come this way! Hurry, inflate your lifevest! Jump!'},
+    250: {'question': 'Команды эвакуация на сушу В737\n',
+        'answer': 'Команды эвакуация на сушу В737:\n'
+                    'Эвакуация! Эвакуация! Расстегнуть ремни, оставить всё на выход! Открыть люки!\n'
+                    'Evacuation! Evacuation! Seats belts off, leave everything! Get out! Open the hatches!\n'
+                    'Ко мне, быстрее! Надуть спасательный жилет! Прыгайте!\n'
+                    'Come this way! Hurry! Jump!'},
+    251: {'question': '...',
+        'answer': '....'},
+    245: {'question': '...',
+        'answer': '...'},
+    246: {'question': '...',
+          'answer': '...'}
 }
