@@ -91,15 +91,15 @@ def lalala(message):
         # elif message.text.lower() in greetings and today == now.day and 17 <= hour < 23:
         #     bot.send_message(message.chat.id, 'Добрый вечер!')
 
-    if len(text(message.text)) <= 3:
+    if len(text(message.text)) <= 2:
         bot.send_message(message.chat.id, 'Слишком короткий запрос. Пожалуйста, чуть подробнее.')
         return
 
     for id in baza.dictionary:
         # TODO условие на поиск в строгом соответсвии не работает
-        # if message.text in baza.dictionary[id]['question']:     # выдает ответ, если найдено в строгом соответсвии
-        #     bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
-        #
+        if message.text in baza.dictionary[id]['question']:     # выдает ответ, если найдено в строгом соответсвии
+            bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
+
         if text(message.text) in text(baza.dictionary[id]['question']):     # выдает ответ если найдено не в строгом соответсвии
             if 'Открыть подробную информацию?' not in baza.dictionary[id]['answer']:
                 bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
