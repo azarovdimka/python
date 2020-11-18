@@ -96,9 +96,13 @@ def lalala(message):
         return
 
     for id in baza.dictionary:
+
+        if message.text in baza.dictionary[id]['question']:     # выдает ответ, если найдено в строгом соответсвии
+            bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
+
         if text(message.text) in text(baza.dictionary[id]['question']):
             if 'Открыть подробную информацию?' not in baza.dictionary[id]['answer']:
-                bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
+                bot.send_message(message.chat.id, baza.dictionary[id]['answer'])    # выдает ответ если найдено не в строгом соответсвии
             if 'Открыть подробную информацию?' in baza.dictionary[id]['answer']:
                 details_button('Да, рассказать подробнее...')
                 bot.send_message(message.chat.id, baza.dictionary[id]['answer'],
