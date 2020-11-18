@@ -91,7 +91,7 @@ def lalala(message):
         # elif message.text.lower() in greetings and today == now.day and 17 <= hour < 23:
         #     bot.send_message(message.chat.id, 'Добрый вечер!')
 
-    if len(text(message.text)) <= 3:
+    if len(text(message.text)) <= 4:
         bot.send_message(message.chat.id, 'Слишком короткий запрос. Пожалуйста, чуть подробнее.')
         return
 
