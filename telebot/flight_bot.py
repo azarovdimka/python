@@ -65,6 +65,7 @@ def lalala(message):
     greetings = ('привет', 'хай', 'здарова', "добрый день", "добрый вечер", "доброе утро", "здравствуйте", "здравствуй")
     good_bye = ("пока", "удачи", "спасибо", "большое спасибо", "круто", "супер", "огонь")
     best_wishes = ('Буду вопросы - пиши! Успехов!', 'Рад был помочь! Я всегда на связи.')
+    exceptions = ('квд')
 
     if message.chat.type == 'private':
 
@@ -91,7 +92,7 @@ def lalala(message):
         # elif message.text.lower() in greetings and today == now.day and 17 <= hour < 23:
         #     bot.send_message(message.chat.id, 'Добрый вечер!')
 
-    if len(text(message.text)) <= 2:
+    if len(text(message.text)) <= 2:    # and len(text(message.text)) not in exceptions:
         bot.send_message(message.chat.id, 'Слишком короткий запрос. Пожалуйста, чуть подробнее.')
         return
 
