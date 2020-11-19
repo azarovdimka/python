@@ -72,7 +72,7 @@ def lalala(message):
     # today = now.day
     # hour = now.hour
 
-    find_exception(message.text)
+    message.text = find_exception(message.text)
 
     if message.chat.type == 'private':
 
