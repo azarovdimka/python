@@ -1,6 +1,10 @@
-import telebot
+# -*- coding: utf8 -*-
+
 # import config # для того чтобы потом токен спрятать в конфиг
 import webbrowser
+
+import telebot
+
 import baza as baza
 from telebot import types
 import requests
@@ -110,8 +114,7 @@ def lalala(message):
         if message.text == baza.dictionary[id]['question']:  # выдает ответ, если найдено в строгом соответсвии
             bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
             return
-        if text(message.text) in text(
-                baza.dictionary[id]['question']):  # выдает ответ если найдено не в строгом соответсвии
+        if text(message.text) in text(baza.dictionary[id]['question']):  # выдает ответ если найдено не в строгом соответсвии
             if 'Открыть подробную информацию?' not in baza.dictionary[id]['answer']:
                 bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
             if 'Открыть подробную информацию?' in baza.dictionary[id]['answer']:
@@ -124,9 +127,7 @@ def lalala(message):
     if not found_result:
         bot.send_message(message.chat.id, 'Я не знаю что на это ответить. Напишите свой вопрос разработчику'
                                           ' @letchikazarov, он внесет ответ на данный вопрос в базу, либо попробуйте '
-                                          'упростить свой запрос: не следует использовать вопросительные слова '
-                                          '(как, где, кто, что...), вопросительные знаки и др.  \n'
-                                          'Кроме того, если вы заметите ошибки, устаревшую информцию '
+                                          'упростить свой запрос. Кроме того, если вы заметите ошибки, устаревшую информцию '
                                           'или обнаружите факты некорректной работы бота - просьба, ткаже написать об этом '
                                           'разработчику для скорейшего исправления.')
 
@@ -136,4 +137,4 @@ def lalala(message):
 # print(message.text) # message.text - введенное сообщение
 
 
-bot.polling(none_stop=True)  # запускает бота
+bot.polling(none_stop=True, interval=0)  # запускает бота
