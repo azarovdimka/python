@@ -54,8 +54,16 @@ def lalala(message):
         lower_text_without_ends = [word[:-2].lower() for word in text.split()]
         return ' '.join(lower_text_without_ends)
 
-    # ПРОБЛЕМА: если к искомому слово добавляется какая-то буква в качестве оконочания (телефон - телефона), то он не может это найти
-    # ПРОБЛЕМА №2: выводит много ненужных ответов если написать слишком простой запрос:
+    def find_exception(message):
+        """принятое слово через запрос ищет по словарю исключений, если функция находит его там, то присваивает ему
+        соответсвующее значение, которое следует использовать при дальнейшем поиске."""
+        for id in baza.exceptions:
+            if message == baza.exceptions[id]['word']:  # ищет слова для преобразования чтобы обойти минимально допустимое разрешение на длину слова
+                message = baza.exceptions[id]['changed_word']
+            return message
+
+    # TODO-ПРОБЛЕМА: если к искомому слово добавляется какая-то буква в качестве оконочания (телефон - телефона), то он не может это найти
+    # TODO-ПРОБЛЕМА №2: выводит много ненужных ответов если написать слишком простой запрос:
 
     found_result = False  # результат поиска - стоит значение по умолчанию, что ничего не найдено
     # чтобы потом при False выводил сообщение что он не смог ничего найти и написать разработчику
@@ -64,10 +72,7 @@ def lalala(message):
     # today = now.day
     # hour = now.hour
 
-    greetings = ('привет', 'хай', 'здарова', "добрый день", "добрый вечер", "доброе утро", "здравствуйте", "здравствуй")
-    good_bye = ("пока", "удачи", "спасибо", "большое спасибо", "круто", "супер", "огонь")
-    best_wishes = ('Буду вопросы - пиши! Успехов!', 'Рад был помочь! Я всегда на связи.')
-    exceptions = ('квд',)
+    find_exception(message.text)
 
     if message.chat.type == 'private':
 
@@ -77,15 +82,14 @@ def lalala(message):
         if message.text == 'Написать разработчику':
             bot.send_message(message.chat.id, webbrowser.open('https://t.me/letchikazarov'))
             found_result = True
-        if message.text.lower() in greetings:
+        if message.text.lower() in baza.greetings:
             bot.send_message(message.chat.id, 'Привет! Буду рад тебе помочь, задавай свой вопрос.')
             return
-        if message.text.lower() in good_bye:
-            bot.send_message(message.chat.id, choice(best_wishes))
+        if message.text.lower() in baza.good_bye:
+            bot.send_message(message.chat.id, choice(baza.best_wishes))
             return
-        if message.text.lower() in exceptions:
-            message.text = message.text + '--'
-            found_result = True
+
+
 
         # if message.text.lower() in greetings and today == now.day and 6 <= hour < 12:
         #     bot.send_message(message.chat.id, 'Доброе утро!')
