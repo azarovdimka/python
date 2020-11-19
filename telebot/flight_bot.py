@@ -26,12 +26,13 @@ def welcome(message):
 
     markup.add(item1, item2)
 
-    bot.send_message(message.chat.id, 'Привет, {0.first_name}!' # имя пользователя и другие его учетные данные извлекаются только при помощи 0.first_name}. и format(message.from_user, bot.get_me())
-                                      '\nЯ - робот, призванный отвечать на вопросы бортпроводников: '
-                                      'подготовиться к МКК и КПК, узнать номер телефона супервазера, '
-                                      'подсказать как настроить корпоративную почту, явка на те или иные меропрития в '
-                                      'штаб по форме штаб или нет? и т.д.\n'
-                                      'Задавай свой первый вопрос.'
+    bot.send_message(message.chat.id,
+                     'Привет, {0.first_name}!'  # имя пользователя и другие его учетные данные извлекаются только при помощи 0.first_name}. и format(message.from_user, bot.get_me())
+                     '\nЯ - робот, призванный отвечать на вопросы бортпроводников: '
+                     'подготовиться к МКК и КПК, узнать номер телефона супервазера, '
+                     'подсказать как настроить корпоративную почту, явка на те или иные меропрития в '
+                     'штаб по форме штаб или нет? и т.д.\n'
+                     'Задавай свой первый вопрос.'
                      .format(message.from_user, bot.get_me()), parse_mode='html', reply_markup=markup)
 
 
@@ -43,7 +44,8 @@ def lalala(message):
         """Кнопка "подробнее", при нажатии которой будет выводиться более подробная информация по уже полученному ответу."""
         global keyboard
         keyboard = types.InlineKeyboardMarkup()
-        url_button = types.InlineKeyboardButton(text=action, url="https://ya.ru") # адрес, по которому будет открываться более подробная информация
+        url_button = types.InlineKeyboardButton(text=action,
+                                                url="https://ya.ru")  # адрес, по которому будет открываться более подробная информация
         keyboard.add(url_button)
 
     def text(text):
@@ -56,7 +58,7 @@ def lalala(message):
     # ПРОБЛЕМА №2: выводит много ненужных ответов если написать слишком простой запрос:
 
     found_result = False  # результат поиска - стоит значение по умолчанию, что ничего не найдено
-                        # чтобы потом при False выводил сообщение что он не смог ничего найти и написать разработчику
+    # чтобы потом при False выводил сообщение что он не смог ничего найти и написать разработчику
 
     # now = datetime.datetime.now() # на случай использования в дальнейшем текущей даты и времени пользователя
     # today = now.day
@@ -65,7 +67,7 @@ def lalala(message):
     greetings = ('привет', 'хай', 'здарова', "добрый день", "добрый вечер", "доброе утро", "здравствуйте", "здравствуй")
     good_bye = ("пока", "удачи", "спасибо", "большое спасибо", "круто", "супер", "огонь")
     best_wishes = ('Буду вопросы - пиши! Успехов!', 'Рад был помочь! Я всегда на связи.')
-    exceptions = ('квд')
+    exceptions = ('квд',)
 
     if message.chat.type == 'private':
 
@@ -81,6 +83,9 @@ def lalala(message):
         if message.text.lower() in good_bye:
             bot.send_message(message.chat.id, choice(best_wishes))
             return
+        if message.text.lower() in exceptions:
+            message.text = message.text + '--'
+            found_result = True
 
         # if message.text.lower() in greetings and today == now.day and 6 <= hour < 12:
         #     bot.send_message(message.chat.id, 'Доброе утро!')
@@ -92,20 +97,17 @@ def lalala(message):
         # elif message.text.lower() in greetings and today == now.day and 17 <= hour < 23:
         #     bot.send_message(message.chat.id, 'Добрый вечер!')
 
-    if message.text in exceptions:
-        message.text = str(message.text) + '--'
-        return
-
     if len(text(message.text)) <= 2:
         bot.send_message(message.chat.id, 'Слишком короткий запрос. Пожалуйста, чуть подробнее.')
         return
 
     for id in baza.dictionary:
         # TODO условие на поиск в строгом соответсвии не работает
-        if message.text == baza.dictionary[id]['question']:     # выдает ответ, если найдено в строгом соответсвии
+        if message.text == baza.dictionary[id]['question']:  # выдает ответ, если найдено в строгом соответсвии
             bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
 
-        if text(message.text) in text(baza.dictionary[id]['question']):     # выдает ответ если найдено не в строгом соответсвии
+        if text(message.text) in text(
+                baza.dictionary[id]['question']):  # выдает ответ если найдено не в строгом соответсвии
             if 'Открыть подробную информацию?' not in baza.dictionary[id]['answer']:
                 bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
             if 'Открыть подробную информацию?' in baza.dictionary[id]['answer']:
