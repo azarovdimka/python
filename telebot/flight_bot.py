@@ -1,6 +1,6 @@
 # -*- coding: utf8 -*-
 
-# import config # для того чтобы потом токен спрятать в конфиг
+import config # для того чтобы потом токен спрятать в конфиг
 import webbrowser
 
 import telebot
@@ -11,7 +11,7 @@ import requests
 import datetime
 from random import choice
 
-bot = telebot.TeleBot('1366677314:AAH3AlfnwN_mo2M8pWcFCK6rHORKu3A4BK4')
+bot = telebot.TeleBot('1366677314:AAEylaOe8m8zV85z4AlBTsyyap8piaajYtU')
 
 
 # в пин закрепить слоган
@@ -92,8 +92,6 @@ def lalala(message):
         if message.text.lower() in baza.good_bye:
             bot.send_message(message.chat.id, choice(baza.best_wishes))
             return
-
-
 
         # if message.text.lower() in greetings and today == now.day and 6 <= hour < 12:
         #     bot.send_message(message.chat.id, 'Доброе утро!')
