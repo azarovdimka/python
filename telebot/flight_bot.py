@@ -32,7 +32,7 @@ def welcome(message):
                      'подготовиться к МКК и КПК, узнать номер телефона супервазера, '
                      'подсказать как настроить корпоративную почту, явка на те или иные меропрития в '
                      'штаб по форме или нет? и т.д.\n'
-                     'Задавай свой первый вопрос.'
+                     'Задавай свой первый вопрос, знак вопроса не нужен.'
                      .format(message.from_user, bot.get_me()), parse_mode='html', reply_markup=markup)
 
 
@@ -109,7 +109,7 @@ def lalala(message):
         # TODO условие на поиск в строгом соответсвии не работает
         if message.text == baza.dictionary[id]['question']:  # выдает ответ, если найдено в строгом соответсвии
             bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
-
+            return
         if text(message.text) in text(
                 baza.dictionary[id]['question']):  # выдает ответ если найдено не в строгом соответсвии
             if 'Открыть подробную информацию?' not in baza.dictionary[id]['answer']:
