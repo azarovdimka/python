@@ -14,20 +14,14 @@ bot = telebot.TeleBot('1366677314:AAFTpl-zPAFTRCcjuqG2Xc1EOvAAPjmeeVo')
 
 # в пин закрепить слоган
 
+
 @bot.message_handler(commands=['start'])  # приветсвенный стикер и приветственный текст при вступлении в группу
 def welcome(message):
     """При первом подключении пользователя к боту - выводит приветсвенный стикер, приветсвенную речь. Также в этой
     функции обозначены кнопки, которые будут всегда отображаться под полем ввода запроса."""
     sti = open('static/AnimatedSticker.tgs', 'rb')
     bot.send_sticker(message.chat.id, sti)
-
-    # keyboard
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    item1 = types.KeyboardButton('Перейти в OpenSky')
-    item2 = types.KeyboardButton('Написать разработчику')
-
-    markup.add(item1, item2)
-
     bot.send_message(message.chat.id,
                      'Привет, {0.first_name}!'  # имя пользователя и другие его учетные данные извлекаются только при помощи 0.first_name}. и format(message.from_user, bot.get_me())
                      '\nЯ - робот, призванный отвечать на вопросы бортпроводников: '
@@ -36,6 +30,16 @@ def welcome(message):
                      'штаб по форме или нет? и т.д.\n'
                      'Задавай свой первый вопрос, знак вопроса и вопросительные слова не нужны.'
                      .format(message.from_user, bot.get_me()), parse_mode='html', reply_markup=markup)
+    # keyboard
+
+    # ReplyKeyboardMarkup - не привязывается к сообщению # InlineKeyboardMarkup — Она привязывается к сообщению, с которым была отправлена.
+    btn1 = types.KeyboardButton('Перейти в OpenSky')
+    btn2 = types.KeyboardButton('План работ')
+    btn3 = types.KeyboardButton('Мой налет')
+    btn4 = types.KeyboardButton('Написать разработчику')
+    markup.add(btn1, btn2, btn3, btn4)
+
+
 
 
 @bot.message_handler(content_types=["text"])  # эта функция будет вызываться каждый раз, когда боту напишут текст
@@ -82,12 +86,19 @@ def lalala(message):
     # print(message)
     if message.chat.type == 'private':
 
-        if message.text == 'Перейти в OpenSky':
-            bot.send_message(message.chat.id, webbrowser.open('https://edu.rossiya-airlines.com/docs/'))
-            found_result = True
-        if message.text == 'Написать разработчику':
-            bot.send_message(message.chat.id, webbrowser.open('https://t.me/letchikazarov'))
-            found_result = True
+        # if message.text == 'Перейти в OpenSky':
+        #     bot.send_message(message.chat.id, webbrowser.open('https://edu.rossiya-airlines.com/docs/'))
+        #     found_result = True
+        # if message.text == 'Налет':
+        #     bot.send_message(message.chat.id, webbrowser.open('https://edu.rossiya-airlines.com/nalet/'))
+        #     found_result = True
+        # if message.text == 'План работ':
+        #     bot.send_message(message.chat.id, webbrowser.open('https://edu.rossiya-airlines.com/workplan/'))
+        #     found_result = True
+        # if message.text == 'Написать разработчику':
+        #     bot.send_message(message.chat.id, webbrowser.open('https://t.me/letchikazarov'))
+        #     found_result = True
+
         if message.text.lower() in baza.greetings:
             bot.send_message(message.chat.id, 'Привет! Буду рад тебе помочь, задавай свой вопрос.')
             return
@@ -111,6 +122,15 @@ def lalala(message):
         bot.send_message(message.chat.id, 'Слишком короткий запрос. Пожалуйста, чуть подробнее.')
         return
 
+    # if message.text == "Перейти в OpenSky":
+    #     webbrowser.open('https://edu.rossiya-airlines.com/docs/')
+    # if message.text == "Налет":
+    #     webbrowser.open('https://edu.rossiya-airlines.com/nalet/')
+    # if message.text == "План работ":
+    #     webbrowser.open('https://edu.rossiya-airlines.com/workplan/')
+    # if message.text == "Написать разработчику":
+    #     webbrowser.open('https://t.me/letchikazarov')
+
     for id in baza.dictionary:
         # TODO условие на поиск в строгом соответсвии не работает
         if message.text == baza.dictionary[id]['question']:  # выдает ответ, если найдено в строгом соответсвии
@@ -119,6 +139,8 @@ def lalala(message):
         if text(message.text) in text(baza.dictionary[id]['question']):  # выдает ответ если найдено не в строгом соответсвии
             if 'Открыть подробную информацию?' not in baza.dictionary[id]['answer']:
                 bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
+            if 'https' in baza.dictionary[id]['answer']:
+                webbrowser.open(baza.dictionary[id]['answer'])
             if 'Открыть подробную информацию?' in baza.dictionary[id]['answer']:
                 details_button('Да, рассказать подробнее...')
                 bot.send_message(message.chat.id, baza.dictionary[id]['answer'],
