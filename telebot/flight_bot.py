@@ -1,3 +1,5 @@
+# -*- coding: utf8 -*-
+
 import telebot
 # import config # для того чтобы потом токен спрятать в конфиг
 import webbrowser
