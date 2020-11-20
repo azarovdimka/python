@@ -7,7 +7,7 @@ import requests
 import datetime
 from random import choice
 
-bot = telebot.TeleBot('1366677314:AAH3AlfnwN_mo2M8pWcFCK6rHORKu3A4BK4')
+bot = telebot.TeleBot('1366677314:AAEylaOe8m8zV85z4AlBTsyyap8piaajYtU')
 
 
 # в пин закрепить слоган
@@ -55,11 +55,15 @@ def lalala(message):
         return ' '.join(lower_text_without_ends)
 
     def find_exception(message):
-        """принятое слово через запрос ищет по словарю исключений, если функция находит его там, то присваивает ему
+        """все запросы от пользователя (принятые слова) сначала прогоняет через словарь исключений, если функция находит его там, то присваивает ему
         соответсвующее значение, которое следует использовать при дальнейшем поиске."""
         for id in baza.exceptions:
             if message == baza.exceptions[id]['word']:  # ищет слова для преобразования чтобы обойти минимально допустимое разрешение на длину слова
-                return baza.exceptions[id]['changed_word']
+                message = baza.exceptions[id]['changed_word']
+                return message #TODO-вопрос почему возращает None??? при том что первое значение в словаре пропускает, остальные слова нет, если не писать дальше else
+            else:
+                return message
+
 
 
     # TODO-ПРОБЛЕМА: если к искомому слово добавляется какая-то буква в качестве оконочания (телефон - телефона), то он не может это найти
@@ -73,7 +77,7 @@ def lalala(message):
     # hour = now.hour
 
     message.text = find_exception(message.text)
-
+    print(message)
     if message.chat.type == 'private':
 
         if message.text == 'Перейти в OpenSky':
@@ -122,8 +126,10 @@ def lalala(message):
             # написать обратное условие, что если не будет найдено по вопросам то поискать по ответам
 
     if not found_result:
-        bot.send_message(message.chat.id, 'Я не знаю что на это ответить. Напишите свой вопрос разработчику'
-                                          ' @letchikazarov, он внесет ответ на данный вопрос в базу, либо попробуйте '
+        message.text = "Пользователь {0.first_name} @{0.username} не смог найти запрос:\n ".format(message.from_user, message.from_user) + message.text
+        bot.send_message(157758328, message.text) # если запрос ненайден - бот об этом сообщит разрабочтику дублированием сообщения напрямую
+        bot.send_message(message.chat.id, 'Я не знаю что на это ответить. Информация о том, что Вы не смогли найти ответ на свой вопрос уже направлена разработчику.\n'
+                                          'Вскоре он внесет ответ на Ваш вопрос в базу и оповестит по возможности, либо попробуйте '
                                           'упростить свой запрос: не следует использовать вопросительные слова '
                                           '(как, где, кто, что...), вопросительные знаки и др.  \n'
                                           'Кроме того, если вы заметите ошибки, устаревшую информцию '
