@@ -7,7 +7,7 @@ import requests
 import datetime
 from random import choice
 
-bot = telebot.TeleBot('1366677314:AAH3AlfnwN_mo2M8pWcFCK6rHORKu3A4BK4')
+bot = telebot.TeleBot('1366677314:AAEylaOe8m8zV85z4AlBTsyyap8piaajYtU')
 
 
 # в пин закрепить слоган
