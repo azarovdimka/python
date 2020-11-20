@@ -139,8 +139,8 @@ def lalala(message):
         if text(message.text) in text(baza.dictionary[id]['question']):  # выдает ответ если найдено не в строгом соответсвии
             if 'Открыть подробную информацию?' not in baza.dictionary[id]['answer']:
                 bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
-            if 'https' in baza.dictionary[id]['answer']:
-                webbrowser.open(baza.dictionary[id]['answer'])
+            if 'Перейди по ссылке:' in baza.dictionary[id]['answer']:
+                webbrowser.open_new_tab(baza.dictionary[id]['answer'])
             if 'Открыть подробную информацию?' in baza.dictionary[id]['answer']:
                 details_button('Да, рассказать подробнее...')
                 bot.send_message(message.chat.id, baza.dictionary[id]['answer'],
