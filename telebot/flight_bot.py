@@ -79,7 +79,7 @@ def lalala(message):
     # hour = now.hour
 
     message.text = find_exception(message.text)
-    print(message)
+    # print(message)
     if message.chat.type == 'private':
 
         if message.text == 'Перейти в OpenSky':
