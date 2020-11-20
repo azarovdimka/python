@@ -114,8 +114,7 @@ def lalala(message):
         if message.text == baza.dictionary[id]['question']:  # выдает ответ, если найдено в строгом соответсвии
             bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
             return
-        if text(message.text) in text(
-                baza.dictionary[id]['question']):  # выдает ответ если найдено не в строгом соответсвии
+        if text(message.text) in text(baza.dictionary[id]['question']):  # выдает ответ если найдено не в строгом соответсвии
             if 'Открыть подробную информацию?' not in baza.dictionary[id]['answer']:
                 bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
             if 'Открыть подробную информацию?' in baza.dictionary[id]['answer']:
