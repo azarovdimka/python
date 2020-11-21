@@ -13,7 +13,7 @@ bot = telebot.TeleBot('1366677314:AAFTpl-zPAFTRCcjuqG2Xc1EOvAAPjmeeVo')
 
 
 # в пин закрепить слоган
-
+# TODO написать новые 4 команды в каждом новом хендлере
 
 @bot.message_handler(commands=['start'])  # приветсвенный стикер и приветственный текст при вступлении в группу
 def welcome(message):
