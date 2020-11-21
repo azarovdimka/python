@@ -40,6 +40,12 @@ def welcome(message):
     markup.add(btn1, btn2, btn3, btn4)
 
 
+def find(question, words):
+    count = 0
+    for word in words:
+        if word in question:
+            count += 1
+    return count
 
 
 @bot.message_handler(content_types=["text"])  # эта функция будет вызываться каждый раз, когда боту напишут текст
@@ -67,8 +73,9 @@ def lalala(message):
             if message == baza.exceptions[id]['word']:  # ищет слова для преобразования чтобы обойти минимально допустимое разрешение на длину слова
                 message = baza.exceptions[id]['changed_word']
                 return message #TODO-вопрос почему возращает None??? при том что первое значение в словаре пропускает, остальные слова нет, если не писать дальше else
-            else:
-                return message
+            # else:
+            #     return message
+        return message
 
 
 
@@ -85,20 +92,6 @@ def lalala(message):
     message.text = find_exception(message.text)
     # print(message)
     if message.chat.type == 'private':
-
-        # if message.text == 'Перейти в OpenSky':
-        #     bot.send_message(message.chat.id, webbrowser.open('https://edu.rossiya-airlines.com/docs/'))
-        #     found_result = True
-        # if message.text == 'Налет':
-        #     bot.send_message(message.chat.id, webbrowser.open('https://edu.rossiya-airlines.com/nalet/'))
-        #     found_result = True
-        # if message.text == 'План работ':
-        #     bot.send_message(message.chat.id, webbrowser.open('https://edu.rossiya-airlines.com/workplan/'))
-        #     found_result = True
-        # if message.text == 'Написать разработчику':
-        #     bot.send_message(message.chat.id, webbrowser.open('https://t.me/letchikazarov'))
-        #     found_result = True
-
         if message.text.lower() in baza.greetings:
             bot.send_message(message.chat.id, 'Привет! Буду рад тебе помочь, задавай свой вопрос.')
             return
@@ -106,37 +99,20 @@ def lalala(message):
             bot.send_message(message.chat.id, choice(baza.best_wishes))
             return
 
+    # if len(text(message.text)) <= 2:
+    #     bot.send_message(message.chat.id, 'Слишком короткий запрос. Пожалуйста, чуть подробнее.')
+    #     return
 
-
-        # if message.text.lower() in greetings and today == now.day and 6 <= hour < 12:
-        #     bot.send_message(message.chat.id, 'Доброе утро!')
-        #
-        # elif message.text.lower() in greetings and today == now.day and 12 <= hour < 17:
-        #     bot.send_message(message.chat.id, 'Добрый день!}')
-        #
-        #
-        # elif message.text.lower() in greetings and today == now.day and 17 <= hour < 23:
-        #     bot.send_message(message.chat.id, 'Добрый вечер!')
-
-    if len(text(message.text)) <= 2:
-        bot.send_message(message.chat.id, 'Слишком короткий запрос. Пожалуйста, чуть подробнее.')
-        return
-
-    # if message.text == "Перейти в OpenSky":
-    #     webbrowser.open('https://edu.rossiya-airlines.com/docs/')
-    # if message.text == "Налет":
-    #     webbrowser.open('https://edu.rossiya-airlines.com/nalet/')
-    # if message.text == "План работ":
-    #     webbrowser.open('https://edu.rossiya-airlines.com/workplan/')
-    # if message.text == "Написать разработчику":
-    #     webbrowser.open('https://t.me/letchikazarov')
-
+    words = text(message.text).split()
+    max_of_found_words = 0
+    results = []
     for id in baza.dictionary:
-        # TODO условие на поиск в строгом соответсвии не работает
-        if message.text == baza.dictionary[id]['question']:  # выдает ответ, если найдено в строгом соответсвии
+        question = baza.dictionary[id]['question'].lower()
+        if message.text == question:  # выдает ответ, если найдено в строгом соответсвии
             bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
             return
-        if text(message.text) in text(baza.dictionary[id]['question']):  # выдает ответ если найдено не в строгом соответсвии
+
+        if text(message.text) in text(question):  # выдает ответ если найдено НЕ в строгом соответсвии
             if 'Открыть подробную информацию?' not in baza.dictionary[id]['answer']:
                 bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
             if 'Перейди по ссылке:' in baza.dictionary[id]['answer']:
@@ -146,9 +122,24 @@ def lalala(message):
                 bot.send_message(message.chat.id, baza.dictionary[id]['answer'],
                                  reply_markup=keyboard)
             found_result = True
-            # написать обратное условие, что если не будет найдено по вопросам то поискать по ответам
+        else:
+            found = find(question, words)
+            if found == max_of_found_words and found != 0:
+                results.append(baza.dictionary[id]['answer'])
+            if found > max_of_found_words:
+                results.clear()
+                max_of_found_words = found
+                results.append(baza.dictionary[id]['answer'])
 
-    if not found_result:
+
+            # написать обратное условие, что если не будет найдено по вопросам то поискать по ответам
+    if len(results) > 0:
+        for a in results:
+            bot.send_message(message.chat.id, a)
+        return
+
+
+    if not found_result :
         message.text = "Пользователь {0.first_name} @{0.username} не смог найти запрос:\n ".format(message.from_user, message.from_user) + message.text
         bot.send_message(157758328, message.text) # если запрос ненайден - бот об этом сообщит разрабочтику дублированием сообщения напрямую
         bot.send_message(message.chat.id, 'Я не знаю что на это ответить. Информация о том, что Вы не смогли найти ответ на свой вопрос уже направлена разработчику.\n'
