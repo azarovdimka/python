@@ -40,9 +40,10 @@ def welcome(message):
     markup.add(btn1, btn2, btn3, btn4)
 
 
-def find(question, words):
+def find(question, user_request):
+    """Выявляет степень максимального соответсвия искомых слов запросу в каждом результате"""
     count = 0
-    for word in words:
+    for word in user_request:
         if word in question:
             count += 1
     return count
@@ -56,11 +57,10 @@ def lalala(message):
         """Кнопка "подробнее", при нажатии которой будет выводиться более подробная информация по уже полученному ответу."""
         global keyboard
         keyboard = types.InlineKeyboardMarkup()
-        url_button = types.InlineKeyboardButton(text=action,
-                                                url="https://ya.ru")  # адрес, по которому будет открываться более подробная информация
+        url_button = types.InlineKeyboardButton(text=action, url="https://ya.ru")  # адрес, по которому будет открываться более подробная информация
         keyboard.add(url_button)
 
-    def text(text):
+    def changed(text):
         """Видоизменяет текст поступающего запроса от пользователя и искомого текста в базе для успешного поиска:
         переводит регистр всех букв в нижний, у каждого слова убирает окончание."""
         lower_text_without_ends = [word[:-2].lower() for word in text.split()]
@@ -72,25 +72,17 @@ def lalala(message):
         for id in baza.exceptions:
             if message == baza.exceptions[id]['word']:  # ищет слова для преобразования чтобы обойти минимально допустимое разрешение на длину слова
                 message = baza.exceptions[id]['changed_word']
-                return message #TODO-вопрос почему возращает None??? при том что первое значение в словаре пропускает, остальные слова нет, если не писать дальше else
+                return message
             # else:
             #     return message
         return message
 
-
-
-    # TODO-ПРОБЛЕМА: если к искомому слово добавляется какая-то буква в качестве оконочания (телефон - телефона), то он не может это найти
-    # TODO-ПРОБЛЕМА №2: выводит много ненужных ответов если написать слишком простой запрос:
-
-    found_result = False  # результат поиска - стоит значение по умолчанию, что ничего не найдено
+    found_result = None  # результат поиска - стоит значение по умолчанию, что ничего не найдено
     # чтобы потом при False выводил сообщение что он не смог ничего найти и написать разработчику
-
-    # now = datetime.datetime.now() # на случай использования в дальнейшем текущей даты и времени пользователя
-    # today = now.day
-    # hour = now.hour
+    # могу ведь вместо False писать None и так лучше вроде
 
     message.text = find_exception(message.text)
-    # print(message)
+    # print(message) # распечатка для полоучения информации оо пользователе написавшем и др.
     if message.chat.type == 'private':
         if message.text.lower() in baza.greetings:
             bot.send_message(message.chat.id, 'Привет! Буду рад тебе помочь, задавай свой вопрос.')
@@ -99,61 +91,66 @@ def lalala(message):
             bot.send_message(message.chat.id, choice(baza.best_wishes))
             return
 
-    # if len(text(message.text)) <= 2:
-    #     bot.send_message(message.chat.id, 'Слишком короткий запрос. Пожалуйста, чуть подробнее.')
-    #     return
+    if len(changed(message.text)) <= 2:
+        bot.send_message(message.chat.id, 'Слишком короткий запрос. Пожалуйста, чуть подробнее.')
+        return
 
-    words = text(message.text).split()
+    changed_user_request = changed(message.text).split()
     max_of_found_words = 0
     results = []
     for id in baza.dictionary:
         question = baza.dictionary[id]['question'].lower()
-        if message.text == question:  # выдает ответ, если найдено в строгом соответсвии
-            bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
-            return
+        # if message.text.lower() in question:  # СТРОГОЕ СООТВЕТСТВИЕ  # == заменил на in чтобы учитывать другие формулировки в вопросе, а не рассматривать целиком запрос == целиком вопрос
+        #     bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
+        #     return
+        #
+        # if changed(message.text) in changed(question):  # НЕ СТРОГОЕ СООТВЕТСВИЕ
+        #     if 'Открыть подробную информацию?' not in baza.dictionary[id]['answer']:
+        #         bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
+        #     if 'Перейди по ссылке:' in baza.dictionary[id]['answer']:
+        #         webbrowser.open_new_tab(baza.dictionary[id]['answer'])  # TODO как свделать чтобы браузером сразу открывал ссылку
+        #     if 'Открыть подробную информацию?' in baza.dictionary[id]['answer']:
+        #         details_button('Да, рассказать подробнее...')
+        #         bot.send_message(message.chat.id, baza.dictionary[id]['answer'], reply_markup=keyboard)
+        #     found_result = True
+        #     break
 
-        if text(message.text) in text(question):  # выдает ответ если найдено НЕ в строгом соответсвии
-            if 'Открыть подробную информацию?' not in baza.dictionary[id]['answer']:
-                bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
-            if 'Перейди по ссылке:' in baza.dictionary[id]['answer']:
-                webbrowser.open_new_tab(baza.dictionary[id]['answer'])
-            if 'Открыть подробную информацию?' in baza.dictionary[id]['answer']:
-                details_button('Да, рассказать подробнее...')
-                bot.send_message(message.chat.id, baza.dictionary[id]['answer'],
-                                 reply_markup=keyboard)
-            found_result = True
-        else:
-            found = find(question, words)
-            if found == max_of_found_words and found != 0:
-                results.append(baza.dictionary[id]['answer'])
-            if found > max_of_found_words:
-                results.clear()
-                max_of_found_words = found
-                results.append(baza.dictionary[id]['answer'])
-
-
+          # ЕСЛИ УСЕЧЕННЫЕ СЛОВА НЕ НАЙДЕНЫ - ИЩЕТ В ЛЮБОМ ПОРЯДКЕ В РАМКАХ ВОПРОСА
+        found = find(question, changed_user_request)
+        if found == max_of_found_words and found != 0:
+            results.append(baza.dictionary[id]['answer'])
+        if found > max_of_found_words:
+            results.clear()
+            max_of_found_words = found
+            results.append(baza.dictionary[id]['answer'])
             # написать обратное условие, что если не будет найдено по вопросам то поискать по ответам
-    if len(results) > 0:
-        for a in results:
-            bot.send_message(message.chat.id, a)
+
+    if len(results) >= 8:
+        bot.send_message(message.chat.id, 'Найдено слишком много ответов. Пожалуйста, уточните свой вопрос или '
+                                          'спросите по-другому.')
         return
 
+    if len(results) > 0:
+        for each_answer in results:
+            bot.send_message(message.chat.id, each_answer)
+        return
 
-    if not found_result :
-        message.text = "Пользователь {0.first_name} @{0.username} не смог найти запрос:\n ".format(message.from_user, message.from_user) + message.text
-        bot.send_message(157758328, message.text) # если запрос ненайден - бот об этом сообщит разрабочтику дублированием сообщения напрямую
-        bot.send_message(message.chat.id, 'Я не знаю что на это ответить. Информация о том, что Вы не смогли найти ответ на свой вопрос уже направлена разработчику.\n'
-                                          'Вскоре он внесет ответ на Ваш вопрос в базу и оповестит по возможности, либо попробуйте '
-                                          'упростить свой запрос: не следует использовать вопросительные слова '
-                                          '(как, где, кто, что...), вопросительные знаки и др.  \n'
-                                          'Кроме того, если вы заметите ошибки, устаревшую информцию '
-                                          'или обнаружите факты некорректной работы бота - просьба, ткаже написать об этом '
-                                          'разработчику для скорейшего исправления.')
+    if not found_result:
+        message.text = "Пользователь {0.first_name} @{0.username} не смог найти запрос:\n "\
+                           .format(message.from_user, message.from_user) + message.text
+        bot.send_message(157758328, message.text)  # если запрос ненайден - бот об этом сообщит разрабочтику дублированием сообщения напрямую
+        bot.send_message(message.chat.id,
+                         'Я не знаю что на это ответить. Информация о том, что Вы не смогли найти ответ на свой вопрос уже направлена разработчику.\n'
+                         'Вскоре он внесет ответ на Ваш вопрос в базу и оповестит по возможности, либо попробуйте '
+                         'упростить свой запрос: не следует использовать вопросительные слова '
+                         '(как, где, кто, что...), вопросительные знаки и др.  \n'
+                         'Кроме того, если вы заметите ошибки, устаревшую информцию '
+                         'или обнаружите факты некорректной работы бота - просьба, ткаже написать об этом '
+                         'разработчику для скорейшего исправления.')
 
 
 #   # bot.reply_to(message, message.text) - ответить переслав сообщение обратно
 # print(message) # распечатывает всю информацию о написавшем человеке и историю сообщений в виде словаря
 # print(message.text) # message.text - введенное сообщение
-
 
 bot.polling(none_stop=True)  # запускает бота
