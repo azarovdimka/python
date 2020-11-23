@@ -77,7 +77,7 @@ def lalala(message):
             #     return message
         return message
 
-    found_result = None  # результат поиска - стоит значение по умолчанию, что ничего не найдено чтобы выводил сообщение что он не смог ничего найти и написать разработчику
+    found_result = False  # результат поиска - стоит значение по умолчанию, что ничего не найдено чтобы выводил сообщение что он не смог ничего найти и написать разработчику
 
     message.text = find_exception(message.text)
     # print(message) # распечатка для полоучения информации оо пользователе написавшем и др.
@@ -93,45 +93,67 @@ def lalala(message):
         bot.send_message(message.chat.id, 'Слишком короткий запрос. Пожалуйста, чуть подробнее.')
         return
 
-    changed_user_request = changed(message.text).split()
-    max_of_found_words = 0  # в max <- записывается matches <- записывается find(вычисляется количество совпадений слов)
-    results = []
-    for id in baza.dictionary:
-        question = baza.dictionary[id]['question'].lower()
-        # if message.text.lower() in question:  # СТРОГОЕ СООТВЕТСТВИЕ  # == заменил на in чтобы учитывать другие формулировки в вопросе, а не рассматривать целиком запрос == целиком вопрос
-        #     bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
-        #     return
-        #
-        # if changed(message.text) in changed(question):  # НЕ СТРОГОЕ СООТВЕТСВИЕ
-        #     if 'Открыть подробную информацию?' not in baza.dictionary[id]['answer']:
-        #         bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
-        #     if 'Перейди по ссылке:' in baza.dictionary[id]['answer']:
-        #         webbrowser.open_new_tab(baza.dictionary[id]['answer'])  # TODO как свделать чтобы браузером сразу открывал ссылку
-        #     if 'Открыть подробную информацию?' in baza.dictionary[id]['answer']:
-        #         details_button('Да, рассказать подробнее...')
-        #         bot.send_message(message.chat.id, baza.dictionary[id]['answer'], reply_markup=keyboard)
-        #     found_result = True
-        #     break
+    if not found_result:
+        for id in baza.dictionary:
+            question = baza.dictionary[id]['question'].lower()
+            if message.text.lower() in question:  # СТРОГОЕ СООТВЕТСТВИЕ  # == заменил на in чтобы учитывать другие формулировки в вопросе, а не рассматривать целиком запрос == целиком вопрос
+                bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
+                bot.send_message(157758328, "Информация выдана успешно")
+                found_result = True
 
-          # ЕСЛИ УСЕЧЕННЫЕ СЛОВА НЕ НАЙДЕНЫ - ИЩЕТ В ЛЮБОМ ПОРЯДКЕ В РАМКАХ ВОПРОСА
-        matches = find(question, changed_user_request) # для каждого id мы проверяем количество соответсвуующих слов
-        if matches == max_of_found_words and matches != 0:  # если количество соответсвий равно максимуму
-            results.append(baza.dictionary[id]['answer']) # ответ заносим в результы
-        if matches > max_of_found_words:    # если соответсвий  больше счетчика максимума
-            results.clear()                 # очищаем список результатов
-            max_of_found_words = matches    # в максимум записываем новую цифру соответсвия
-            results.append(baza.dictionary[id]['answer']) # в результаты добавляем answer
-            # написать обратное условие, что если не будет найдено по вопросам то поискать по ответам
+    bot.send_message(157758328, found_result)
 
-    if len(results) > 0:    # выдает ответы при оптимальном количстве результатов
-        for each_answer in results:
-            bot.send_message(message.chat.id, each_answer)
-        return
+    if not found_result:
+        for id in baza.dictionary:
+            question = baza.dictionary[id]['question'].lower()
+            if not found_result and changed(message.text) in changed(question):  # НЕ СТРОГОЕ СООТВЕТСВИЕ
+                if 'Открыть подробную информацию?' not in baza.dictionary[id]['answer']:
+                    bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
+                    bot.send_message(157758328, "какая-то информация выдана не в строгом соответсвии")
+                    found_result = True # TODO как сделать чтобы found_result было видно и она перезаписывалась во внешней зоне глобал и нонлокал пробовал
+                    return
+                if 'Перейди по ссылке:' in baza.dictionary[id]['answer']:
+                    webbrowser.open_new_tab(baza.dictionary[id]['answer'])  # TODO как свделать чтобы браузером сразу открывал ссылку
+                    bot.send_message(157758328, "какая-то информация выдана не в строгом соответсвии")
+                    found_result = True
+                    return
+                if 'Открыть подробную информацию?' in baza.dictionary[id]['answer']:
+                    details_button('Да, рассказать подробнее...')
+                    bot.send_message(message.chat.id, baza.dictionary[id]['answer'], reply_markup=keyboard)
+                    bot.send_message(157758328, "какая-то информация выдана не в строгом соответсвии")
+                    found_result = True
+                    return
+                found_result = False
 
-    if len(results) >= 8:   # не выдает ответы если их 8
-        bot.send_message(message.chat.id, 'Найдено слишком много ответов. Пожалуйста, уточните свой вопрос или '
-                                          'спросите по-другому.')
-        return
+    bot.send_message(157758328, found_result)
+
+    if not found_result:                # ЕСЛИ УСЕЧЕННЫЕ СЛОВА НЕ НАЙДЕНЫ - ИЩЕТ В ЛЮБОМ ПОРЯДКЕ В РАМКАХ ВОПРОСА
+        for id in baza.dictionary:
+            changed_user_request = changed(message.text).split()
+            max_of_found_words = 0  # в max <- записывается matches <- записывается find(вычисляется количество совпадений слов)
+            results = []
+            question = baza.dictionary[id]['question'].lower()
+            matches = find(question, changed_user_request) # для каждого id мы проверяем количество соответсвуующих слов
+            if not found_result and matches == max_of_found_words and matches != 0:  # если количество соответсвий равно максимуму
+                results.append(baza.dictionary[id]['answer']) # ответ заносим в результы
+            if not found_result and matches > max_of_found_words:    # если соответсвий  больше счетчика максимума
+                results.clear()                 # очищаем список результатов
+                max_of_found_words = matches    # в максимум записываем новую цифру соответсвия
+                results.append(baza.dictionary[id]['answer']) # в результаты добавляем answer
+                           # написать обратное условие, что если не будет найдено по вопросам то поискать по ответам
+
+            if len(results) > 0:    # выдает ответы при оптимальном количстве результатов
+                for each_answer in results:
+                    bot.send_message(message.chat.id, each_answer)
+                    bot.send_message(157758328, "информация выдана из запроса в случайном порядке")
+                return
+
+            if len(results) >= 8:   # не выдает ответы если их 8
+                bot.send_message(message.chat.id, 'Найдено слишком много ответов. Пожалуйста, уточните свой вопрос или '
+                                              'спросите по-другому.')
+                return
+    # found_result = False
+    bot.send_message(157758328, found_result)
 
     if not found_result:    # если ничего не найдено
         message.text = "Пользователь {0.first_name} @{0.username} не смог найти запрос:\n "\
