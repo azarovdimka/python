@@ -77,13 +77,23 @@ def lalala(message):
             #     return message
         return message
 
+
+    def find_garbage(message):
+        """Ищет лишние слова-сорняки, которые вешают программу: как, кто, где и меняет их на пустую строку"""
+        for word in baza.garbage:
+            if word in message:
+                return message.replace(word, '-')
+        return message
+
     found_result = False  # результат поиска - стоит значение по умолчанию, что ничего не найдено чтобы выводил сообщение что он не смог ничего найти и написать разработчику
 
     message.text = find_exception(message.text)
     # print(message) # распечатка для полоучения информации оо пользователе написавшем и др.
+    message.text = find_garbage(message.text)
     if message.chat.type == 'private':
         if message.text.lower() in baza.greetings:
             bot.send_message(message.chat.id, 'Привет! Буду рад тебе помочь, задавай свой вопрос.')
+
             return
         if message.text.lower() in baza.good_bye:
             bot.send_message(message.chat.id, choice(baza.best_wishes))
@@ -106,7 +116,7 @@ def lalala(message):
     if not found_result:
         for id in baza.dictionary:
             question = baza.dictionary[id]['question'].lower()
-            if not found_result and changed(message.text) in changed(question):  # НЕ СТРОГОЕ СООТВЕТСВИЕ
+            if changed(message.text) in changed(question): # not found_result and # НЕ СТРОГОЕ СООТВЕТСВИЕ
                 if 'Открыть подробную информацию?' not in baza.dictionary[id]['answer']:
                     bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
                     bot.send_message(157758328, "какая-то информация выдана не в строгом соответсвии")
@@ -128,30 +138,30 @@ def lalala(message):
     bot.send_message(157758328, found_result)
 
     if not found_result:                # ЕСЛИ УСЕЧЕННЫЕ СЛОВА НЕ НАЙДЕНЫ - ИЩЕТ В ЛЮБОМ ПОРЯДКЕ В РАМКАХ ВОПРОСА
+        changed_user_request = changed(message.text).split()
+        max_of_found_words = 0  # в max <- записывается matches <- записывается find(вычисляется количество совпадений слов)
+        results = []
         for id in baza.dictionary:
-            changed_user_request = changed(message.text).split()
-            max_of_found_words = 0  # в max <- записывается matches <- записывается find(вычисляется количество совпадений слов)
-            results = []
             question = baza.dictionary[id]['question'].lower()
-            matches = find(question, changed_user_request) # для каждого id мы проверяем количество соответсвуующих слов
-            if not found_result and matches == max_of_found_words and matches != 0:  # если количество соответсвий равно максимуму
-                results.append(baza.dictionary[id]['answer']) # ответ заносим в результы
-            if not found_result and matches > max_of_found_words:    # если соответсвий  больше счетчика максимума
-                results.clear()                 # очищаем список результатов
-                max_of_found_words = matches    # в максимум записываем новую цифру соответсвия
-                results.append(baza.dictionary[id]['answer']) # в результаты добавляем answer
-                           # написать обратное условие, что если не будет найдено по вопросам то поискать по ответам
+            matches = find(question, changed_user_request)      # для каждого id мы проверяем кол-во соотв-х слов
+            if matches == max_of_found_words and matches != 0:   # если количество соответсвий равно максимуму
+                results.append(baza.dictionary[id]['answer'])   # ответ заносим в результы
+            if matches > max_of_found_words:                    # если соответсвий  больше счетчика максимума
+                results.clear()                                 # очищаем список результатов
+                max_of_found_words = matches                    # в максимум записываем новую цифру соответсвия
+                results.append(baza.dictionary[id]['answer'])   # в результаты добавляем answer
+                                                                    # написать обратное условие, что если не будет найдено по вопросам то поискать по ответам
 
-            if len(results) > 0:    # выдает ответы при оптимальном количстве результатов
-                for each_answer in results:
-                    bot.send_message(message.chat.id, each_answer)
-                    bot.send_message(157758328, "информация выдана из запроса в случайном порядке")
-                return
+        if len(results) > 0:    # выдает ответы при оптимальном количстве результатов
+            for each_answer in results:
+                bot.send_message(message.chat.id, each_answer)
+                bot.send_message(157758328, "информация выдана из запроса в случайном порядке")
+            return
 
-            if len(results) >= 8:   # не выдает ответы если их 8
-                bot.send_message(message.chat.id, 'Найдено слишком много ответов. Пожалуйста, уточните свой вопрос или '
-                                              'спросите по-другому.')
-                return
+        if len(results) >= 8:   # не выдает ответы если их 8
+            bot.send_message(message.chat.id, 'Найдено слишком много ответов. Пожалуйста, уточните свой вопрос или '
+                                          'спросите по-другому.')
+            return
     # found_result = False
     bot.send_message(157758328, found_result)
 
