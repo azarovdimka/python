@@ -50,7 +50,7 @@ def find(question, user_request):
 
 
 @bot.message_handler(content_types=["text"])  # эта функция будет вызываться каждый раз, когда боту напишут текст
-def lalala(message):
+def conversation(message):
     """Модуль для общения и взаимодействия с пользователем."""
 
     def details_button(action):
@@ -87,7 +87,7 @@ def lalala(message):
 
     found_result = False  # результат поиска - стоит значение по умолчанию, что ничего не найдено чтобы выводил сообщение что он не смог ничего найти и написать разработчику
 
-    message.text = find_exception(message.text)
+    message.text = find_exception(message.text.lower())
     # print(message) # распечатка для полоучения информации оо пользователе написавшем и др.
     message.text = find_garbage(message.text)
     if message.chat.type == 'private':
