@@ -108,10 +108,8 @@ def conversation(message):
             question = baza.dictionary[id]['question'].lower()
             if message.text.lower() in question:  # СТРОГОЕ СООТВЕТСТВИЕ  # == заменил на in чтобы учитывать другие формулировки в вопросе, а не рассматривать целиком запрос == целиком вопрос
                 bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
-                bot.send_message(157758328, "Информация выдана успешно")
+                bot.send_message(157758328, "Информация выдана успешно в строгом соответсвии")
                 found_result = True
-
-    bot.send_message(157758328, found_result)
 
     if not found_result:
         for id in baza.dictionary:
@@ -124,18 +122,16 @@ def conversation(message):
                     return
                 if 'Перейди по ссылке:' in baza.dictionary[id]['answer']:
                     webbrowser.open_new_tab(baza.dictionary[id]['answer'])  # TODO как свделать чтобы браузером сразу открывал ссылку
-                    bot.send_message(157758328, "какая-то информация выдана не в строгом соответсвии")
+                    bot.send_message(157758328, "информация выдана не в строгом соответствии")
                     found_result = True
                     return
                 if 'Открыть подробную информацию?' in baza.dictionary[id]['answer']:
                     details_button('Да, рассказать подробнее...')
                     bot.send_message(message.chat.id, baza.dictionary[id]['answer'], reply_markup=keyboard)
-                    bot.send_message(157758328, "какая-то информация выдана не в строгом соответсвии")
+                    bot.send_message(157758328, "информация выдана не в строгом соответствии")
                     found_result = True
                     return
                 found_result = False
-
-    bot.send_message(157758328, found_result)
 
     if not found_result:                # ЕСЛИ УСЕЧЕННЫЕ СЛОВА НЕ НАЙДЕНЫ - ИЩЕТ В ЛЮБОМ ПОРЯДКЕ В РАМКАХ ВОПРОСА
         changed_user_request = changed(message.text).split()
@@ -155,7 +151,8 @@ def conversation(message):
         if len(results) > 0:    # выдает ответы при оптимальном количстве результатов
             for each_answer in results:
                 bot.send_message(message.chat.id, each_answer)
-                bot.send_message(157758328, "информация выдана из запроса в случайном порядке")
+                bot.send_message(157758328, message.text)
+                bot.send_message(157758328, "^^^^ по этому запросу выдана информация из слов в случайном порядке")
             return
 
         if len(results) >= 8:   # не выдает ответы если их 8
@@ -163,7 +160,6 @@ def conversation(message):
                                           'спросите по-другому.')
             return
     # found_result = False
-    bot.send_message(157758328, found_result)
 
     if not found_result:    # если ничего не найдено
         message.text = "Пользователь {0.first_name} @{0.username} не смог найти запрос:\n "\
