@@ -82,7 +82,7 @@ def conversation(message):
         """Ищет лишние слова-сорняки, которые вешают программу: как, кто, где и меняет их на пустую строку"""
         for word in baza.garbage:
             if word in message:
-                return message.replace(word, '-')
+                return message.replace(word, '')
         return message
 
     found_result = False  # результат поиска - стоит значение по умолчанию, что ничего не найдено чтобы выводил сообщение что он не смог ничего найти и написать разработчику
