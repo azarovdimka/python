@@ -1,0 +1,40 @@
+import sqlite3
+import config
+import datetime
+import telebot
+from telebot import types
+
+today = datetime.date.today()
+tomorrow = today + datetime.timedelta(days = 1)
+today = today.strftime("%d-%m-%Y")
+tomorrow = tomorrow.strftime("%d-%m-%Y")
+
+bot = telebot.TeleBot(config.TOKEN)
+
+keyboard_markup = types.ReplyKeyboardMarkup(row_width=2)
+btn_today = types.KeyboardButton('today')
+btn_tomorrow = types.KeyboardButton('tomorrow')
+keyboard_markup.add(btn_today, btn_tomorrow)
+
+@bot.message_handler(commands=["today"])
+def add_user_handler(message):
+    con = sqlite3.connect('schedule.db')
+    cursor = con.cursor()
+    sql = ("SELECT * FROM 'schedule' WHERE date=?")
+    today_sql = (today,)
+    cursor.execute(sql, today_sql)
+    today_schedule = cursor.fetchone()
+    clear_schedule = ''
+
+    while today_schedule is not None:
+        clear_schedule += ("text" + '\n' +
+                           "text: " + str(today_schedule[0]) + '\n' +
+                           "text: "+ str(today_schedule[1]) + '\n' +
+                           "text: " + str(today_schedule[3]) + '\n' +
+                           "text: " + str(today_schedule[4]) + '-' + (today_schedule[5]) + '\n' +
+                           "text: " + str(today_schedule[6]))
+        today_schedule = cursor.fetchone()
+
+        bot.send_message(message.chat.id, clear_schedule, reply_markup=keyboard_markup)
+
+bot.polling(none_stop=True)

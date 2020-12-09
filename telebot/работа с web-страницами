@@ -1,0 +1,12 @@
+Выполнение запроса POST
+Выполнение запроса POST так же просто, как создание запросов GET. Вы просто используете функцию post() вместо get().
+Это может быть полезно, когда вы автоматически отправляете формы. Например, следующий код загрузит всю страницу Википедии
+по нанотехнологии и сохранит ее на вашем ПК.
+
+
+import requests
+req = requests.post('https://en.wikipedia.org/w/index.php', data = {'search':'Nanotechnology'})
+req.raise_for_status()
+with open('Nanotechnology.html', 'wb') as fd:
+    for chunk in req.iter_content(chunk_size=50000):
+        fd.write(chunk)

@@ -106,6 +106,10 @@ def conversation(message):
         elif call.data == "thanks":
             bot.answer_callback_query(call.id, bot.send_message(message.chat.id, choice(baza.best_wishes)))
 
+    def checking_answer():
+        check_answer = 'Информация была выдана корректно?'  # выводит эти кнопки только еслив строгом соответсвии было выдано, потому что там return
+        bot.send_message(message.chat.id, check_answer, reply_markup=correcting_button())
+
 
     found_result = False  # результат поиска - стоит значение по умолчанию, что ничего не найдено чтобы выводил сообщение что он не смог ничего найти и написать разработчику
 
@@ -138,7 +142,7 @@ def conversation(message):
             if message.text.lower() in question:  # СТРОГОЕ СООТВЕТСТВИЕ  # == заменил на in чтобы учитывать другие формулировки в вопросе, а не рассматривать целиком запрос == целиком вопрос
                 bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
                 bot.send_message(157758328, "Информация выдана успешно в строгом соответствии")
-                found_result = True
+                found_result = True     # вопрос checking_answer() для строго соответсвия вынесен в конец скрипта
 
     if not found_result:
         for id in baza.dictionary:
@@ -147,20 +151,18 @@ def conversation(message):
                 if 'Открыть подробную информацию?' not in baza.dictionary[id]['answer']:
                     bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
                     bot.send_message(157758328, "какая-то информация выдана не в строгом соответсвии")
-                    found_result = True
+                    checking_answer()
                     return
                 if 'Перейди по ссылке:' in baza.dictionary[id]['answer']:
                     webbrowser.open_new_tab(baza.dictionary[id]['answer'])  # TODO как свделать чтобы браузером сразу открывал ссылку
                     bot.send_message(157758328, "информация выдана не в строгом соответствии")
-                    found_result = True
                     return
                 if 'Открыть подробную информацию?' in baza.dictionary[id]['answer']:
                     details_button('Да, рассказать подробнее...')
                     bot.send_message(message.chat.id, baza.dictionary[id]['answer'], reply_markup=keyboard)
                     bot.send_message(157758328, "информация выдана не в строгом соответствии")
-                    found_result = True
                     return
-                found_result = False
+                found_result = True
 
     if not found_result:                # ЕСЛИ УСЕЧЕННЫЕ СЛОВА НЕ НАЙДЕНЫ - ИЩЕТ В ЛЮБОМ ПОРЯДКЕ В РАМКАХ ВОПРОСА
         changed_user_request = changed(message.text).split()
@@ -178,17 +180,18 @@ def conversation(message):
                                                                     # написать обратное условие, что если не будет найдено по вопросам то поискать по ответам
 
         if len(results) > 0:    # выдает ответы при оптимальном количстве результатов
+            found_result = True
             for each_answer in results:
                 bot.send_message(message.chat.id, each_answer)
                 bot.send_message(157758328, message.text)
                 bot.send_message(157758328, "^^^^ по этому запросу выдана информация из слов в случайном порядке")
+            checking_answer()
             return
 
         if len(results) >= 8:   # не выдает ответы если их 8, крайне редко когда достигается, по другим методам поиска все равно сипит кучу ответов
             bot.send_message(message.chat.id, 'Найдено слишком много ответов. Пожалуйста, уточните свой вопрос или '
                                           'спросите по-другому.')
             return
-    # found_result = False
 
     if not found_result:    # если ничего не найдено
         message.text = "Пользователь {0.first_name} @{0.username} не смог найти запрос:\n "\
@@ -200,9 +203,8 @@ def conversation(message):
                          'или обнаружите факты некорректной работы бота - просьба, написать об этом '
                          'разработчику @letchikazarov.')
 
-    if found_result:
-        check_answer = 'Информация была выдана корректно?'
-        bot.send_message(message.chat.id, check_answer, reply_markup=correcting_button())
+    if found_result:        # две кнопки для списка ответов строгого соответствия
+        checking_answer()
 
 #   # bot.reply_to(message, message.text) - ответить переслав сообщение обратно
 # print(message) # распечатывает всю информацию о написавшем человеке и историю сообщений в виде словаря
