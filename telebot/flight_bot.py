@@ -5,15 +5,16 @@ import telebot
 import webbrowser
 import baza as baza
 from telebot import types
-import requests
-import datetime
+# import requests
+# import datetime
 from random import choice
 
 bot = telebot.TeleBot('1366677314:AAFTpl-zPAFTRCcjuqG2Xc1EOvAAPjmeeVo')
 
-
+# user_id = message.from_user.id - извлечение id пользователя
 # в пин закрепить слоган
 # TODO написать новые 4 команды в каждом новом хендлере
+
 
 @bot.message_handler(commands=['start'])  # приветсвенный стикер и приветственный текст при вступлении в группу
 def welcome(message):
@@ -22,6 +23,8 @@ def welcome(message):
     sti = open('static/AnimatedSticker.tgs', 'rb')
     bot.send_sticker(message.chat.id, sti)
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+
+
     bot.send_message(message.chat.id,
                      'Привет, {0.first_name}!'  # имя пользователя и другие его учетные данные извлекаются только при помощи 0.first_name}. и format(message.from_user, bot.get_me())
                      '\nЯ - робот, призванный отвечать на вопросы бортпроводников: '
@@ -77,13 +80,32 @@ def conversation(message):
             #     return message
         return message
 
-
     def find_garbage(message):
         """Ищет лишние слова-сорняки, которые вешают программу: как, кто, где и меняет их на пустую строку"""
         for word in baza.garbage:
             if word in message:
                 return message.replace(word, '')
         return message
+
+    def correcting_button(): # две кнопки прикрепляемые к выдаваемому ответу
+        markup = types.InlineKeyboardMarkup()
+        markup.row_width = 2
+        markup.add(types.InlineKeyboardButton("Отредактировать", callback_data="Отредактировать ответ"),
+                   types.InlineKeyboardButton("Всё верно", callback_data="thanks"))
+        return markup
+
+    @bot.callback_query_handler(func=lambda call: True)
+    def callback_query(call):
+        if call.data == "Отредактировать ответ":
+            bot.answer_callback_query(call.id,
+                                      bot.send_message(message.chat.id, '   В следующем сообщении напишите еще раз свой вопрос коротко '
+                                                                        'и свой вариант ответа в '
+                                                                        'произвольной форме, но начинаться ваше сообщение '
+                                                                        'должно со слова "правка", например:\n\n'
+                                                                        'Правка: Кто желает знать где сидит фазан? Правильный ответ: охотник.'))
+        elif call.data == "thanks":
+            bot.answer_callback_query(call.id, bot.send_message(message.chat.id, choice(baza.best_wishes)))
+
 
     found_result = False  # результат поиска - стоит значение по умолчанию, что ничего не найдено чтобы выводил сообщение что он не смог ничего найти и написать разработчику
 
@@ -93,11 +115,18 @@ def conversation(message):
     if message.chat.type == 'private':
         if message.text.lower() in baza.greetings:
             bot.send_message(message.chat.id, 'Привет! Буду рад тебе помочь, задавай свой вопрос.')
-
             return
-        if message.text.lower() in baza.good_bye: #TODO не удается тут сделать так чтобы введя слово со скобкой, например, в качестве смайлика, бот мог бы находить его по тьюплу без скобок
+        if message.text.lower() in baza.good_bye:
             bot.send_message(message.chat.id, choice(baza.best_wishes))
             return
+
+    if 'правка' in message.text.lower() or 'предложить информацию' in message.text.lower():
+        answer = "пользователь предложил правку:\n" + message.text
+        bot.send_message(message.chat.id, 'Ваша информация успешно отправлена. После ее рассмотрения будут внесены соответсвующие изменения. \n'
+                                          'Спасибо за Ваше участие в улучшении Телеграм-Бота!\n'
+                                          'В будущем Вы можете предлагать любую свою информацию для внесения в базу данных, просто начав свое сообщение со слов "предложение информации" или "правка".')
+        bot.send_message(157758328, answer)
+        return
 
     if len(changed(message.text)) <= 2:
         bot.send_message(message.chat.id, 'Слишком короткий запрос. Пожалуйста, чуть подробнее.')
@@ -107,8 +136,8 @@ def conversation(message):
         for id in baza.dictionary:
             question = baza.dictionary[id]['question'].lower()
             if message.text.lower() in question:  # СТРОГОЕ СООТВЕТСТВИЕ  # == заменил на in чтобы учитывать другие формулировки в вопросе, а не рассматривать целиком запрос == целиком вопрос
-                bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
-                bot.send_message(157758328, "Информация выдана успешно в строгом соответсвии")
+                bot.send_message(message.chat.id, baza.dictionary[id]['answer'], reply_markup=correcting_button())
+                bot.send_message(157758328, "Информация выдана успешно в строгом соответствии")
                 found_result = True
 
     if not found_result:
@@ -116,12 +145,12 @@ def conversation(message):
             question = baza.dictionary[id]['question'].lower()
             if changed(message.text) in changed(question): # not found_result and # НЕ СТРОГОЕ СООТВЕТСВИЕ
                 if 'Открыть подробную информацию?' not in baza.dictionary[id]['answer']:
-                    bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
+                    bot.send_message(message.chat.id, baza.dictionary[id]['answer'], reply_markup=correcting_button())
                     bot.send_message(157758328, "какая-то информация выдана не в строгом соответсвии")
                     found_result = True # TODO как сделать чтобы found_result было видно и она перезаписывалась во внешней зоне глобал и нонлокал пробовал
                     return
                 if 'Перейди по ссылке:' in baza.dictionary[id]['answer']:
-                    webbrowser.open_new_tab(baza.dictionary[id]['answer'])  # TODO как свделать чтобы браузером сразу открывал ссылку
+                    webbrowser.open_new_tab(baza.dictionary[id]['answer'], reply_markup=correcting_button())  # TODO как свделать чтобы браузером сразу открывал ссылку
                     bot.send_message(157758328, "информация выдана не в строгом соответствии")
                     found_result = True
                     return
@@ -150,7 +179,7 @@ def conversation(message):
 
         if len(results) > 0:    # выдает ответы при оптимальном количстве результатов
             for each_answer in results:
-                bot.send_message(message.chat.id, each_answer)
+                bot.send_message(message.chat.id, each_answer, reply_markup=correcting_button())
                 bot.send_message(157758328, message.text)
                 bot.send_message(157758328, "^^^^ по этому запросу выдана информация из слов в случайном порядке")
             return
