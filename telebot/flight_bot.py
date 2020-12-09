@@ -27,10 +27,9 @@ def welcome(message):
 
     bot.send_message(message.chat.id,
                      'Привет, {0.first_name}!'  # имя пользователя и другие его учетные данные извлекаются только при помощи 0.first_name}. и format(message.from_user, bot.get_me())
-                     '\nЯ - робот, призванный отвечать на вопросы бортпроводников: '
-                     'подготовиться к МКК и КПК, узнать номер телефона супервазера, '
-                     'подсказать как настроить корпоративную почту, явка на те или иные меропрития в '
-                     'штаб по форме или нет? и т.д.\n'
+                     '\nЯ робот, призванный отвечать на вопросы бортпроводников: '
+                     'подготовиться к МКК и КПК, часы работы и номера телефонов отделов и супрервайзеров, '
+                     'подсказать как настроить корпоративную почту, явка по форме или нет? и т.д.\n'
                      'Задавай свой первый вопрос.'
                      .format(message.from_user, bot.get_me()), parse_mode='html', reply_markup=markup)
     # keyboard
@@ -106,8 +105,7 @@ def conversation(message):
         elif call.data == "thanks":
             bot.answer_callback_query(call.id, bot.send_message(message.chat.id, choice(baza.best_wishes)))
 
-    def checking_answer():
-        check_answer = 'Информация была выдана корректно?'  # выводит эти кнопки только еслив строгом соответсвии было выдано, потому что там return
+    def checking_answer(check_answer=None):  # выводит эти кнопки только еслив строгом соответсвии было выдано, потому что там return
         bot.send_message(message.chat.id, check_answer, reply_markup=correcting_button())
 
 
@@ -151,7 +149,7 @@ def conversation(message):
                 if 'Открыть подробную информацию?' not in baza.dictionary[id]['answer']:
                     bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
                     bot.send_message(157758328, "какая-то информация выдана не в строгом соответсвии")
-                    checking_answer()
+                    checking_answer("Предоставлена корректная информация?")
                     return
                 if 'Перейди по ссылке:' in baza.dictionary[id]['answer']:
                     webbrowser.open_new_tab(baza.dictionary[id]['answer'])  # TODO как свделать чтобы браузером сразу открывал ссылку
@@ -185,7 +183,7 @@ def conversation(message):
                 bot.send_message(message.chat.id, each_answer)
                 bot.send_message(157758328, message.text)
                 bot.send_message(157758328, "^^^^ по этому запросу выдана информация из слов в случайном порядке")
-            checking_answer()
+            checking_answer("Это то, что Вы искали? Ответ верный?")
             return
 
         if len(results) >= 8:   # не выдает ответы если их 8, крайне редко когда достигается, по другим методам поиска все равно сипит кучу ответов
@@ -204,7 +202,7 @@ def conversation(message):
                          'разработчику @letchikazarov.')
 
     if found_result:        # две кнопки для списка ответов строгого соответствия
-        checking_answer()
+        checking_answer("Всё верно? Есть ошибки?")
 
 #   # bot.reply_to(message, message.text) - ответить переслав сообщение обратно
 # print(message) # распечатывает всю информацию о написавшем человеке и историю сообщений в виде словаря
