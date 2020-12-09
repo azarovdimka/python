@@ -31,7 +31,7 @@ def welcome(message):
                      'подготовиться к МКК и КПК, узнать номер телефона супервазера, '
                      'подсказать как настроить корпоративную почту, явка на те или иные меропрития в '
                      'штаб по форме или нет? и т.д.\n'
-                     'Задавай свой первый вопрос, знак вопроса и вопросительные слова не нужны.'
+                     'Задавай свой первый вопрос.'
                      .format(message.from_user, bot.get_me()), parse_mode='html', reply_markup=markup)
     # keyboard
 
@@ -136,7 +136,7 @@ def conversation(message):
         for id in baza.dictionary:
             question = baza.dictionary[id]['question'].lower()
             if message.text.lower() in question:  # СТРОГОЕ СООТВЕТСТВИЕ  # == заменил на in чтобы учитывать другие формулировки в вопросе, а не рассматривать целиком запрос == целиком вопрос
-                bot.send_message(message.chat.id, baza.dictionary[id]['answer'], reply_markup=correcting_button())
+                bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
                 bot.send_message(157758328, "Информация выдана успешно в строгом соответствии")
                 found_result = True
 
@@ -145,12 +145,12 @@ def conversation(message):
             question = baza.dictionary[id]['question'].lower()
             if changed(message.text) in changed(question): # not found_result and # НЕ СТРОГОЕ СООТВЕТСВИЕ
                 if 'Открыть подробную информацию?' not in baza.dictionary[id]['answer']:
-                    bot.send_message(message.chat.id, baza.dictionary[id]['answer'], reply_markup=correcting_button())
+                    bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
                     bot.send_message(157758328, "какая-то информация выдана не в строгом соответсвии")
-                    found_result = True # TODO как сделать чтобы found_result было видно и она перезаписывалась во внешней зоне глобал и нонлокал пробовал
+                    found_result = True
                     return
                 if 'Перейди по ссылке:' in baza.dictionary[id]['answer']:
-                    webbrowser.open_new_tab(baza.dictionary[id]['answer'], reply_markup=correcting_button())  # TODO как свделать чтобы браузером сразу открывал ссылку
+                    webbrowser.open_new_tab(baza.dictionary[id]['answer'])  # TODO как свделать чтобы браузером сразу открывал ссылку
                     bot.send_message(157758328, "информация выдана не в строгом соответствии")
                     found_result = True
                     return
@@ -179,7 +179,7 @@ def conversation(message):
 
         if len(results) > 0:    # выдает ответы при оптимальном количстве результатов
             for each_answer in results:
-                bot.send_message(message.chat.id, each_answer, reply_markup=correcting_button())
+                bot.send_message(message.chat.id, each_answer)
                 bot.send_message(157758328, message.text)
                 bot.send_message(157758328, "^^^^ по этому запросу выдана информация из слов в случайном порядке")
             return
@@ -200,6 +200,9 @@ def conversation(message):
                          'или обнаружите факты некорректной работы бота - просьба, написать об этом '
                          'разработчику @letchikazarov.')
 
+    if found_result:
+        check_answer = 'Информация была выдана корректно?'
+        bot.send_message(message.chat.id, check_answer, reply_markup=correcting_button())
 
 #   # bot.reply_to(message, message.text) - ответить переслав сообщение обратно
 # print(message) # распечатывает всю информацию о написавшем человеке и историю сообщений в виде словаря
