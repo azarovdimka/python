@@ -103,7 +103,10 @@ def conversation(message):
                                                                         'должно со слова "правка", например:\n\n'
                                                                         'Правка: Кто желает знать где сидит фазан? Правильный ответ: охотник.'))
         elif call.data == "thanks":
-            bot.answer_callback_query(call.id, bot.send_message(message.chat.id, choice(baza.best_wishes)))
+            report = "Пользователь {0.first_name} {0.last_name} @{0.username} id {0.id} остался доволен ответом на запрос:\n" \
+                               .format(message.from_user, message.from_user, message.from_user, message.from_user) + message.text
+            bot.answer_callback_query(call.id, (bot.send_message(message.chat.id, choice(baza.best_wishes))), bot.send_message(157758328, report))
+
 
     def checking_answer(check_answer=None):  # выводит эти кнопки только еслив строгом соответсвии было выдано, потому что там return
         bot.send_message(message.chat.id, check_answer, reply_markup=correcting_button())
@@ -192,8 +195,8 @@ def conversation(message):
             return
 
     if not found_result:    # если ничего не найдено
-        message.text = "Пользователь {0.first_name} @{0.username} не смог найти запрос:\n "\
-                           .format(message.from_user, message.from_user) + message.text
+        message.text = "Пользователь {0.first_name} {0.last_name} @{0.username}  id {0.id} не смог найти запрос:\n "\
+                           .format(message.from_user, message.from_user, message.from_user, message.from_user) + message.text
         bot.send_message(157758328, message.text)  # если запрос ненайден - бот об этом сообщит разрабочтику дублированием сообщения напрямую
         bot.send_message(message.chat.id,
                          'Я не знаю, что на это ответить. Попробуйте изменить свой запрос.  \n'
