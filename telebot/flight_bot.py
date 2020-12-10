@@ -183,7 +183,7 @@ def conversation(message):
                 bot.send_message(message.chat.id, each_answer)
                 bot.send_message(157758328, message.text)
                 bot.send_message(157758328, "^^^^ по этому запросу выдана информация из слов в случайном порядке")
-            checking_answer("Это то, что Вы искали? Ответ верный?")
+            checking_answer("Это то, что Вы искали? Информация корректна?")
             return
 
         if len(results) >= 8:   # не выдает ответы если их 8, крайне редко когда достигается, по другим методам поиска все равно сипит кучу ответов
