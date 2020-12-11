@@ -103,12 +103,13 @@ def conversation(message):
                                                                         'должно со слова "правка", например:\n\n'
                                                                         'Правка: Кто желает знать где сидит фазан? Правильный ответ: охотник.'))
         elif call.data == "thanks":
-            report = "Пользователь {0.first_name} {0.last_name} @{0.username} id {0.id} остался доволен ответом на запрос:\n" \
-                               .format(message.from_user, message.from_user, message.from_user, message.from_user) + message.text
+            report = "Пользователь {0.first_name} {0.last_name} @{0.username} id{0.id} поблагодарил за ответ на запрос."\
+                .format(message.from_user, message.from_user, message.from_user, message.from_user) # + message.text - почему-то message.text не обновляется
             bot.answer_callback_query(call.id, (bot.send_message(message.chat.id, choice(baza.best_wishes))), bot.send_message(157758328, report))
 
 
     def checking_answer(check_answer=None):  # выводит эти кнопки только еслив строгом соответсвии было выдано, потому что там return
+
         bot.send_message(message.chat.id, check_answer, reply_markup=correcting_button())
 
 
