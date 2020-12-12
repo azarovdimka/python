@@ -93,6 +93,13 @@ def conversation(message):
                    types.InlineKeyboardButton("Всё верно", callback_data="thanks"))
         return markup
 
+    def good_report_two_directions():
+        report = "Пользователь {0.first_name} {0.last_name} @{0.username} id{0.id} поблагодарил за ответ на запрос." \
+            .format(message.from_user, message.from_user, message.from_user,
+                    message.from_user)  # + message.text - почему-то message.text не обновляется
+        bot.send_message(message.chat.id, choice(baza.best_wishes))
+        bot.send_message(157758328, report)
+
     @bot.callback_query_handler(func=lambda call: True)
     def callback_query(call):
         if call.data == "Отредактировать ответ":
@@ -103,21 +110,16 @@ def conversation(message):
                                                                         'должно со слова "правка", например:\n\n'
                                                                         'Правка: Кто желает знать где сидит фазан? Правильный ответ: охотник.'))
         elif call.data == "thanks":
-            report = "Пользователь {0.first_name} {0.last_name} @{0.username} id{0.id} поблагодарил за ответ на запрос."\
-                .format(message.from_user, message.from_user, message.from_user, message.from_user) # + message.text - почему-то message.text не обновляется
-            bot.answer_callback_query(call.id, (bot.send_message(message.chat.id, choice(baza.best_wishes))), bot.send_message(157758328, report))
-
+            bot.answer_callback_query(call.id, good_report_two_directions())
 
     def checking_answer(check_answer=None):  # выводит эти кнопки только еслив строгом соответсвии было выдано, потому что там return
-
         bot.send_message(message.chat.id, check_answer, reply_markup=correcting_button())
-
 
     found_result = False  # результат поиска - стоит значение по умолчанию, что ничего не найдено чтобы выводил сообщение что он не смог ничего найти и написать разработчику
 
     message.text = find_exception(message.text.lower())
-    # print(message) # распечатка для полоучения информации оо пользователе написавшем и др.
     message.text = find_garbage(message.text)
+
     if message.chat.type == 'private':
         if message.text.lower() in baza.greetings:
             bot.send_message(message.chat.id, 'Привет! Буду рад тебе помочь, задавай свой вопрос.')
