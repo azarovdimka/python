@@ -90,27 +90,26 @@ def conversation(message):
         markup = types.InlineKeyboardMarkup()
         markup.row_width = 2
         markup.add(types.InlineKeyboardButton("Отредактировать", callback_data="Отредактировать ответ"),
-                   types.InlineKeyboardButton("Всё верно", callback_data="thanks"))
+                   types.InlineKeyboardButton("Всё верно", callback_data="Всё верно"))
         return markup
 
-    def good_report_two_directions():
+    def report_all_correct():
         report = "Пользователь {0.first_name} {0.last_name} @{0.username} id{0.id} сказал, что в ответе всё верно." \
-            .format(message.from_user, message.from_user, message.from_user,
-                    message.from_user)
-        bot.send_message(message.chat.id, choice(baza.best_wishes))  # TODO + message - почему-то приходит все равно разработчику, а не пользователю
+                .format(message.from_user, message.from_user, message.from_user, message.from_user)
+        # bot.send_message(message.chat.id, choice(baza.best_wishes))  # TODO + message - почему-то приходит все равно разработчику, а не пользователю
         bot.send_message(157758328, report)
 
-    @bot.callback_query_handler(func=lambda call: True)
+
+    @bot.callback_query_handler(func=lambda call: True) # Хендлер для работы с существующими сообщениями????
     def callback_query(call):
+        answer = ''
         if call.data == "Отредактировать ответ":
-            bot.answer_callback_query(call.id,
-                                      bot.send_message(message.chat.id, '   В следующем сообщении напишите еще раз свой вопрос коротко '
-                                                                        'и свой вариант ответа в '
-                                                                        'произвольной форме, но начинаться ваше сообщение '
-                                                                        'должно со слова "правка", например:\n\n'
-                                                                        'Правка: Кто желает знать где сидит фазан? Правильный ответ: охотник.'))
-        elif call.data == "thanks":
-            bot.answer_callback_query(call.id, good_report_two_directions())  # "Рад был помочь! Я всегда на связи.")    # TODO good_report отправляет не пользователю а разработчику
+            answer = 'В следующем сообщении еще раз коротко напишите свой вопрос и свой вариант ответа в произвольной форме, но начинаться Ваше сообщение должно со слова "правка", например:\n\n Правка: Кто желает знать где сидит фазан? Правильный ответ: охотник.'
+        elif call.data == "Всё верно":
+            answer = 'Рад был помочь! Я всегда на связи.'   # TODO good_report отправляет не пользователю а разработчику
+            report_all_correct()
+        bot.send_message(call.message.chat.id, answer)  # может только одну функцию вызывать # если взаимодействуем с инлайном и нужно отправить текстовое сообщение в ответ, то используем не chat.id, а call.message.chat.id, если хотим отправить короткое уведомление, то bot.answer_callback_query(call.id, "Answer is Yes")
+        bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id) # убирает клаиватуру после нажатия кнопок
 
 
     def checking_answer(check_answer=None):  # выводит эти кнопки только еслив строгом соответсвии было выдано, потому что там return
