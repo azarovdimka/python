@@ -98,7 +98,7 @@ def conversation(message):
             answer = 'В следующем сообщении еще раз коротко напишите свой вопрос и свой вариант ответа в произвольной форме, но начинаться Ваше сообщение должно со слова "правка", например:\n\n Правка: Кто желает знать где сидит фазан? Правильный ответ: охотник.\n\n Пожалуйста, не забывайте пояснять к какому вопросу правка. Присланное Вами сообщение пока не привязывается к ранее выданному ответу)'
         elif call.data == "Всё верно":
             bot.send_message(157758328, "Пользователь сообщил, что всё верно")
-            answer = choice(baza.best_wishes)   # TODO good_report отправляет не пользователю а разработчику
+            answer = choice(baza.best_wishes)   # TODO вытащить id сообщения до кнопок
         bot.send_message(call.message.chat.id, answer)  # может только одну функцию вызывать # если взаимодействуем с инлайном и нужно отправить текстовое сообщение в ответ, то используем не chat.id, а call.message.chat.id, если хотим отправить короткое уведомление, то bot.answer_callback_query(call.id, "Answer is Yes")
         bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id) # убирает клаиватуру после нажатия кнопок
         bot.delete_message(call.message.chat.id, call.message.message_id)
@@ -227,11 +227,10 @@ def conversation(message):
                     btn = types.InlineKeyboardButton(text="СКАЧАТЬ", url=baza.dictionary[id]['link'])
                     download_btn.add(btn)
                     bot.send_message(message.chat.id, baza.dictionary[id]['answer'], reply_markup=download_btn)
-                    bot.send_message(157758328, "Предложили скачать файл")
-                    return
+                    bot.send_message(157758328, "Предложили скачать файл по запросу: " + message.text)
                 if 'скачать' not in baza.dictionary[id]['answer']:
                     bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
-                    bot.send_message(157758328, "Информация выдана успешно в строгом соответствии")
+                    bot.send_message(157758328, "Информация выдана успешно в строгом соответствии по запросу: " + message.text)
                     found_result = True     # вопрос checking_answer() для строго соответсвия вынесен в конец скрипта
 
     if not found_result:
@@ -239,10 +238,9 @@ def conversation(message):
             question = baza.dictionary[id]['question'].lower()
             if changed(message.text) in changed(question):                  # НЕ СТРОГОЕ СООТВЕТСВИЕ
                 bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
-                bot.send_message(157758328, "какая-то информация выдана не в строгом соответсвии")
+                bot.send_message(157758328, "какая-то информация выдана не в строгом соответсвии по запросу: " + message.text)
                 checking_answer("Предоставлена корректная информация?")
-                return
-            found_result = True
+                found_result = True
 
     if not found_result:                # ЕСЛИ УСЕЧЕННЫЕ СЛОВА НЕ НАЙДЕНЫ - ИЩЕТ В ЛЮБОМ ПОРЯДКЕ В РАМКАХ ВОПРОСА
         changed_user_request = changed(message.text).split()
@@ -258,13 +256,11 @@ def conversation(message):
                 max_of_found_words = matches                    # в максимум записываем новую цифру соответсвия
                 results.append(baza.dictionary[id]['answer'])   # в результаты добавляем answer
                                                                     # написать обратное условие, что если не будет найдено по вопросам то поискать по ответам
-
         if len(results) > 0:    # выдает ответы при оптимальном количстве результатов
-            found_result = True
             for each_answer in results:
                 bot.send_message(message.chat.id, each_answer)
                 bot.send_message(157758328, message.text)
-                bot.send_message(157758328, "^^^^ по этому запросу выдана информация из слов в случайном порядке")
+                bot.send_message(157758328, "^^^^ по этому запросу выдана информация из слов в случайном порядке по запросу: " + message.text)
             checking_answer("Это то, что Вы искали? Информация корректна?")
             return
 
