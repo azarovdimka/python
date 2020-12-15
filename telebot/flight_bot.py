@@ -1,6 +1,8 @@
 # -*- coding: utf8 -*-
 
 import telebot
+from telebot.types import InlineKeyboardMarkup
+
 import baza as baza
 from telebot import types
 # import requests
@@ -223,15 +225,21 @@ def conversation(message):
             question = baza.dictionary[id]['question'].lower()
             if message.text.lower() in question:  # СТРОГОЕ СООТВЕТСТВИЕ
                 if 'скачать' in baza.dictionary[id]['answer']:
-                    download_btn = types.InlineKeyboardMarkup()
+                    download_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()
                     btn = types.InlineKeyboardButton(text="СКАЧАТЬ", url=baza.dictionary[id]['link'])
                     download_btn.add(btn)
                     bot.send_message(message.chat.id, baza.dictionary[id]['answer'], reply_markup=download_btn)
                     bot.send_message(157758328, "Предложили скачать файл по запросу: " + message.text)
-                if 'скачать' not in baza.dictionary[id]['answer']:
-                    bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
-                    bot.send_message(157758328, "Информация выдана успешно в строгом соответствии по запросу: " + message.text)
-                    found_result = True     # вопрос checking_answer() для строго соответсвия вынесен в конец скрипта
+                    found_result = True
+
+    if not found_result:
+        for id in baza.dictionary:
+            question = baza.dictionary[id]['question'].lower()
+            if message.text.lower() in question:  # СТРОГОЕ СООТВЕТСТВИЕ
+                bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
+                bot.send_message(157758328,
+                                 "Информация выдана успешно в строгом соответствии по запросу: " + message.text)
+                found_result = True  # вопрос checking_answer() для строго соответсвия вынесен в конец скрипта
 
     if not found_result:
         for id in baza.dictionary:
@@ -239,7 +247,6 @@ def conversation(message):
             if changed(message.text) in changed(question):                  # НЕ СТРОГОЕ СООТВЕТСВИЕ
                 bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
                 bot.send_message(157758328, "какая-то информация выдана не в строгом соответсвии по запросу: " + message.text)
-                checking_answer("Предоставлена корректная информация?")
                 found_result = True
 
     if not found_result:                # ЕСЛИ УСЕЧЕННЫЕ СЛОВА НЕ НАЙДЕНЫ - ИЩЕТ В ЛЮБОМ ПОРЯДКЕ В РАМКАХ ВОПРОСА
@@ -256,18 +263,15 @@ def conversation(message):
                 max_of_found_words = matches                    # в максимум записываем новую цифру соответсвия
                 results.append(baza.dictionary[id]['answer'])   # в результаты добавляем answer
                                                                     # написать обратное условие, что если не будет найдено по вопросам то поискать по ответам
-        if len(results) > 0:    # выдает ответы при оптимальном количстве результатов
+        if len(results) < 8:    # выдает ответы при оптимальном количстве результатов
             for each_answer in results:
                 bot.send_message(message.chat.id, each_answer)
-                bot.send_message(157758328, message.text)
-                bot.send_message(157758328, "^^^^ по этому запросу выдана информация из слов в случайном порядке по запросу: " + message.text)
-            checking_answer("Это то, что Вы искали? Информация корректна?")
-            return
+                bot.send_message(157758328, "выдана информация из слов в случайном порядке по запросу: " + message.text)
+                found_result = True
 
         if len(results) >= 8:   # не выдает ответы если их 8, крайне редко когда достигается, по другим методам поиска все равно сипит кучу ответов
             bot.send_message(message.chat.id, 'Найдено слишком много ответов. Пожалуйста, уточните свой вопрос или '
                                           'спросите по-другому.')
-            return
 
     if not found_result:    # если ничего не найдено
         message.text = "Пользователь {0.first_name} {0.last_name} @{0.username} id{0.id} не смог найти запрос:\n" \
@@ -276,9 +280,11 @@ def conversation(message):
         bot.send_message(157758328, message.text)  # если запрос ненайден - бот об этом сообщит разрабочтику дублированием сообщения напрямую
         bot.send_message(message.chat.id,
                          'Я не знаю, что на это ответить. Попробуйте изменить свой запрос.  \n'
+                         'Ваш неудачный запрос уже направлен разработчику на рассмотрение.\n'
                          'Если вы заметите ошибки, устаревшую информцию '
-                         'или обнаружите факты некорректной работы бота - просьба написать об этом '
-                         'разработчику @letchikazarov.')
+                         'или обнаружите факты некорректной работы бота - просьба написать об этом также  '
+                         'разработчику @letchikazarov.\n\n'
+                         'Либо вы можете самостоятельно внести информацию в базу данных, начав свое сообщение со слов "предложить информацию:". Информация бдует внесена через некоторое время после предварительной модерации.')
 
     if found_result:  # две кнопки для списка ответов строгого соответствия
         checking_answer("Всё верно? Есть ошибки?")
