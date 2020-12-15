@@ -62,8 +62,8 @@ def conversation(message):
         return ' '.join(lower_text_without_ends)
 
     def find_exception(message):
-        """все запросы от пользователя (принятые слова) сначала прогоняет через словарь исключений, если функция находит его там, то присваивает ему
-        соответсвующее значение, которое следует использовать при дальнейшем поиске."""
+        """все запросы от пользователя (принятые слова) сначала прогоняет через словарь исключений, если функция находит
+        его там, то заменяет его на такое же развернутое значение, которое следует использовать при дальнейшем поиске."""
         for id in baza.exceptions:
             if message == baza.exceptions[id]['word']:  # ищет слова для преобразования чтобы обойти минимально допустимое разрешение на длину слова
                 message = baza.exceptions[id]['changed_word']
@@ -71,27 +71,18 @@ def conversation(message):
         return message
 
     def find_garbage(message):
-        """Ищет лишние слова-сорняки, которые вешают программу: как, кто, где и меняет их на пустую строку"""
-        for word in baza.garbage:
-            if word in message:
-                return message.replace(word, '')
+        """Ищет лишние слова-сорняки, которые вешают программу (как, кто, где) и меняет их на пустую строку"""
+        for word in baza.garbage:                       # для каждого слова в кортеже
+            if word in message:                         # если это каждое слово есть в запросе
+                return message.replace(word, '')        # нам нужно удалить часть строки
         return message
 
-    def correcting_button(): # две кнопки прикрепляемые к выдаваемому ответу
+    def correcting_button():                            # две кнопки прикрепляемые к выдаваемому ответу
         markup = types.InlineKeyboardMarkup()
         markup.row_width = 2
         markup.add(types.InlineKeyboardButton("Отредактировать", callback_data="Отредактировать ответ"),
                    types.InlineKeyboardButton("Всё верно", callback_data="Всё верно"))
         return markup
-
-    # def report_all_correct(ttt):
-    #     report = "Пользователь сообщил, что в ответе всё верно при запросе: " + ttt  #TODO хочется указывать кто сообщил и какой был в дествительностьи запрос
-    #     # "Пользователь id{0.id} @{0.username} {0.last_name} {0.first_name} сообщил, что в ответе всё верно при запросе: " \
-    #     #     .format(call.message.from_user, call.message.from_user, call.message.from_user,
-    #     #             call.message.from_user) + message.text
-    #     # bot.send_message(message.chat.id, choice(baza.best_wishes))  # TODO не указывается имя пользователя, а разработчика
-    #     bot.send_message(157758328, report)
-
 
     @bot.callback_query_handler(func=lambda call: True) # Хендлер для работы с существующими сообщениями????
     def callback_query(call):
@@ -104,90 +95,7 @@ def conversation(message):
         bot.send_message(call.message.chat.id, answer)  # может только одну функцию вызывать # если взаимодействуем с инлайном и нужно отправить текстовое сообщение в ответ, то используем не chat.id, а call.message.chat.id, если хотим отправить короткое уведомление, то bot.answer_callback_query(call.id, "Answer is Yes")
         bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id) # убирает клаиватуру после нажатия кнопок
         bot.delete_message(call.message.chat.id, call.message.message_id)
-        # call.message.chat.id - id # call.message.chat - весь словарь о пользователе
-        # call.message - {'content_type': 'text',
-        #                 'message_id': 16829,
-        #                 'from_user': {'id': 1366677314,
-        #                               'is_bot': True,
-        #                               'first_name': 'Бортпроводник',
-        #                               'username': 'Flight_attendant_bot',
-        #                               'last_name': None,
-        #                               'language_code': None,
-        #                               'can_join_groups': None,
-        #                               'can_read_all_group_messages': None,
-        #                               'supports_inline_queries': None},
-        #                 'date': 1607952534,
-        #                 'chat': {'id': 157758328,  - # call.message.chat.id
-        #                          'type': 'private',
-        #                          'title': None,
-        #                          'username': 'letchikazarov',
-        #                          'first_name': '👨\u200d✈️Дмитрий',
-        #                          'last_name': None,
-        #                          'all_members_are_administrators': None,
-        #                          'photo': None,
-        #                          'description': None,
-        #                          'invite_link': None,
-        #                          'pinned_message': None,
-        #                          'permissions': None,
-        #                          'slow_mode_delay': None,
-        #                          'sticker_set_name': None,
-        #                          'can_set_sticker_set': None},
-        #                 'forward_from': None,
-        #                 'forward_from_chat': None,
-        #                 'forward_from_message_id': None,
-        #                 'forward_signature': None,
-        #                 'forward_date': None,
-        #                 'reply_to_message': None,
-        #                 'edit_date': None,
-        #                 'media_group_id': None,
-        #                 'author_signature': None,
-        #                 'text': 'Всё верно? Есть ошибки?',
-        #                 'entities': None,
-        #                 'caption_entities': None,
-        #                 'audio': None,
-        #                 'document': None,
-        #                 'photo': None,
-        #                 'sticker': None,
-        #                 'video': None,
-        #                 'video_note': None,
-        #                 'voice': None,
-        #                 'caption': None,
-        #                 'contact': None,
-        #                 'location': None,
-        #                 'venue': None,
-        #                 'animation': None,
-        #                 'dice': None,
-        #                 'new_chat_member': None,
-        #                 'new_chat_members': None,
-        #                 'left_chat_member': None,
-        #                 'new_chat_title': None,
-        #                 'new_chat_photo': None,
-        #                 'delete_chat_photo': None,
-        #                 'group_chat_created': None,
-        #                 'supergroup_chat_created': None,
-        #                 'channel_chat_created': None,
-        #                 'migrate_to_chat_id': None,
-        #                 'migrate_from_chat_id': None,
-        #                 'pinned_message': None,
-        #                 'invoice': None,
-        #                 'successful_payment': None,
-        #                 'connected_website': None,
-        #                 'json': {'message_id': 16829,
-        #                          'from': {'id': 1366677314,
-        #                          'is_bot': True,
-        #                          'first_name': 'Бортпроводник',
-        #                          'username': 'Flight_attendant_bot'},
-        #                 'chat': {'id': 157758328,
-        #                          'first_name': '👨\u200d✈️Дмитрий',
-        #                          'username': 'letchikazarov',
-        #                          'type': 'private'},
-        #                  'date': 1607952534,
-        #                  'text': 'Всё верно? Есть ошибки?',
-        #                  'reply_markup': {'inline_keyboard': [[{
-        #                                   'text': 'Отредактировать',
-        #                                   'callback_data': 'Отредактировать ответ'},
-        #                                   {'text': 'Всё верно',
-        #                                   'callback_data': 'Всё верно'}]]}}}
+
 
     def checking_answer(check_answer=None):  # выводит эти кнопки только еслив строгом соответсвии было выдано, потому что там return
         bot.send_message(message.chat.id, check_answer, reply_markup=correcting_button())
