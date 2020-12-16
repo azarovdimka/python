@@ -55,6 +55,15 @@ def find(question, user_request):
 def conversation(message):
     """Модуль для общения и взаимодействия с пользователем."""
 
+    def download():
+        """Предлагает скачать файл"""
+        download_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()
+        btn = types.InlineKeyboardButton(text="СКАЧАТЬ", url=baza.dictionary[id]['link'])
+        download_btn.add(btn)
+        bot.send_message(message.chat.id, baza.dictionary[id]['answer'], reply_markup=download_btn)
+        bot.send_message(157758328, "Предложили скачать файл по запросу: " + message.text)
+        found_result = True
+
     def changed(text):
         """Видоизменяет текст поступающего запроса от пользователя и искомого текста в базе для успешного поиска:
         переводит регистр всех букв в нижний, у каждого слова убирает окончание."""
@@ -73,7 +82,7 @@ def conversation(message):
     def find_garbage(message):
         """Ищет лишние слова-сорняки, которые вешают программу (как, кто, где) и меняет их на пустую строку"""
         for word in baza.garbage:                       # для каждого слова в кортеже
-            if word in message:                         # если это каждое слово есть в запросе
+            if word.lower() in message.lower():                         # если это каждое слово есть в запросе
                 return message.replace(word, '')        # нам нужно удалить часть строки
         return message
 
@@ -133,29 +142,30 @@ def conversation(message):
             question = baza.dictionary[id]['question'].lower()
             if message.text.lower() in question:  # СТРОГОЕ СООТВЕТСТВИЕ
                 if 'скачать' in baza.dictionary[id]['answer']:
-                    download_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()
-                    btn = types.InlineKeyboardButton(text="СКАЧАТЬ", url=baza.dictionary[id]['link'])
-                    download_btn.add(btn)
-                    bot.send_message(message.chat.id, baza.dictionary[id]['answer'], reply_markup=download_btn)
-                    bot.send_message(157758328, "Предложили скачать файл по запросу: " + message.text)
-                    found_result = True
+                    download()
 
     if not found_result:
         for id in baza.dictionary:
             question = baza.dictionary[id]['question'].lower()
             if message.text.lower() in question:  # СТРОГОЕ СООТВЕТСТВИЕ
-                bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
-                bot.send_message(157758328,
-                                 "Информация выдана успешно в строгом соответствии по запросу: " + message.text)
-                found_result = True  # вопрос checking_answer() для строго соответсвия вынесен в конец скрипта
+                if 'скачать' in question:
+                    download()
+                else:
+                    bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
+                    bot.send_message(157758328,
+                                     "Информация выдана успешно в строгом соответствии по запросу: " + message.text)
+                    found_result = True  # вопрос checking_answer() для строго соответсвия вынесен в конец скрипта
 
     if not found_result:
         for id in baza.dictionary:
             question = baza.dictionary[id]['question'].lower()
             if changed(message.text) in changed(question):                  # НЕ СТРОГОЕ СООТВЕТСВИЕ
-                bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
-                bot.send_message(157758328, "какая-то информация выдана не в строгом соответсвии по запросу: " + message.text)
-                found_result = True
+                if 'скачать' in question:
+                    download()
+                else:
+                    bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
+                    bot.send_message(157758328, "какая-то информация выдана не в строгом соответсвии по запросу: " + message.text)
+                    found_result = True
 
     if not found_result:                # ЕСЛИ УСЕЧЕННЫЕ СЛОВА НЕ НАЙДЕНЫ - ИЩЕТ В ЛЮБОМ ПОРЯДКЕ В РАМКАХ ВОПРОСА
         changed_user_request = changed(message.text).split()
