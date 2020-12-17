@@ -133,6 +133,11 @@ def conversation(message):
         bot.send_message(157758328, correct)
         return
 
+    if "отчёт пользователю" in message.text.lower():
+        bot.send_message(111, "Юрий, добавчоный номер бухгалтерии успешно изменен на 1017.")
+        bot.send_message(157758328, "Отчет пользователю отправлен успешно")
+        found_result = True  # вопрос checking_answer() для строго соответсвия вынесен в конец скрипта
+
     if len(changed(message.text)) <= 2:
         bot.send_message(message.chat.id, 'Слишком короткий запрос. Пожалуйста, чуть подробнее.')
         return
@@ -140,14 +145,7 @@ def conversation(message):
     if not found_result:
         for id in baza.dictionary:
             question = baza.dictionary[id]['question'].lower()
-            if message.text.lower() in question:  # СТРОГОЕ СООТВЕТСТВИЕ
-                if 'скачать' in baza.dictionary[id]['answer']:
-                    download()
-
-    if not found_result:
-        for id in baza.dictionary:
-            question = baza.dictionary[id]['question'].lower()
-            if message.text.lower() in question:  # СТРОГОЕ СООТВЕТСТВИЕ
+            if message.text.lower() in question:                        # СТРОГОЕ СООТВЕТСТВИЕ
                 if 'скачать' in question:
                     download()
                 else:
@@ -159,7 +157,7 @@ def conversation(message):
     if not found_result:
         for id in baza.dictionary:
             question = baza.dictionary[id]['question'].lower()
-            if changed(message.text) in changed(question):                  # НЕ СТРОГОЕ СООТВЕТСВИЕ
+            if changed(message.text) in changed(question):              # НЕ СТРОГОЕ СООТВЕТСВИЕ
                 if 'скачать' in question:
                     download()
                 else:
@@ -167,7 +165,7 @@ def conversation(message):
                     bot.send_message(157758328, "какая-то информация выдана не в строгом соответсвии по запросу: " + message.text)
                     found_result = True
 
-    if not found_result:                # ЕСЛИ УСЕЧЕННЫЕ СЛОВА НЕ НАЙДЕНЫ - ИЩЕТ В ЛЮБОМ ПОРЯДКЕ В РАМКАХ ВОПРОСА
+    if not found_result:                                                # ИЩЕТ В ЛЮБОМ ПОРЯДКЕ В РАМКАХ ВОПРОСА
         changed_user_request = changed(message.text).split()
         max_of_found_words = 0  # в max <- записывается matches <- записывается find(вычисляется количество совпадений слов)
         results = []
