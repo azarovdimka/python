@@ -35,7 +35,7 @@ def welcome(message):
     btn2 = types.KeyboardButton('План работ')
     btn3 = types.KeyboardButton('Мой налет')
     btn4 = types.KeyboardButton('Расчётный лист')
-    btn5 = types.KeyboardButton('Написать разработчику') # TODO перестала появляться клавиатура
+    btn5 = types.KeyboardButton('Написать разработчику')     # TODO перестала появляться клавиатура
     markup.add(btn1, btn2, btn3, btn4, btn5)
 
 
