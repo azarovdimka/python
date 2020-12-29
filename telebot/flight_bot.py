@@ -144,8 +144,15 @@ def conversation(message):
         found_result = True  # вопрос checking_answer() для строго соответсвия вынесен в конец скрипта
 
     if len(changed(message.text)) <= 2:
-        bot.send_message(message.chat.id, 'Слишком короткий запрос. Пожалуйста, чуть подробнее.')
+        bot.send_message(message.chat.id, 'Слишком короткий запрос. Пожалуйста, чуть подробнее, или измените запрос.')
         return
+
+    # if not found_result:
+    #     words = changed(message.text).split(' ') # TODO исли использовать этот способ фильтрации то нельзя будет предлоги использовать в запросе и преобразовывать выражения в слова с предогами
+    #     for letter in words:
+    #         if len(letter) <= 1:
+    #             bot.send_message(message.chat.id, 'Слишком короткий запрос. Пожалуйста, чуть подробнее.')
+    #             return
 
     if not found_result:            # СТРОГОЕ СООТВЕТСТВИЕ
         for id in baza.dictionary:
