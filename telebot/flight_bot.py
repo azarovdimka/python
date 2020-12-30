@@ -21,7 +21,7 @@ def general_menu():
     btn2 = types.KeyboardButton('План работ')
     btn3 = types.KeyboardButton('Мой налет')
     btn4 = types.KeyboardButton('Расчётный лист')
-    btn5 = types.KeyboardButton('Внести информацию')    # InlineKeyBoard (callback_data='Внести информацию')
+    btn5 = types.KeyboardButton(' Добавить  информацию')    # InlineKeyBoard (callback_data='Внести информацию')
     general_menu.add(btn1, btn2, btn3, btn4, btn5)
     return general_menu
 
@@ -39,7 +39,7 @@ def welcome(message):
                      'вопросы к МКК и КПК, часы работы и номера телефонов отделов и супрервайзеров, '
                      'настройки почты, аббревиатуры, инструктажи... '
                      'Задавай свой первый вопрос.'
-                     .format(message.from_user, bot.get_me()), reply_markup=general_menu())      #  parse_mode='html',
+                     .format(message.from_user, bot.get_me()))      # , reply_markup=general_menu() parse_mode='html',
 
 
 def find(question, user_request):
@@ -109,9 +109,9 @@ def conversation(message):
         answer = ''
         if call.data == "Исправить ответ":
             answer = 'В следующем сообщении еще раз коротко напишите свой вопрос и свой вариант ответа в произвольной ' \
-                     'форме, но начинаться Ваше сообщение должно со слова "правка", например:\n\n Правка: Кто желает ' \
-                     'знать где сидит фазан? Правильный ответ: охотник.\n\n Пожалуйста, не забывайте пояснять к какому ' \
-                     'вопросу правка. Присланное Вами сообщение пока не привязывается к ранее выданному ответу)'
+                     'форме, но начинаться Ваше сообщение должно со слова "правка", например:\n\n Правка: добавочный ' \
+                     'номер бухгалетрии 1017.\n\n Пожалуйста, не забывайте пояснять к какому вопросу правка ' \
+                     '(не просто 1017). Присланное Вами сообщение пока не привязывается к ранее выданному ответу.'
         elif call.data == "Всё верно":
             bot.send_message(157758328, "Пользователь сообщил, что всё верно")
             answer = choice(baza.best_wishes)   # TODO вытащить id сообщения до кнопок
@@ -142,15 +142,19 @@ def conversation(message):
                 .format(message.from_user, message.from_user, message.from_user, message.from_user), reply_markup=general_menu())
             return
 
-    if 'правка' in message.text.lower() or 'предложить информацию' in message.text.lower():
+    if "добавить информацию" in message.text.lower():
+        # adding_information()
+        bot.send_message(message.chat.id,
+                         'Для добавление своей информации в телеграм-бот, начните свое сообщение со слова "предложить:". Например:\n\nПредложить: '
+                         'номер телефона представителя в Москве 8(495)123-45-67', reply_markup=general_menu())
+        return
+
+    if 'правка' in message.text.lower() or 'предложить' in message.text.lower():
         correct = "Пользователь id{0.id} @{0.username} {0.last_name} {0.first_name} предлоджил правку:\n" \
-            .format(message.from_user, message.from_user, message.from_user, message.from_user) + message.text[7:]
+            .format(message.from_user, message.from_user, message.from_user, message.from_user) + message.text[12:]
         bot.send_message(message.chat.id, 'Ваша информация успешно отправлена. После ее рассмотрения будут внесены '
                                           'соответсвующие изменения. \n'
-                                          'Спасибо за Ваше участие в улучшении Телеграм-Бота!\n'
-                                          'В будущем Вы можете предлагать любую свою информацию для внесения в базу '
-                                          'данных, просто начав свое сообщение со слов "предложение информации" или '
-                                          '"правка".', reply_markup=general_menu())
+                                          'Спасибо за Ваше участие в улучшении Телеграм-Бота!', reply_markup=general_menu())
         bot.send_message(157758328, correct)
         return
 
@@ -159,13 +163,6 @@ def conversation(message):
                                     "шесть компетениций или концепция. это?", reply_markup=general_menu())
         bot.send_message(157758328, "Отчет пользователю отправлен успешно")
         found_result = True  # вопрос checking_answer() для строго соответсвия вынесен в конец скрипта
-
-    if "внести информацию" in message.text.lower():
-        # adding_information()
-        bot.send_message(message.chat.id,
-                         'Начните свое сообщение со слова "предложить информацию:". Например:\n\n предложить информацию: '
-                         'номер телефона представителя в Москве 8(495)123-45-67', reply_markup=general_menu())
-        return
 
     if len(changed(message.text)) <= 2:
         bot.send_message(message.chat.id, 'Слишком короткий запрос. Пожалуйста, чуть подробнее, или измените запрос.', reply_markup=general_menu())
@@ -189,7 +186,7 @@ def conversation(message):
                     open()
                     found_result = True
                 else:   # так надо 2 раза
-                    bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
+                    bot.send_message(message.chat.id, baza.dictionary[id]['answer'], reply_markup=general_menu())
                     bot.send_message(157758328,
                                      "1 - Информация выдана успешно в строгом соответствии по запросу: " + message.text)
                     found_result = True  # вопрос checking_answer() для строго соответсвия вынесен в конец скрипта
@@ -205,7 +202,7 @@ def conversation(message):
                     open()
                     found_result = True
                 else:
-                    bot.send_message(message.chat.id, baza.dictionary[id]['answer'])
+                    bot.send_message(message.chat.id, baza.dictionary[id]['answer'], reply_markup=general_menu())
                     bot.send_message(157758328, "2 - какая-то информация выдана не в строгом соответсвии по запросу: " + message.text)
                     found_result = True
 
@@ -244,12 +241,10 @@ def conversation(message):
                          'Если вы заметите ошибки, устаревшую информцию '
                          'или обнаружите факты некорректной работы бота - просьба написать об этом также  '
                          'разработчику @letchikazarov.\n\n'
-                         'Либо вы можете самостоятельно внести информацию в базу данных, начав свое сообщение со слов '
-                         '"предложить информацию:". Информация бдует внесена через некоторое время после '
-                         'предварительной модерации.', reply_markup=general_menu())
+                         'Либо вы можете самостоятельно внести информацию в базу данных, нажав кнопку "Добавить информацию".', reply_markup=general_menu())
 
-    if found_result:  # две кнопки для списка ответов строгого соответствия
-        checking_answer("Всё верно? Есть ошибки?")
+    # if found_result:  # две кнопки для списка ответов строгого соответствия
+    #     checking_answer("Всё верно? Есть ошибки?")
 
 # ReplyKeyboardMarkup - не привязывается к сообщению
 # InlineKeyboardMarkup — Она привязывается к сообщению, с которым была отправлена.
