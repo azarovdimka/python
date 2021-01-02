@@ -39,7 +39,7 @@ def welcome(message):
                      'вопросы к МКК и КПК, часы работы и номера телефонов отделов и супрервайзеров, '
                      'настройки почты, аббревиатуры, инструктажи... '
                      'Задавай свой первый вопрос.'
-                     .format(message.from_user, bot.get_me()))      # , reply_markup=general_menu() parse_mode='html',
+                     .format(message.from_user, bot.get_me()), reply_markup=general_menu())      #  parse_mode='html',
 
 
 def find(question, user_request):
@@ -186,7 +186,8 @@ def conversation(message):
                     open()
                     found_result = True
                 else:   # так надо 2 раза
-                    bot.send_message(message.chat.id, baza.dictionary[id]['answer'], reply_markup=general_menu())
+                    bot.send_message(message.chat.id, baza.dictionary[id]['answer'], reply_markup=general_menu(),
+                  parse_mode='Markdown')
                     bot.send_message(157758328,
                                      "1 - Информация выдана успешно в строгом соответствии по запросу: " + message.text)
                     found_result = True  # вопрос checking_answer() для строго соответсвия вынесен в конец скрипта
@@ -202,7 +203,8 @@ def conversation(message):
                     open()
                     found_result = True
                 else:
-                    bot.send_message(message.chat.id, baza.dictionary[id]['answer'], reply_markup=general_menu())
+                    bot.send_message(message.chat.id, baza.dictionary[id]['answer'], reply_markup=general_menu(),
+                  parse_mode='Markdown')
                     bot.send_message(157758328, "2 - какая-то информация выдана не в строгом соответсвии по запросу: " + message.text)
                     found_result = True
 
@@ -222,13 +224,13 @@ def conversation(message):
 
         if len(results) < 8:    # выдает ответы при оптимальном количстве результатов
             for each_answer in results:                                                     # TODO добавить исклюбчение если это место вашает программу
-                bot.send_message(message.chat.id, each_answer, reply_markup=general_menu()) # TODO быть может для разгрузки памяти выдавать ответы генератором?
+                bot.send_message(message.chat.id, each_answer, reply_markup=general_menu(), parse_mode='Markdown')    # TODO быть может для разгрузки памяти выдавать ответы генератором?
                 bot.send_message(157758328, "3 - выдана информация из слов в случайном порядке по запросу: " + message.text)
                 found_result = True
 
         if len(results) >= 8:   # не выдает ответы если их 8, крайне редко когда достигается, по другим методам поиска все равно сипит кучу ответов
             bot.send_message(message.chat.id, 'Найдено слишком много ответов. Пожалуйста, уточните свой вопрос или '
-                          'спросите по-другому.', reply_markup=general_menu())
+                          'спросите по-другому.', reply_markup=general_menu(), parse_mode='Markdown')
                                                                                                 # TODO написать обратное условие, что если не будет найдено по вопросам то поискать по ответам
     if not found_result:    # если ничего не найдено
         message.text = "Пользователь {0.first_name} {0.last_name} @{0.username} id{0.id} не смог найти запрос:\n" \
