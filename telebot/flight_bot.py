@@ -143,7 +143,7 @@ def conversation(message):
             return
 
     if "добавить информацию" in message.text.lower():
-        # adding_information()
+        # adding_information()  # TODO идея использовать метод словаря .setdefault() который будет добавлять ключ со значением в словарь при его отсутствии
         bot.send_message(message.chat.id,
                          'Для добавление своей информации в телеграм-бот, начните свое сообщение со слова "предложить:". Например:\n\nПредложить: '
                          'номер телефона представителя в Москве 8(495)123-45-67', reply_markup=general_menu())
