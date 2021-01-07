@@ -21,7 +21,7 @@ def general_menu():
     btn2 = types.KeyboardButton('План работ')
     btn3 = types.KeyboardButton('Мой налет')
     btn4 = types.KeyboardButton('Расчётный лист')
-    btn5 = types.KeyboardButton(' Добавить  информацию')    # InlineKeyBoard (callback_data='Внести информацию')
+    btn5 = types.KeyboardButton('Добавить  информацию')    # InlineKeyBoard (callback_data='Внести информацию')
     general_menu.add(btn1, btn2, btn3, btn4, btn5)
     return general_menu
 
@@ -142,13 +142,6 @@ def conversation(message):
                 .format(message.from_user, message.from_user, message.from_user, message.from_user), reply_markup=general_menu())
             return
 
-    if "добавить информацию" in message.text.lower():
-        # adding_information()  # TODO идея использовать метод словаря .setdefault() который будет добавлять ключ со значением в словарь при его отсутствии
-        bot.send_message(message.chat.id,
-                         'Для добавление своей информации в телеграм-бот, начните свое сообщение со слова "предложить:". Например:\n\nПредложить: '
-                         'номер телефона представителя в Москве 8(495)123-45-67', reply_markup=general_menu())
-        return
-
     if 'правка' in message.text.lower() or 'предложить' in message.text.lower():
         correct = "Пользователь id{0.id} @{0.username} {0.last_name} {0.first_name} предлоджил правку:\n" \
             .format(message.from_user, message.from_user, message.from_user, message.from_user) + message.text[12:]
@@ -158,9 +151,14 @@ def conversation(message):
         bot.send_message(157758328, correct)
         return
 
-    if "отчёт пользователю" in message.text.lower():
-        bot.send_message(406430959, "Это шесть компетенций, добавил слово концепция и пункты туда. Наберите еще раз "
-                                    "шесть компетениций или концепция. это?", reply_markup=general_menu())
+    if "добавить  информацию" in message.text.lower():     # TODO идея использовать метод словаря .setdefault() который будет добавлять ключ со значением в словарь при его отсутствии
+        bot.send_message(message.chat.id,
+                         'Для добавление своей информации в телеграм-бот, начните свое сообщение со слова "предложить:". Например:\n\nПредложить: '
+                         'номер телефона представителя в Москве 8(495)123-45-67', reply_markup=general_menu())
+        return
+
+    if "ответ пользователю" in message.text.lower():
+        bot.send_message(111, "----.", reply_markup=general_menu())
         bot.send_message(157758328, "Отчет пользователю отправлен успешно")
         found_result = True  # вопрос checking_answer() для строго соответсвия вынесен в конец скрипта
 
@@ -238,12 +236,13 @@ def conversation(message):
 
         bot.send_message(157758328, message.text)  # если запрос ненайден - бот об этом сообщит разрабочтику дублированием сообщения напрямую
         bot.send_message(message.chat.id,
-                         'Я не знаю, что на это ответить. Попробуйте изменить свой запрос.  \n'
+                         '{0.first_name}, я не знаю, что на это ответить. Попробуйте изменить свой запрос.\n'
+                         'Если у вас появится какая-то информация на этот вопрос - сообщите, пожалуйста.\n'
                          'Ваш неудачный запрос уже направлен разработчику на рассмотрение.\n'
-                         'Если вы заметите ошибки, устаревшую информцию '
+                         '\n Если вы заметите ошибки, устаревшую информцию '
                          'или обнаружите факты некорректной работы бота - просьба написать об этом также  '
-                         'разработчику @letchikazarov.\n\n'
-                         'Либо вы можете самостоятельно внести информацию в базу данных, нажав кнопку "Добавить информацию".', reply_markup=general_menu())
+                         'разработчику @letchikazarov.\n'
+                         'Либо вы можете самостоятельно внести информацию в базу данных, нажав кнопку "Добавить информацию".'.format(message.from_user, bot.get_me()), reply_markup=general_menu())
 
     # if found_result:  # две кнопки для списка ответов строгого соответствия
     #     checking_answer("Всё верно? Есть ошибки?")
