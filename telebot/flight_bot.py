@@ -227,25 +227,11 @@ def conversation(message):
         bot.send_message(157758328, "Ответ пользователю отправлен успешно")
         found_result = True  # вопрос checking_answer() для строго соответсвия вынесен в конец скрипта
 
-    # if "ответ пользователю" in message.text.lower():
-    #     message = message.text.lower()
-    #     id_mes = int(message.split(' ')[2])
-    #     mes_to_user = message.split(' ')[3:]  # TODO - почему-то таким образом работать не хочет
-    #     answer = ' '.join(mes_to_user)
-    #     bot.send_message(id_mes, answer, reply_markup=general_menu())
-    #     bot.send_message(157758328, "Отчет пользователю отправлен успешно")
-    #     found_result = True  # вопрос checking_answer() для строго соответсвия вынесен в конец скрипта
-
     if len(changed(message.text)) <= 2:
         bot.send_message(message.chat.id, 'Слишком короткий запрос. Пожалуйста, чуть подробнее, или измените запрос.',
                          reply_markup=general_menu())
         return
-    # if not found_result:
-    #     words = changed(message.text).split(' ') # TODO исли использовать этот способ фильтрации то нельзя будет предлоги использовать в запросе и преобразовывать выражения в слова с предогами
-    #     for letter in words:
-    #         if len(letter) <= 1:
-    #             bot.send_message(message.chat.id, 'Слишком короткий запрос. Пожалуйста, чуть подробнее.')
-    #             return
+
     if not found_result:  # СТРОГОЕ СООТВЕТСТВИЕ        # if можно заменить на while и засунуть всё в один try except
         for id in baza.dictionary:
             question = baza.dictionary[id]['question'].lower()
