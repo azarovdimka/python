@@ -223,7 +223,7 @@ def conversation(message):
         return
 
     if "ответ пользователю" in message.text.lower():
-        bot.send_message(157758328, '----', reply_markup=general_menu())
+        bot.send_message(157758328, '---', reply_markup=general_menu())
         bot.send_message(157758328, "Ответ пользователю отправлен успешно")
         found_result = True  # вопрос checking_answer() для строго соответсвия вынесен в конец скрипта
 
