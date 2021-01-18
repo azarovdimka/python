@@ -88,6 +88,15 @@ def conversation(message):
                 return message
         return message
 
+    # def find_abbreviation(message):
+    #     """проверяет по спику аббревиатур, чтобы выдать развернутое значение аббревиатуры"""
+    #     for id in baza.abbreviations:
+    #         if message == baza.abbreviations[id]['abbr']:
+    #             # answer = baza.abbreviations[id]['deployed']
+    #             bot.send_message(message.chat.id, baza.abbreviations[id]['deployed'], parse_mode='Markdown')
+    #     bot.send_message(157758328, "аббревиатуры не найдено: " + message)
+    #     return message
+
     def find_garbage(message):
         """Ищет лишние слова-сорняки, которые вешают программу (как, кто, где) и меняет их на пустую строку"""
         for word in baza.garbage:  # для каждого слова в кортеже
@@ -182,6 +191,7 @@ def conversation(message):
 
     found_result = False
 
+    # message.text = find_abbreviation(message.text.upper())
     message.text = find_exception(message.text.lower())
     message.text = find_garbage(message.text)
 
