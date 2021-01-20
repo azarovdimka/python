@@ -61,16 +61,18 @@ def conversation(message):
         download_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()  # что такое двоеточие и что оно дает??? reformat сам так сделал
         btn = types.InlineKeyboardButton(text="ОТКРЫТЬ", url=baza.dictionary[id]['link'])
         download_btn.add(btn)
-        bot.send_message(message.chat.id, baza.dictionary[id]['answer'], reply_markup=download_btn, parse_mode='Markdown')
-        bot.send_message(157758328, "Предложили ОТКРЫТЬ сайт по запросу: " + message.text)
+        bot.send_message(message.chat.id, baza.dictionary[id]['answer'], reply_markup=download_btn,
+                         parse_mode='Markdown')
+        bot.send_message(157758328, "Предложили ОТКРЫТЬ: " + message.text)
 
     def download():
         """Предлагает скачать файл"""
         download_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()
         btn = types.InlineKeyboardButton(text="СКАЧАТЬ", url=baza.dictionary[id]['link'])
         download_btn.add(btn)
-        bot.send_message(message.chat.id, baza.dictionary[id]['answer'], parse_mode='Markdown', reply_markup=download_btn)
-        bot.send_message(157758328, "Предложили скачать файл по запросу: " + message.text)
+        bot.send_message(message.chat.id, baza.dictionary[id]['answer'], parse_mode='Markdown',
+                         reply_markup=download_btn)
+        bot.send_message(157758328, "Предложили скачать: " + message.text)
 
     def changed(text):
         """Видоизменяет текст поступающего запроса от пользователя и искомого текста в базе для успешного поиска:
@@ -233,7 +235,7 @@ def conversation(message):
         return
 
     if "ответ пользователю" in message.text.lower():
-        bot.send_message(157758328, '---', reply_markup=general_menu())
+        bot.send_message(157758328, '--------------------', reply_markup=general_menu())
         bot.send_message(157758328, "Ответ пользователю отправлен успешно")
         found_result = True  # вопрос checking_answer() для строго соответсвия вынесен в конец скрипта
 
