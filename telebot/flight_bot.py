@@ -192,7 +192,7 @@ def conversation(message):
     #     bot.send_message(message.chat.id, check_answer, reply_markup=correcting_button())
 
     found_result = False
-
+    global user_id
     # message.text = find_abbreviation(message.text.upper())
     message.text = find_exception(message.text.lower())
     message.text = find_garbage(message.text)
@@ -235,7 +235,8 @@ def conversation(message):
         return
 
     if "ответ пользователю" in message.text.lower():
-        bot.send_message(157758328, '---', reply_markup=general_menu())
+        # todo ОБНОВИ СЕРВЕР
+        bot.send_message(user_id, message.text[18:], reply_markup=general_menu())
         bot.send_message(157758328, "Ответ пользователю отправлен успешно")
         found_result = True  # вопрос checking_answer() для строго соответсвия вынесен в конец скрипта
 
@@ -284,6 +285,7 @@ def conversation(message):
             bot.send_message(157758328, f"при запросе '{message.text}' при поиске в случайном порядке возникала ошибка {type(exc).__name__} {exc} ")
 
     if not found_result:  # если ничего не найдено
+        user_id = message.from_user.id
         message.text = "Пользователь {0.first_name} {0.last_name} @{0.username} id{0.id} не смог найти запрос:\n" \
                            .format(message.from_user, message.from_user, message.from_user,
                                    message.from_user) + message.text
