@@ -209,17 +209,6 @@ def conversation(message):
                              reply_markup=general_menu())
             return
 
-    if 'правка' in message.text.lower() or 'предложить' in message.text.lower():
-        correct = "Пользователь id{0.id} @{0.username} {0.last_name} {0.first_name} предлоджил правку:\n" \
-                      .format(message.from_user, message.from_user, message.from_user,
-                              message.from_user) + message.text[8:]
-        bot.send_message(message.chat.id, 'Ваша информация успешно отправлена. После ее рассмотрения будут внесены '
-                                          'соответсвующие изменения. \n'
-                                          'Спасибо за Ваше участие в улучшении Телеграм-Бота!',
-                         reply_markup=general_menu())
-        bot.send_message(157758328, correct)
-        return
-
     if "исправить ответ" in message.text.lower():
         bot.send_message(message.chat.id,
                          'В следующем сообщении еще раз коротко напишите свой вопрос и свой вариант ответа в произвольной '
@@ -227,11 +216,33 @@ def conversation(message):
                          'номер бухгалетрии 1017.\n\n Пожалуйста, не забывайте пояснять к какому вопросу правка '
                          '(не просто 1017).')
         return
+
+    if 'правка' in message.text.lower():
+        correct = "Пользователь id{0.id} @{0.username} {0.last_name} {0.first_name} предлоджил правку:\n" \
+                      .format(message.from_user, message.from_user, message.from_user,
+                              message.from_user) + message.text[7:]
+        bot.send_message(message.chat.id, 'Ваша информация успешно отправлена. После ее рассмотрения будут внесены '
+                                          'соответсвующие изменения. \n'
+                                          'Большое спасибо за Ваше участие в улучшении Телеграм-Бота!',
+                         reply_markup=general_menu())
+        bot.send_message(157758328, correct)
+        return
         # TODO: идея перенести все эти ifы также в словарь, тогда как присылать отчет разработчику? создавать новый цикл с отчетом For?
     if "добавить  информацию" in message.text.lower():  # TODO идея использовать метод словаря .setdefault() который будет добавлять ключ со значением в словарь при его отсутствии
         bot.send_message(message.chat.id,
                          'Для добавления своей информации в телеграм-бот, начните свое сообщение со слова "предложить:". Например:\n\nПредложить: '
                          'номер телефона представителя в Москве 8(495)123-45-67', reply_markup=general_menu())
+        return
+
+    if 'предложить' in message.text.lower():
+        correct = "Пользователь id{0.id} @{0.username} {0.last_name} {0.first_name} предлоджил информацию:\n" \
+                      .format(message.from_user, message.from_user, message.from_user,
+                              message.from_user) + message.text[11:]
+        bot.send_message(message.chat.id, 'Ваша информация успешно отправлена. После ее рассмотрения будут внесены '
+                                          'соответсвующие изменения. \n'
+                                          'Большое спасибо за Ваше участие в улучшении Телеграм-Бота!',
+                         reply_markup=general_menu())
+        bot.send_message(157758328, correct)
         return
 
     if "ответ пользователю" in message.text.lower():
@@ -291,13 +302,13 @@ def conversation(message):
                                    message.from_user) + message.text
         bot.send_message(157758328, message.text)
         bot.send_message(message.chat.id,
-                         '{0.first_name}, я не знаю, что на это ответить. Попробуйте изменить свой запрос.\n\n'
-                         'Если у вас появится какая-то информация на этот вопрос - сообщите, пожалуйста.\n'
-                         'Ваш неудачный запрос уже направлен разработчику на рассмотрение.\n'
-                         '\n Если вы заметите ошибки, устаревшую информцию '
+                         '{0.first_name}, я не знаю, что на это ответить. Попробуйте изменить или упростить свой запрос.\n\n'
+                         'Ваш неудачный запрос уже направлен разработчику на рассмотрение, в ближайшее время он внесёт ответ на него.\n'
+                         'Если у Вас появится какая-то информация на этот счёт - сообщите.\n'
+                         '\n Если Вы заметите ошибки, устаревшую информцию '
                          'или обнаружите факты некорректной работы бота - просьба написать об этом также  '
                          'разработчику @letchikazarov.\n'
-                         'Либо вы можете самостоятельно внести информацию в базу данных, нажав кнопку "Добавить информацию".'.format(
+                         'Либо Вы можете самостоятельно внести информацию в базу данных, нажав кнопку "Добавить информацию".'.format(
                              message.from_user, bot.get_me()), reply_markup=general_menu())
     # if found_result:  # две кнопки для списка ответов строгого соответствия
     #     checking_answer("Всё верно? Есть ошибки?")
