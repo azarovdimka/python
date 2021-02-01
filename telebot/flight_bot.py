@@ -204,30 +204,29 @@ def conversation(message):
             return
         if "спасибо" in message.text.lower() or message.text.lower() in baza.good_bye:
             bot.send_message(message.chat.id, choice(baza.best_wishes))
-            bot.send_message(157758328, "Пользователь id{0.id} @{0.username} {0.last_name} {0.first_name} поблагодарил." \
-                             .format(message.from_user, message.from_user, message.from_user, message.from_user),
+            bot.send_message(157758328, "Пользователь {0.first_name} @{0.username} id{0.id} поблагодарил." \
+                             .format(message.from_user, message.from_user, message.from_user),
                              reply_markup=general_menu())
             return
 
     if "исправить ответ" in message.text.lower():
         bot.send_message(message.chat.id,
                          'В следующем сообщении еще раз коротко напишите свой вопрос и свой вариант ответа в произвольной '
-                         'форме, но начинаться Ваше сообщение должно со слова "правка", например:\n\n Правка: добавочный '
-                         'номер бухгалетрии 1017.\n\n Пожалуйста, не забывайте пояснять к какому вопросу правка '
-                         '(не просто 1017).')
+                         'форме, но начинаться Ваше сообщение должно со слова "исправить", например:\n\n '
+                         'Исправить: добавочный номер бухгалтерии 1017.\n\n '
+                         'Пожалуйста, не забывайте пояснять к какому вопросу правка (не просто 1017).')
         return
 
-    if 'правка' in message.text.lower():
-        correct = "Пользователь id{0.id} @{0.username} {0.last_name} {0.first_name} предлоджил правку:\n" \
-                      .format(message.from_user, message.from_user, message.from_user,
-                              message.from_user) + message.text[7:]
+    if 'исправить' in message.text.lower():
+        correct = "Пользователь {0.first_name} @{0.username} id{0.id} предлоджил правку:\n" \
+                      .format(message.from_user, message.from_user, message.from_user) + message.text[10:]
         bot.send_message(message.chat.id, 'Ваша информация успешно отправлена. После ее рассмотрения будут внесены '
                                           'соответсвующие изменения. \n'
                                           'Большое спасибо за Ваше участие в улучшении Телеграм-Бота!',
                          reply_markup=general_menu())
         bot.send_message(157758328, correct)
         return
-        # TODO: идея перенести все эти ifы также в словарь, тогда как присылать отчет разработчику? создавать новый цикл с отчетом For?
+
     if "добавить  информацию" in message.text.lower():  # TODO идея использовать метод словаря .setdefault() который будет добавлять ключ со значением в словарь при его отсутствии
         bot.send_message(message.chat.id,
                          'Для добавления своей информации в телеграм-бот, начните свое сообщение со слова "предложить:". Например:\n\nПредложить: '
@@ -235,9 +234,8 @@ def conversation(message):
         return
 
     if 'предложить' in message.text.lower():
-        correct = "Пользователь id{0.id} @{0.username} {0.last_name} {0.first_name} предлоджил информацию:\n" \
-                      .format(message.from_user, message.from_user, message.from_user,
-                              message.from_user) + message.text[11:]
+        correct = "Пользователь {0.first_name} @{0.username} id{0.id} предлоджил информацию:\n" \
+                      .format(message.from_user, message.from_user, message.from_user) + message.text[11:]
         bot.send_message(message.chat.id, 'Ваша информация успешно отправлена. После ее рассмотрения будут внесены '
                                           'соответсвующие изменения. \n'
                                           'Большое спасибо за Ваше участие в улучшении Телеграм-Бота!',
@@ -277,12 +275,12 @@ def conversation(message):
                                          f"при запросе '{message.text}' при поиске в строгом соответствии возникала ошибка {type(exc).__name__} {exc} ")
                     found_result = True
 
-
-    if not found_result:  # НЕ СТРОГОЕ СООТВЕТСВИЕ
+    if not found_result:  # НЕСТРОГОЕ СООТВЕТСВИЕ
         try:
             found_result = find_non_strict_accordance(message)
         except Exception as exc:
-            bot.send_message(157758328, f"при запросе '{message.text}' в нестрогом соответсвии возникала ошибка {type(exc).__name__} {exc}")
+            bot.send_message(157758328,
+                             f"при запросе '{message.text}' в нестрогом соответсвии возникала ошибка {type(exc).__name__} {exc}")
 
     if not found_result:  # ИЩЕТ В ЛЮБОМ ПОРЯДКЕ В РАМКАХ ВОПРОСА
         try:
