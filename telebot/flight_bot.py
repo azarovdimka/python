@@ -1,15 +1,14 @@
 # -*- coding: utf8 -*-
 
-import telebot
+import \
+    telebot  # чтобы работал telebot - нужно удалить telebot, и установить Pytelegrambotapi но при этом написанным оставить telebot
 from telebot.types import InlineKeyboardMarkup
-
 import baza as baza
 from telebot import types
-# import requests
-# import datetime
 from random import choice
+import config
 
-bot = telebot.TeleBot('1366677314:AAFTpl-zPAFTRCcjuqG2Xc1EOvAAPjmeeVo')
+bot = telebot.TeleBot(config.api)
 
 
 # в пин закрепить слоган
