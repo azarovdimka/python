@@ -43,7 +43,8 @@ def welcome(message):
 
 
 def find(question, user_request):
-    """Выявляет степень максимального соответсвия искомых слов запросу в каждом результате. Возвращает счетчик: количество совпавших слов."""
+    """Выявляет степень максимального соответсвия искомых слов запросу в каждом результате: считает количество совпавших
+    слов и возвращает счетчик."""
     count = 0
     for word in user_request:
         if word in question:
@@ -84,9 +85,11 @@ def conversation(message):
         заменяет его на такое же развернутое значение, которое следует использовать при дальнейшем поиске. ищет слова
         для преобразования чтобы обойти минимально допустимое разрешение на длину слова"""
         for id in baza.exceptions:
-            if message == baza.exceptions[id]['word']:
-                message = baza.exceptions[id]['changed_word']
-                return message
+            for word in message.split(' '):
+                if word == baza.exceptions[id]['word']:
+                    changed_word = baza.exceptions[id]['changed_word']
+                    message = message.replace(word, changed_word)
+                    return message
         return message
 
     # def find_abbreviation(message):
@@ -305,7 +308,7 @@ def conversation(message):
                          'Если у Вас появится какая-то информация на этот счёт - сообщите.\n'
                          '\n Если Вы заметите ошибки, устаревшую информцию '
                          'или обнаружите факты некорректной работы бота - просьба написать об этом также  '
-                         'разработчику @letchikazarov.\n'
+                         'разработчику @DeveloperAzarov.\n'
                          'Либо Вы можете самостоятельно внести информацию в базу данных, нажав кнопку "Добавить информацию".'.format(
                              message.from_user, bot.get_me()), reply_markup=general_menu())
     # if found_result:  # две кнопки для списка ответов строгого соответствия
