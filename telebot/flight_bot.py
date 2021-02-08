@@ -131,13 +131,15 @@ def conversation(message):
         results = []
         for id in baza.dictionary:
             question = baza.dictionary[id]['question'].lower()
-            matches = find(question, changed_user_request)  # для каждого id мы проверяем кол-во соотв-х слов
-            if matches == max_of_found_words and matches != 0:  # если количество соответсвий равно максимуму
-                results.append(baza.dictionary[id]['answer'])  # ответ заносим в результы
-            if matches > max_of_found_words:  # если соответсвий  больше счетчика максимума
+            matches = find(question,
+                           changed_user_request)  # matches Принимает число соответсвий слов запроса вопросу в базе для каждого id мы проверяем кол-во соотв-х слов
+            if matches == max_of_found_words and matches != 0:  # если количество соответсвий равно максимум
+                results.append(baza.dictionary[id].get(
+                    'answer'))  # #TODO возникает ошибка здесь key error answer ответ заносим в результы
+            if matches > max_of_found_words:  # если соответсвий нашли еще больше итогого счетчика максимума
                 results.clear()  # очищаем список результатов
                 max_of_found_words = matches  # в максимум записываем новую цифру соответсвия
-                results.append(baza.dictionary[id]['answer'])  # в результаты добавляем answer
+                results.append(baza.dictionary[id].get('answer'))  # в результаты добавляем answer
 
         if len(results) < 8:  # выдает ответы при оптимальном количстве результатов
             for each_answer in results:
@@ -158,6 +160,7 @@ def conversation(message):
             bot.send_message(message.chat.id, 'Найдено слишком много ответов. Пожалуйста, уточните свой вопрос или '
                                               'спросите по-другому.', reply_markup=general_menu(),
                              parse_mode='Markdown')
+
 
     # def adding_information():
     #     """Вносит информацию пользователя в бащу данных и перезаписывает файл с базой данных."""
@@ -295,6 +298,7 @@ def conversation(message):
                              reply_markup=general_menu(),
                              parse_mode='Markdown')
             bot.send_message(157758328, f"при запросе '{message.text}' при поиске в случайном порядке возникала ошибка {type(exc).__name__} {exc} ")
+        # !!!!!! ЕСЛИ ВОЗНИКАЕТ ОШИБКА KEY ERROR то вместо квадратных скобок ключа словаря, лучше использовать .get('key')
 
     if not found_result:  # если ничего не найдено
         user_id = message.from_user.id
