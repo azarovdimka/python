@@ -126,6 +126,7 @@ def conversation(message):
 
     def find_in_random_order(message):
         """Ищет в случайном соответсвии."""
+        global question
         changed_user_request = changed(message.text).split()
         max_of_found_words = 0  # в max <- записывается matches <- записывается find(вычисляется количество совпадений слов)
         results = []
@@ -134,19 +135,18 @@ def conversation(message):
             matches = find(question,
                            changed_user_request)  # matches Принимает число соответсвий слов запроса вопросу в базе для каждого id мы проверяем кол-во соотв-х слов
             if matches == max_of_found_words and matches != 0:  # если количество соответсвий равно максимум
-                results.append(baza.dictionary[id].get(
-                    'answer'))  # #TODO возникает ошибка здесь key error answer ответ заносим в результы
+                results.append(baza.dictionary[id].get('answer'))
             if matches > max_of_found_words:  # если соответсвий нашли еще больше итогого счетчика максимума
                 results.clear()  # очищаем список результатов
                 max_of_found_words = matches  # в максимум записываем новую цифру соответсвия
                 results.append(baza.dictionary[id].get('answer'))  # в результаты добавляем answer
 
         if len(results) < 8:  # выдает ответы при оптимальном количстве результатов
-            for each_answer in results:
-                if 'скачать' in results:  # так надо 2 раза
+            for each_answer in results:  # TODO не прикрепляет кнопки к ответу, если выдается ответ в случайном порялке
+                if 'скачать' in question:  # так надо 2 раза
                     download()
                     found_result = True
-                elif 'просмотреть' in results:  # так надо 2 раза
+                elif 'просмотреть' in question:  # так надо 2 раза
                     open()
                     found_result = True
                 else:  # так надо 2 раза
