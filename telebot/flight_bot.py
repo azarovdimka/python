@@ -120,7 +120,8 @@ def conversation(message):
                 else:  # так надо 2 раза
                     bot.send_message(message.chat.id, baza.dictionary[id]['answer'], reply_markup=general_menu(),
                                      parse_mode='Markdown')
-                    bot.send_message(157758328, "2 - информация выдана не в строгом соответсвии по запросу: " + message.text)
+                    bot.send_message(157758328,
+                                     "2 - информация выдана не в строгом соответсвии по запросу: " + message.text)
                 found_result = True
                 return found_result
 
@@ -156,49 +157,14 @@ def conversation(message):
                 bot.send_message(157758328, "3 - выдана информация в случайном порядке по запросу: " + message.text)
                 return found_result
 
-        if len(results) >= 8:  # не выдает ответы если их 8, крайне редко когда достигается
-            bot.send_message(message.chat.id, 'Найдено слишком много ответов. Пожалуйста, уточните свой вопрос или '
-                                              'спросите по-другому.', reply_markup=general_menu(),
-                             parse_mode='Markdown')
-
-
-    # def adding_information():
-    #     """Вносит информацию пользователя в бащу данных и перезаписывает файл с базой данных."""
-    #     bot.send_message(message.chat.id, 'Для начала добавьте вопрос. Начните свое сообщение со слова "внести вопрос:". Например:\n\n внести вопрос: номер телефона представителя в Москве')
-
-    # def correcting_button():  # две кнопки прикрепляемые к выдаваемому ответу
-    #     markup = types.InlineKeyboardMarkup()
-    #     markup.row_width = 2
-    #     markup.add(types.InlineKeyboardButton("Исправить", callback_data="Исправить ответ"),
-    #                types.InlineKeyboardButton("Всё верно", callback_data="Всё верно"))
-    #     return markup
-
-    # @bot.callback_query_handler(func=lambda call: True)  # Хендлер для работы с существующими сообщениями????
-    # def callback_query(call):
-    #     answer = ''
-    #     if call.data == "Исправить ответ":
-    #         answer = 'В следующем сообщении еще раз коротко напишите свой вопрос и свой вариант ответа в произвольной ' \
-    #                  'форме, но начинаться Ваше сообщение должно со слова "правка", например:\n\n Правка: добавочный ' \
-    #                  'номер бухгалетрии 1017.\n\n Пожалуйста, не забывайте пояснять к какому вопросу правка ' \
-    #                  '(не просто 1017). Присланное Вами сообщение пока не привязывается к ранее выданному ответу.'
-    #     elif call.data == "Всё верно":
-    #         bot.send_message(157758328, "Пользователь сообщил, что всё верно")
-    #         answer = choice(baza.best_wishes)   # TODO вытащить id сообщения до кнопок
-    #     bot.send_message(call.message.chat.id, answer)  # может только одну функцию вызывать # если взаимодействуем с инлайном и нужно отправить текстовое сообщение в ответ, то используем не chat.id, а call.message.chat.id, если хотим отправить короткое уведомление, то bot.answer_callback_query(call.id, "Answer is Yes")
-    #     bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id)     # убирает клаиватуру после нажатия кнопок
-    #     bot.delete_message(call.message.chat.id, call.message.message_id)
-    # if call.data == "Внести информацию":
-    #     send = bot.send_message(message.chat.id, 'Введи город')
-    #     bot.register_next_step_handler(send, call)
-    #     # log(message)
-    #     # answer = "Следующее сообщение начните со слова: внести"
-
-    # def checking_answer(check_answer=None):  # выводит эти кнопки только если в строгом соответсвии было выдано
-    #     bot.send_message(message.chat.id, check_answer, reply_markup=correcting_button())
+        # if len(results) >= 8:  # не выдает ответы если их 8, крайне редко когда достигается
+        #     bot.send_message(message.chat.id, 'Найдено слишком много ответов. Пожалуйста, уточните свой вопрос или '
+        #                                       'спросите по-другому.', reply_markup=general_menu(),
+        #                      parse_mode='Markdown') # TODO вероятно, эта часть бессмыслена
 
     found_result = False
     global user_id
-    # message.text = find_abbreviation(message.text.upper())
+
     message.text = find_exception(message.text.lower())
     message.text = find_garbage(message.text)
 
@@ -255,6 +221,12 @@ def conversation(message):
         bot.send_message(157758328, "Ответ пользователю отправлен успешно")
         found_result = True  # вопрос checking_answer() для строго соответсвия вынесен в конец скрипта
 
+    if 'телефон' == message.text.lower():  # TODO наверное не очень семантично здесь размещать обработку этого запроса
+        bot.send_message(message.chat.id, 'Чей именно телефон Вас инетересует?',
+                         reply_markup=general_menu())
+        bot.send_message(157758328, "Попросили уточнить чей телефон нужен")
+        return
+
     if len(changed(message.text)) <= 2:
         bot.send_message(message.chat.id, 'Слишком короткий запрос. Пожалуйста, чуть подробнее, или измените запрос.',
                          reply_markup=general_menu())
@@ -272,10 +244,11 @@ def conversation(message):
                     found_result = True
                 else:  # так надо 2 раза
                     try:
-                        bot.send_message(message.chat.id, baza.dictionary[id]['answer'], reply_markup=general_menu(), # TODO если вешается бот то ругается на ключ answer в 260 строке
-                                     parse_mode='Markdown')
+                        bot.send_message(message.chat.id, baza.dictionary[id]['answer'], reply_markup=general_menu(),
+                                         # TODO если вешается бот то ругается на ключ answer в 260 строке
+                                         parse_mode='Markdown')
                         bot.send_message(157758328,
-                                     "1 - Информация выдана в строгом соответствии по запросу: " + message.text)
+                                         "1 - Информация выдана в строгом соответствии по запросу: " + message.text)
                     except Exception as exc:
                         bot.send_message(157758328,
                                          f"при запросе '{message.text}' при поиске в строгом соответствии возникала ошибка {type(exc).__name__} {exc} ")
@@ -297,15 +270,14 @@ def conversation(message):
                              'Не удалось найти ответ. Попробуйте упростить свой запрос.',
                              reply_markup=general_menu(),
                              parse_mode='Markdown')
-            bot.send_message(157758328, f"при запросе '{message.text}' при поиске в случайном порядке возникала ошибка {type(exc).__name__} {exc} ")
+            bot.send_message(157758328,
+                             f"при запросе '{message.text}' при поиске в случайном порядке возникала ошибка {type(exc).__name__} {exc} ")
         # !!!!!! ЕСЛИ ВОЗНИКАЕТ ОШИБКА KEY ERROR то вместо квадратных скобок ключа словаря, лучше использовать .get('key')
 
     if not found_result:  # если ничего не найдено
         user_id = message.from_user.id
-        message.text = "Пользователь {0.first_name} {0.last_name} @{0.username} id{0.id} не смог найти запрос:\n" \
-                           .format(message.from_user, message.from_user, message.from_user,
-                                   message.from_user) + message.text
-        bot.send_message(157758328, message.text)
+        if len(message.text) > 6:  # для отправки развернутой аббревиатуры, в случае если расшифровка была найдена, но
+            bot.send_message(message.chat.id, message.text)  # подробного ответа на нее не было выдано. Расшифровывает.
         bot.send_message(message.chat.id,
                          '{0.first_name}, я не знаю, что на это ответить. Попробуйте изменить или упростить свой запрос.\n\n'
                          'Ваш неудачный запрос уже направлен разработчику на рассмотрение, в ближайшее время он внесёт ответ на него.\n'
@@ -315,14 +287,53 @@ def conversation(message):
                          'разработчику @DeveloperAzarov.\n'
                          'Либо Вы можете самостоятельно внести информацию в базу данных, нажав кнопку "Добавить информацию".'.format(
                              message.from_user, bot.get_me()), reply_markup=general_menu())
-    # if found_result:  # две кнопки для списка ответов строгого соответствия
-    #     checking_answer("Всё верно? Есть ошибки?")
+        found_result = "Пользователь {0.first_name} {0.last_name} @{0.username} id{0.id} не смог найти запрос:\n" \
+                           .format(message.from_user, message.from_user, message.from_user,
+                                   message.from_user) + message.text
+        bot.send_message(157758328, found_result)
 
 
+bot.polling(none_stop=True)  # запускает бота
+
+# if found_result:  # две кнопки для списка ответов строгого соответствия
+#     checking_answer("Всё верно? Есть ошибки?")
 # ReplyKeyboardMarkup - не привязывается к сообщению
 # InlineKeyboardMarkup — Она привязывается к сообщению, с которым была отправлена.
 # user_id = message.from_user.id - извлечение id пользователя
 # bot.reply_to(message, message.text) - ответить переслав сообщение обратно
 # print(message) # распечатывает всю информацию о написавшем человеке и историю сообщений в виде словаря
 # print(message.text) # message.text - введенное сообщение
-bot.polling(none_stop=True)  # запускает бота
+
+# def adding_information():
+#     """Вносит информацию пользователя в бащу данных и перезаписывает файл с базой данных."""
+#     bot.send_message(message.chat.id, 'Для начала добавьте вопрос. Начните свое сообщение со слова "внести вопрос:". Например:\n\n внести вопрос: номер телефона представителя в Москве')
+
+# def correcting_button():  # две кнопки прикрепляемые к выдаваемому ответу
+#     markup = types.InlineKeyboardMarkup()
+#     markup.row_width = 2
+#     markup.add(types.InlineKeyboardButton("Исправить", callback_data="Исправить ответ"),
+#                types.InlineKeyboardButton("Всё верно", callback_data="Всё верно"))
+#     return markup
+
+# @bot.callback_query_handler(func=lambda call: True)  # Хендлер для работы с существующими сообщениями????
+# def callback_query(call):
+#     answer = ''
+#     if call.data == "Исправить ответ":
+#         answer = 'В следующем сообщении еще раз коротко напишите свой вопрос и свой вариант ответа в произвольной ' \
+#                  'форме, но начинаться Ваше сообщение должно со слова "правка", например:\n\n Правка: добавочный ' \
+#                  'номер бухгалетрии 1017.\n\n Пожалуйста, не забывайте пояснять к какому вопросу правка ' \
+#                  '(не просто 1017). Присланное Вами сообщение пока не привязывается к ранее выданному ответу.'
+#     elif call.data == "Всё верно":
+#         bot.send_message(157758328, "Пользователь сообщил, что всё верно")
+#         answer = choice(baza.best_wishes)   # TODO вытащить id сообщения до кнопок
+#     bot.send_message(call.message.chat.id, answer)  # может только одну функцию вызывать # если взаимодействуем с инлайном и нужно отправить текстовое сообщение в ответ, то используем не chat.id, а call.message.chat.id, если хотим отправить короткое уведомление, то bot.answer_callback_query(call.id, "Answer is Yes")
+#     bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id)     # убирает клаиватуру после нажатия кнопок
+#     bot.delete_message(call.message.chat.id, call.message.message_id)
+# if call.data == "Внести информацию":
+#     send = bot.send_message(message.chat.id, 'Введи город')
+#     bot.register_next_step_handler(send, call)
+#     # log(message)
+#     # answer = "Следующее сообщение начните со слова: внести"
+
+# def checking_answer(check_answer=None):  # выводит эти кнопки только если в строгом соответсвии было выдано
+#     bot.send_message(message.chat.id, check_answer, reply_markup=correcting_button())
