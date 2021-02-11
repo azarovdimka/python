@@ -1,18 +1,17 @@
 # -*- coding: utf8 -*-
+# !/usr/bin/env python3
+try:
+    import settings
+except ImportError:
+    exit('DO cp settings.py.default settings.py and set token')  # TODO не получается скопировать так чтобы работало
 
-import \
-    telebot  # чтобы работал telebot - нужно удалить telebot, и установить Pytelegrambotapi но при этом написанным оставить telebot
+import telebot  # чтобы работал telebot - удалить telebot, и установить Pytelegrambotapi, написанным оставить telebot
 from telebot.types import InlineKeyboardMarkup
 import baza as baza
 from telebot import types
 from random import choice
-import config
 
-bot = telebot.TeleBot(config.api)
-
-
-# в пин закрепить слоган
-# TODO написать новые 4 команды в каждом новом хендлере
+bot = telebot.TeleBot(settings.TOKEN)
 
 
 def general_menu():
@@ -34,7 +33,7 @@ def welcome(message):
     bot.send_sticker(message.chat.id, sti)
 
     bot.send_message(message.chat.id,
-                     'Привет, {0.first_name}!'  # имя пользователя и другие его учетные данные извлекаются только при помощи 0.first_name}. и format(message.from_user, bot.get_me())
+                     'Привет, {0.first_name}!'
                      '\nЯ робот, призванный отвечать на вопросы бортпроводников: '
                      'вопросы к МКК и КПК, часы работы и номера телефонов отделов и супрервайзеров, '
                      'настройки почты, аббревиатуры, инструктажи... '
@@ -58,19 +57,20 @@ def conversation(message):
 
     def open():
         """Предлагает открыть сайт"""
-        download_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()  # что такое двоеточие и что оно дает??? reformat сам так сделал
+        download_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()  # что такое двоеточие и что оно дает???
         btn = types.InlineKeyboardButton(text="ОТКРЫТЬ", url=baza.dictionary[id]['link'])
         download_btn.add(btn)
-        bot.send_message(message.chat.id, baza.dictionary[id]['answer'], reply_markup=download_btn,
+        bot.send_message(message.chat.id, baza.dictionary[id].get('answer'), reply_markup=download_btn,
                          parse_mode='Markdown')
         bot.send_message(157758328, "Предложили ОТКРЫТЬ: " + message.text)
 
     def download():
         """Предлагает скачать файл"""
         download_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()
-        btn = types.InlineKeyboardButton(text="СКАЧАТЬ", url=baza.dictionary[id]['link'])
+        btn = types.InlineKeyboardButton(text="СКАЧАТЬ", url=baza.dictionary[id][
+            'link'])  # в кнопку нельзя передавать содержание ключа 'link' ссылку методом .get('link') возникает ошибка
         download_btn.add(btn)
-        bot.send_message(message.chat.id, baza.dictionary[id]['answer'], parse_mode='Markdown',
+        bot.send_message(message.chat.id, baza.dictionary[id].get('answer'), parse_mode='Markdown',
                          reply_markup=download_btn)
         bot.send_message(157758328, "Предложили скачать: " + message.text)
 
@@ -136,8 +136,8 @@ def conversation(message):
         if len(results) < 8:  # выдает ответы при оптимальном количстве результатов
             for each_answer in results:  # TODO не прикрепляет кнопки к ответу, если выдается ответ в случайном порялке
                 if 'скачать' in question:  # так надо 2 раза
-                    download()
-                    found_result = True
+                    download()  # TODO при запросе 'ответы на английский' в нестрогом соответствии возникала ошибка KeyError 'link' кнопка не крепится если ключ в квадратных скобках
+                    found_result = True  # TODO при запросе 'ответы на английский' в нестрогом соответствии возникала ошибка ApiTelegramException A request to the Telegram API was unsuccessful. Error code: 400 Description: Bad Request: can't parse inline keyboard button: Text buttons are unallowed in the inline keyboard? если ждля извлечения ключа использован метод .get('link')
                 elif 'просмотреть' in question:  # так надо 2 раза
                     open()
                     found_result = True
@@ -156,8 +156,8 @@ def conversation(message):
     found_result = False
     global user_id
 
-    message.text = find_exception(message.text.lower())
     message.text = find_garbage(message.text)
+    message.text = find_exception(message.text.lower())
 
     if message.chat.type == 'private':
         if message.text.lower() in baza.greetings:
@@ -207,7 +207,6 @@ def conversation(message):
         return
 
     if "ответ пользователю" in message.text.lower():
-        # todo ОБНОВИ СЕРВЕР
         bot.send_message(user_id, message.text[18:], reply_markup=general_menu())
         bot.send_message(157758328, "Ответ пользователю отправлен успешно")
         found_result = True  # вопрос checking_answer() для строго соответсвия вынесен в конец скрипта
@@ -235,8 +234,8 @@ def conversation(message):
                     found_result = True
                 else:  # так надо 2 раза
                     try:
-                        bot.send_message(message.chat.id, baza.dictionary[id]['answer'], reply_markup=general_menu(),
-                                         # TODO если вешается бот то ругается на ключ answer в 260 строке
+                        bot.send_message(message.chat.id, baza.dictionary[id].get('answer'),
+                                         reply_markup=general_menu(),
                                          parse_mode='Markdown')
                         bot.send_message(157758328,
                                          "1 - Информация выдана в строгом соответствии по запросу: " + message.text)
@@ -249,21 +248,19 @@ def conversation(message):
         try:
             found_result = find_non_strict_accordance(message)
         except Exception as exc:
-            bot.send_message(157758328,
-                             f"при запросе '{message.text}' в нестрогом соответсвии возникала ошибка {type(exc).__name__} {exc}")
+            bot.send_message(157758328,  # TODO тго скачать ищет, скачать тго не ищет keyerror 'link'
+                             f"при запросе '{message.text}' в нестрогом соответствии возникала ошибка {type(exc).__name__} {exc}")
 
     if not found_result:  # ИЩЕТ В ЛЮБОМ ПОРЯДКЕ В РАМКАХ ВОПРОСА
         try:
             found_result = find_in_random_order(message)
         except Exception as exc:
-            # TODO придумать как изменить запрос (персетавить местами слова??) чтобы обойти ошибку
             bot.send_message(message.chat.id,
                              'Не удалось найти ответ. Попробуйте упростить свой запрос.',
                              reply_markup=general_menu(),
                              parse_mode='Markdown')
             bot.send_message(157758328,
                              f"при запросе '{message.text}' при поиске в случайном порядке возникала ошибка {type(exc).__name__} {exc} ")
-        # !!!!!! ЕСЛИ ВОЗНИКАЕТ ОШИБКА KEY ERROR то вместо квадратных скобок ключа словаря, лучше использовать .get('key')
 
     if not found_result:  # если ничего не найдено
         user_id = message.from_user.id
@@ -286,6 +283,7 @@ def conversation(message):
 
 bot.polling(none_stop=True)  # запускает бота
 
+# !!!!!! ЕСЛИ ВОЗНИКАЕТ ОШИБКА KEYERROR то вместо квадратных скобок ключа словаря, лучше использовать .get('key')
 # def find_abbreviation(message):
 #     """проверяет по спику аббревиатур, чтобы выдать развернутое значение аббревиатуры"""
 #     for id in baza.abbreviations:
