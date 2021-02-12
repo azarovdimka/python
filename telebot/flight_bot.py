@@ -41,6 +41,14 @@ def welcome(message):
                      .format(message.from_user, bot.get_me()), reply_markup=general_menu())
 
 
+def count_users(user):
+    """Считает количество оригинальных пользователей, подключившихся к телеграм-боту в последнее время.
+    Дозаписывает в конец файла user_base.txt."""
+    user_set = set(user)
+    with open('user_base.txt', mode='a+', encoding='utf-8') as f:
+        print(user_set, file=f)
+
+
 def find(question, user_request):
     """Выявляет степень максимального соответсвия искомых слов запросу в каждом результате: считает количество совпавших
     слов и возвращает счетчик."""
@@ -111,8 +119,7 @@ def conversation(message):
                 else:  # так надо 2 раза
                     bot.send_message(message.chat.id, baza.dictionary[id]['answer'], reply_markup=general_menu(),
                                      parse_mode='Markdown')
-                    bot.send_message(157758328,
-                                     "2 - информация выдана не в строгом соответсвии по запросу: " + message.text)
+                    bot.send_message(157758328, "2 - ответ выдан не в строгом соответсвии по запросу: " + message.text)
                 found_result = True
                 return found_result
 
@@ -145,7 +152,7 @@ def conversation(message):
                     bot.send_message(message.chat.id, each_answer, reply_markup=general_menu(),
                                      parse_mode='Markdown')
                     found_result = True
-                bot.send_message(157758328, "3 - выдана информация в случайном порядке по запросу: " + message.text)
+                bot.send_message(157758328, "3 - выдана ответ в случайном порядке по запросу: " + message.text)
                 return found_result
 
         # if len(results) >= 8:  # не выдает ответы если их 8, крайне редко когда достигается
@@ -155,6 +162,8 @@ def conversation(message):
 
     found_result = False
     global user_id
+
+    count_users(message.from_user.id)
 
     message.text = find_garbage(message.text)
     message.text = find_exception(message.text.lower())
@@ -183,26 +192,25 @@ def conversation(message):
         correct = "Пользователь {0.first_name} @{0.username} id{0.id} предлоджил правку:\n" \
                       .format(message.from_user, message.from_user, message.from_user) + message.text[10:]
         bot.send_message(message.chat.id, 'Ваша информация успешно отправлена. После ее рассмотрения будут внесены '
-                                          'соответсвующие изменения. \n'
-                                          'Большое спасибо за Ваше участие в улучшении Телеграм-Бота!',
-                         reply_markup=general_menu())
+                                          'соответсвующие изменения. \n Большое спасибо за Ваше участие в улучшении '
+                                          'Телеграм-Бота!', reply_markup=general_menu())
         bot.send_message(157758328, correct)
         return
 
     if "добавить  информацию" in message.text.lower():  # TODO идея использовать метод словаря .setdefault() который будет добавлять ключ со значением в словарь при его отсутствии
         bot.send_message(message.chat.id,
                          # TODO либо создавать новый словарь и методом в питон 3.9  а|b сливать его с существующим
-                         'Для добавления своей информации в телеграм-бот, начните свое сообщение со слова "предложить:". Например:\n\nПредложить: '
-                         'номер телефона представителя в Москве 8(495)123-45-67', reply_markup=general_menu())
+                         'Для добавления своей информации в телеграм-бот, начните свое сообщение со слова "предложить:". '
+                         'Например:\n\nПредложить: номер телефона представителя в Москве 8(495)123-45-67',
+                         reply_markup=general_menu())
         return
 
     if 'предложить' in message.text.lower():
         correct = "Пользователь {0.first_name} @{0.username} id{0.id} предлоджил информацию:\n" \
                       .format(message.from_user, message.from_user, message.from_user) + message.text[11:]
         bot.send_message(message.chat.id, 'Ваша информация успешно отправлена. После ее рассмотрения будут внесены '
-                                          'соответсвующие изменения. \n'
-                                          'Большое спасибо за Ваше участие в улучшении Телеграм-Бота!',
-                         reply_markup=general_menu())
+                                          'соответсвующие изменения. \n Большое спасибо за Ваше участие в улучшении '
+                                          'Телеграм-Бота!', reply_markup=general_menu())
         bot.send_message(157758328, correct)
         return
 
@@ -212,8 +220,7 @@ def conversation(message):
         found_result = True  # вопрос checking_answer() для строго соответсвия вынесен в конец скрипта
 
     if 'телефон' == message.text.lower():  # TODO наверное не очень семантично здесь размещать обработку этого запроса
-        bot.send_message(message.chat.id, 'Чей именно телефон Вас инетересует?',
-                         reply_markup=general_menu())
+        bot.send_message(message.chat.id, 'Чей именно телефон Вас инетересует?', reply_markup=general_menu())
         bot.send_message(157758328, "Попросили уточнить чей телефон нужен")
         return
 
@@ -240,27 +247,26 @@ def conversation(message):
                         bot.send_message(157758328,
                                          "1 - Информация выдана в строгом соответствии по запросу: " + message.text)
                     except Exception as exc:
-                        bot.send_message(157758328,
-                                         f"при запросе '{message.text}' при поиске в строгом соответствии возникала ошибка {type(exc).__name__} {exc} ")
+                        bot.send_message(157758328, f"при запросе '{message.text}' при поиске в строгом соответствии "
+                                                    f"возникала ошибка {type(exc).__name__} {exc} ")
                     found_result = True
 
     if not found_result:  # НЕСТРОГОЕ СООТВЕТСВИЕ
         try:
             found_result = find_non_strict_accordance(message)
-        except Exception as exc:
-            bot.send_message(157758328,  # TODO тго скачать ищет, скачать тго не ищет keyerror 'link'
-                             f"при запросе '{message.text}' в нестрогом соответствии возникала ошибка {type(exc).__name__} {exc}")
+        except Exception as exc:  # TODO тго скачать ищет, скачать тго не ищет keyerror 'link' с ТГО проблема подогнана под ответ, но сама проблема не устранена
+            bot.send_message(157758328, f"при поиске '{message.text}' в нестрогом соответствии возникала ошибка "
+                                        f"{type(exc).__name__} {exc}")
 
     if not found_result:  # ИЩЕТ В ЛЮБОМ ПОРЯДКЕ В РАМКАХ ВОПРОСА
         try:
             found_result = find_in_random_order(message)
         except Exception as exc:
-            bot.send_message(message.chat.id,
-                             'Не удалось найти ответ. Попробуйте упростить свой запрос.',
+            bot.send_message(message.chat.id, 'Не удалось найти ответ. Попробуйте упростить свой запрос.',
                              reply_markup=general_menu(),
                              parse_mode='Markdown')
-            bot.send_message(157758328,
-                             f"при запросе '{message.text}' при поиске в случайном порядке возникала ошибка {type(exc).__name__} {exc} ")
+            bot.send_message(157758328, f"при поиске '{message.text}' в случайном порядке возникала ошибка "
+                                        f"{type(exc).__name__} {exc} ")
 
     if not found_result:  # если ничего не найдено
         user_id = message.from_user.id
