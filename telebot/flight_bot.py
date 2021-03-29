@@ -1,15 +1,12 @@
 # -*- coding: utf8 -*-
 # !/usr/bin/env python3
-try:
-    import settings
-except ImportError:
-    exit('DO cp settings.py.default settings.py and set token')  # TODO не получается скопировать так чтобы работало
 
 import telebot  # чтобы работал telebot - удалить telebot, и установить Pytelegrambotapi, написанным оставить telebot
 from telebot.types import InlineKeyboardMarkup
 import baza as baza
 from telebot import types
 from random import choice
+import settings
 
 bot = telebot.TeleBot(settings.TOKEN)
 
@@ -41,14 +38,6 @@ def welcome(message):
                      .format(message.from_user, bot.get_me()), reply_markup=general_menu())
 
 
-def count_users(user):
-    """Считает количество оригинальных пользователей, подключившихся к телеграм-боту в последнее время.
-    Дозаписывает в конец файла user_base.txt."""
-    user_set = set(user)
-    with open('user_base.txt', mode='a+', encoding='utf-8') as f:
-        print(user_set, file=f)
-
-
 def find(question, user_request):
     """Выявляет степень максимального соответсвия искомых слов запросу в каждом результате: считает количество совпавших
     слов и возвращает счетчик."""
@@ -68,15 +57,15 @@ def conversation(message):
         download_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()  # что такое двоеточие и что оно дает???
         btn = types.InlineKeyboardButton(text="ОТКРЫТЬ", url=baza.dictionary[id]['link'])
         download_btn.add(btn)
-        bot.send_message(message.chat.id, baza.dictionary[id].get('answer'), reply_markup=download_btn,
-                         parse_mode='Markdown')
+        bot.send_message(message.chat.id, baza.dictionary[id].get('answer'), parse_mode='Markdown',
+                         reply_markup=download_btn)
         bot.send_message(157758328, "Предложили ОТКРЫТЬ: " + message.text)
 
     def download():
         """Предлагает скачать файл"""
         download_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()
         btn = types.InlineKeyboardButton(text="СКАЧАТЬ", url=baza.dictionary[id][
-            'link'])  # в кнопку нельзя передавать содержание ключа 'link' ссылку методом .get('link') возникает ошибка
+            'link'])  # TODO возникает ошибка в кнопку нельзя передавать содержание ключа 'link' ссылку методом .get('link') [id]['link'] возникает ошибка
         download_btn.add(btn)
         bot.send_message(message.chat.id, baza.dictionary[id].get('answer'), parse_mode='Markdown',
                          reply_markup=download_btn)
@@ -112,7 +101,7 @@ def conversation(message):
         for id in baza.dictionary:
             question = baza.dictionary[id]['question'].lower()
             if changed(message.text) in changed(question):
-                if 'скачать' in question:  # так надо 2 раза
+                if 'скачать' in baza.dictionary[id]['question'].lower():  # так надо 2 раза
                     download()
                 elif 'просмотреть' in question:  # так надо 2 раза
                     open()
@@ -132,39 +121,29 @@ def conversation(message):
         for id in baza.dictionary:
             question = baza.dictionary[id]['question'].lower()
             matches = find(question,
-                           changed_user_request)  # matches Принимает число соответсвий слов запроса вопросу в базе для каждого id мы проверяем кол-во соотв-х слов
+                           changed_user_request)  # в matches сохраняется число соответсвий слов запроса вопросу в базе для каждого id мы проверяем кол-во соотв-х слов
             if matches == max_of_found_words and matches != 0:  # если количество соответсвий равно максимум
                 results.append(baza.dictionary[id].get('answer'))
-            if matches > max_of_found_words:  # если соответсвий нашли еще больше итогого счетчика максимума
+            if matches > max_of_found_words:  # если соответсвий нашли еще больше итогового счетчика максимума
                 results.clear()  # очищаем список результатов
                 max_of_found_words = matches  # в максимум записываем новую цифру соответсвия
-                results.append(baza.dictionary[id].get('answer'))  # в результаты добавляем answer
+                results.append(baza.dictionary[id].get('answer'))
+                link = baza.dictionary[id].get('link')  # в результаты добавляем answer
 
         if len(results) < 8:  # выдает ответы при оптимальном количстве результатов
-            for each_answer in results:  # TODO не прикрепляет кнопки к ответу, если выдается ответ в случайном порялке
-                if 'скачать' in question:  # так надо 2 раза
-                    download()  # TODO при запросе 'ответы на английский' в нестрогом соответствии возникала ошибка KeyError 'link' кнопка не крепится если ключ в квадратных скобках
-                    found_result = True  # TODO при запросе 'ответы на английский' в нестрогом соответствии возникала ошибка ApiTelegramException A request to the Telegram API was unsuccessful. Error code: 400 Description: Bad Request: can't parse inline keyboard button: Text buttons are unallowed in the inline keyboard? если ждля извлечения ключа использован метод .get('link')
-                elif 'просмотреть' in question:  # так надо 2 раза
-                    open()
-                    found_result = True
-                else:  # так надо 2 раза
-                    bot.send_message(message.chat.id, each_answer, reply_markup=general_menu(),
-                                     parse_mode='Markdown')
-                    found_result = True
-                bot.send_message(157758328, "3 - выдана ответ в случайном порядке по запросу: " + message.text)
+            for each_answer in results:  # TODO не прикрепляет кнопки к ответу, если выдается ответ в случайном порядке
+                bot.send_message(message.chat.id, each_answer, reply_markup=general_menu(), parse_mode='Markdown')
+                if link:
+                    bot.send_message(message.chat.id, link, reply_markup=general_menu(), parse_mode='Markdown')
+                found_result = True
+                report = "3 - Пользователю {0.first_name} {0.last_name} @{0.username} id{0.id} выдан ответ в случайном порядке по запросу:\n" \
+                             .format(message.from_user, message.from_user, message.from_user,
+                                     message.from_user) + message.text
+                bot.send_message(157758328, report)
                 return found_result
 
-        # if len(results) >= 8:  # не выдает ответы если их 8, крайне редко когда достигается
-        #     bot.send_message(message.chat.id, 'Найдено слишком много ответов. Пожалуйста, уточните свой вопрос или '
-        #                                       'спросите по-другому.', reply_markup=general_menu(),
-        #                      parse_mode='Markdown') # TODO вероятно, эта часть бессмыслена
-
-    found_result = False
+    found_result = False  # TODO сделать чтобы запрос превр в список слов, и обрабат-е вопрос в словаре тоже в список и проверялось количество совпадений, но как-то тогда надо отделать хорошие соотсевтвия от плохих и опредлять сколько выдавать значений в результат. Третья ступень поиска так и ищет по списку, может так и оставить как есть, но тогда первые способы находят не все что нужно - так ли это - проверить
     global user_id
-
-    count_users(message.from_user.id)
-
     message.text = find_garbage(message.text)
     message.text = find_exception(message.text.lower())
 
@@ -200,14 +179,14 @@ def conversation(message):
     if "добавить  информацию" in message.text.lower():  # TODO идея использовать метод словаря .setdefault() который будет добавлять ключ со значением в словарь при его отсутствии
         bot.send_message(message.chat.id,
                          # TODO либо создавать новый словарь и методом в питон 3.9  а|b сливать его с существующим
-                         'Для добавления своей информации в телеграм-бот, начните свое сообщение со слова "предложить:". '
-                         'Например:\n\nПредложить: номер телефона представителя в Москве 8(495)123-45-67',
+                         'Для добавления своей информации в телеграм-бот, начните свое сообщение со слова "добавить:". '
+                         'Например:\n\nДобавить: номер телефона представителя в Москве 8(495)123-45-67',
                          reply_markup=general_menu())
         return
 
-    if 'предложить' in message.text.lower():
+    if 'добавить' in message.text.lower():  # предложить заменили на добавить так как пересекается с предложить вино на английском языке
         correct = "Пользователь {0.first_name} @{0.username} id{0.id} предлоджил информацию:\n" \
-                      .format(message.from_user, message.from_user, message.from_user) + message.text[11:]
+                      .format(message.from_user, message.from_user, message.from_user) + message.text[8:]
         bot.send_message(message.chat.id, 'Ваша информация успешно отправлена. После ее рассмотрения будут внесены '
                                           'соответсвующие изменения. \n Большое спасибо за Ваше участие в улучшении '
                                           'Телеграм-Бота!', reply_markup=general_menu())
@@ -217,14 +196,20 @@ def conversation(message):
     if "ответ пользователю" in message.text.lower():
         bot.send_message(user_id, message.text[18:], reply_markup=general_menu())
         bot.send_message(157758328, "Ответ пользователю отправлен успешно")
-        found_result = True  # вопрос checking_answer() для строго соответсвия вынесен в конец скрипта
+        return
+
+    if "написать пользователю по id" in message.text.lower():
+        mess = message.text.split()
+        bot.send_message(int(mess[4]), ' '.join(mess[5:]), reply_markup=general_menu())
+        bot.send_message(157758328, "Сообщение пользователю отправлен успешно")
+        return
 
     if 'телефон' == message.text.lower():  # TODO наверное не очень семантично здесь размещать обработку этого запроса
         bot.send_message(message.chat.id, 'Чей именно телефон Вас инетересует?', reply_markup=general_menu())
         bot.send_message(157758328, "Попросили уточнить чей телефон нужен")
         return
 
-    if len(changed(message.text)) <= 2:
+    if len(message.text) <= 2:  # было changed(message.text) - есть ли смысл вернуть чтобы не сыпал на короткие запросы
         bot.send_message(message.chat.id, 'Слишком короткий запрос. Пожалуйста, чуть подробнее, или измените запрос.',
                          reply_markup=general_menu())
         return
@@ -269,12 +254,13 @@ def conversation(message):
                                         f"{type(exc).__name__} {exc} ")
 
     if not found_result:  # если ничего не найдено
+
         user_id = message.from_user.id
         if len(message.text) > 6:  # для отправки развернутой аббревиатуры, в случае если расшифровка была найдена, но
             bot.send_message(message.chat.id, message.text)  # подробного ответа на нее не было выдано. Расшифровывает.
         bot.send_message(message.chat.id,
                          '{0.first_name}, я не знаю, что на это ответить. Попробуйте изменить или упростить свой запрос.\n\n'
-                         'Ваш неудачный запрос уже направлен разработчику, в ближайшее время он внесёт ответ на него.\n'
+                         'Ваш неудачный запрос уже направлен разработчику, в ближайшее время он добавит ответ на него.\n'
                          'Если у Вас появится какая-то информация на этот счёт - сообщите.\n'
                          '\n Если Вы заметите ошибки, устаревшую информцию '
                          'или обнаружите факты некорректной работы бота - просьба написать об этом также  '
@@ -288,6 +274,20 @@ def conversation(message):
 
 
 bot.polling(none_stop=True)  # запускает бота
+
+# def count_users(user, message): #  как сделать чтобы только новых пользователей записывал в файл
+#     """Считает количество оригинальных пользователей, подключившихся к телеграм-боту в последнее время.
+#     Дозаписывает в конец файла user_base.txt."""
+#     user_set = time.strftime('%d.%m.%Y г., %H:%M (+8)'), user.id, user.first_name, '@'+user.username, message
+#     with open('user_base.txt', mode='a+', encoding='utf-8') as f:
+#         if user_set not in f:
+#             print(*user_set, file=f)
+
+
+# if len(results) >= 8:  # не выдает ответы если их 8, крайне редко когда достигается
+#     bot.send_message(message.chat.id, 'Найдено слишком много ответов. Пожалуйста, уточните свой вопрос или '
+#                                       'спросите по-другому.', reply_markup=general_menu(),
+#                      parse_mode='Markdown')
 
 # !!!!!! ЕСЛИ ВОЗНИКАЕТ ОШИБКА KEYERROR то вместо квадратных скобок ключа словаря, лучше использовать .get('key')
 # def find_abbreviation(message):
