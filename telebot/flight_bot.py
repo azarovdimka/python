@@ -8,10 +8,8 @@ from telebot import types
 from random import choice
 import settings
 import dict_users
-import second_dict
 import getplan
 import getnalet
-import os.path
 import notificator
 import threading
 import time
