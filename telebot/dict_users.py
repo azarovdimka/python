@@ -1692,7 +1692,7 @@ users = {
                 'plan_notify': True,
                 'status': 'do not disturb',
                 'autoconfirm': True,
-                'messaging': True},
+                'messaging': False},
     1630023445: {'surname': 'Камлева',
                  'name': 'Эллина',
                  'city': 'Санкт-Петербург',
