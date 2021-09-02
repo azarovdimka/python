@@ -16,6 +16,7 @@ import time
 import get_permissions
 import traceback
 import flight_counter
+import check_news
 
 bot = telebot.TeleBot(settings.TOKEN)
 
@@ -94,6 +95,26 @@ def check_permissions_for_everyone():
 
 # permissions_thread = threading.Thread(target=check_permissions_for_everyone) #TODO закомментирвоать
 # permissions_thread.start()
+
+
+def check_new_documents():
+    document_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()  # что такое двоеточие и что оно дает???
+    btn = types.InlineKeyboardButton(text="Открыть подробнее в OpenSky",
+                                     url='https://edu.rossiya-airlines.com/ready/userReady-1/')
+    document_btn.add(btn)
+
+    try:
+        new_document = check_news.parser(157758328)
+        bot.send_message(157758328, new_document, reply_markup=document_btn)  # TODO закомментировать
+    except Exception:
+        bot.send_message(157758328,
+                         f'не удалось отправить сообщение о новых документах, произошла ошибка: {traceback.format_exc()}')
+
+    time.sleep(2000)
+
+
+check_new_documents_thread = threading.Thread(target=check_new_documents)  # TODO закомментирвоать
+check_new_documents_thread.start()
 
 
 def messaging(message):
