@@ -100,12 +100,13 @@ def check_permissions_for_everyone():
 def check_new_documents():
     document_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()  # что такое двоеточие и что оно дает???
     btn = types.InlineKeyboardButton(text="Открыть подробнее в OpenSky",
-                                     url='https://edu.rossiya-airlines.com/ready/userReady-1/')
+                                     url='https://edu.rossiya-airlines.com/')
     document_btn.add(btn)
 
     try:
         new_document = check_news.parser(157758328)
-        bot.send_message(157758328, new_document, reply_markup=document_btn)  # TODO закомментировать
+        if new_document is not None:
+            bot.send_message(157758328, new_document, reply_markup=document_btn)  # TODO закомментировать
     except Exception:
         bot.send_message(157758328,
                          f'не удалось отправить сообщение о новых документах, произошла ошибка: {traceback.format_exc()}')
