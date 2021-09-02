@@ -1989,7 +1989,7 @@ users = {
                 "link": "@s7hak",
                 "exp_date": "31.12.22",
                 "tab_number": "125498",
-                "password": "",
+                "password": "Sveta030498",
                 "access": True,
                 "plan_notify": True,
                 "autoconfirm": True,
