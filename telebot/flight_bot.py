@@ -145,7 +145,7 @@ def messaging(message):
                 users_off_list.append(fio)
                 counter_errors += 1
                 bot.send_message(157758328,
-                                 f"Вероятно, отключились {counter_errors} чел.: {', '.join(users_off_list)}.")  # TODO временно
+                                 f"Вероятно, отключились {counter_errors} чел.: {', '.join(users_off_list)} ошибка {traceback.format_exc()}.")  # TODO временно
         else:
             continue
     return
