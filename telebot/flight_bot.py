@@ -51,13 +51,15 @@ def cycle_plan_notify():
             except Exception:  # если случилась ошибка при отправке сообщений пользователю
                 users_off_list.append(fio)
                 counter_errors += 1
-                error = f'{traceback.format_exc()}'
+                error = f'{traceback.format_exc()}'  # TODO в этом месте надо предусмотреть, чтио ошибок может быть несколько от разных пользователей: добавлять в список ошибки? только нужны сами ошибки а не весь путь
+                continue
         if sent_plan_counter > 0:
             bot.send_message(157758328, f'проверено пользователей {counter_users}')
             bot.send_message(157758328, f'план выслан {sent_plan_counter} пользователям: {", ".join(sent_plan_list)}')
             bot.send_message(157758328, f'найдено ошибок {counter_errors}')
             if len(users_off_list) != 0:
                 bot.send_message(157758328, f'не удалось отправить план: {", ".join(users_off_list)}: {error}')
+
         time.sleep(300)
 
 
@@ -86,6 +88,7 @@ def check_permissions_for_everyone():
             except Exception:
                 bot.send_message(157758328,
                                  f'Пользователю {fio} не удалось отправить сообщение об истекающих допусках, произошла ошибка: {traceback.format_exc()}')
+                continue
     time.sleep(3000)
 
 
@@ -244,10 +247,14 @@ def find(question, user_request):
 @bot.message_handler(content_types=["text"])  #
 def conversation(message):
     """Модуль для общения и взаимодействия с пользователем. Декоратор будет вызываться когда боту напишут текст."""
-
-    name = dict_users.users[message.chat.id]['name']
-    surname = dict_users.users[message.chat.id]['surname']
-    password = dict_users.users[message.chat.id]['password']
+    try:
+        name = dict_users.users[message.chat.id]['name']
+        surname = dict_users.users[message.chat.id]['surname']
+        password = dict_users.users[message.chat.id]['password']
+    except Exception:
+        bot.send_message(message.chat.id, 'Доступ Вам пока не предоставлен, пожалуйста, ожидайте.')
+        bot.send_message(157758328, 'Пользователь попытался что-то нажать до предоставления доступа.')
+        return
 
     def photo():
         """Отправляет пользовтелю информацию с фото"""
