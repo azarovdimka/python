@@ -1998,7 +1998,7 @@ users = {
     1429522051: {"surname": "Янова",
                  "name": "Татьяна",
                  "city": "Санкт-Петербург",
-                 "link": "@s7hak",
+                 "link": "",
                  "exp_date": "30.11.22",
                  "tab_number": "88686",
                  "password": "Salasana06",
