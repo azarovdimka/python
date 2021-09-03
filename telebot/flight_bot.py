@@ -274,6 +274,7 @@ def conversation(message):
     name = dict_users.users[message.chat.id]['name']
     surname = dict_users.users[message.chat.id]['surname']
     password = dict_users.users[message.chat.id]['password']
+    fio = f'{name} {surname}'
 
     def photo():
         """Отправляет пользовтелю информацию с фото"""
@@ -349,27 +350,34 @@ def conversation(message):
 
     def find_non_strict_accordance(message):
         """2 - Ищет не в строгом соответсвии."""
-        for id in baza.dictionary:
-            question = baza.dictionary[id]['question'].lower()
-            #нужно сделать так чтобы для каждого слова из # bcgjkmpjdfnm функцию find для вопроса и ответа либо создать функцию которая будет записывать чсило совпадению в клю словаря, а сам ответ в ответ словаря.. и по наибольшему ключу - искать нужный
-            if changed(message.text) in changed(question):
-                if 'скачать' in baza.dictionary[id]['question'].lower():  # так надо 2 раза
-                    download()
-                elif 'просмотреть' in question:  # так надо 2 раза
-                    open()
-                elif 'изображение' in question:  # так надо 2 раза
-                    photo()
-                else:  # так надо 2 раза
-                    bot.send_message(message.chat.id, baza.dictionary[id]['answer'], reply_markup=general_menu(),
-                                     parse_mode='Markdown')
-                    bot.send_message(157758328,
-                                     "2.1 - ответ выдан не в строгом соответсвии по запросу: " + message.text)
-                    non_strict_notification = "Пользователь {0.first_name} {0.last_name} @{0.username} id {0.id}." \
-                        .format(message.from_user, message.from_user, message.from_user,
-                                message.from_user)
-                    bot.send_message(157758328, non_strict_notification)
-                found_result = True
-                return found_result
+        if 4 <= len(message.text) <= 5:
+            bot.send_message(message.chat.id, "Пожалуйста, уточните свой вопрос", reply_markup=general_menu(),
+                             parse_mode='Markdown')
+            bot.send_message(message.chat.id, f'2.1 Пользователя {fio} попросили уточнить вопрос {message.text}')
+            found_result = True
+            return found_result
+        else:
+            for id in baza.dictionary:
+                question = baza.dictionary[id]['question'].lower()
+                # нужно сделать так чтобы для каждого слова из # bcgjkmpjdfnm функцию find для вопроса и ответа либо создать функцию которая будет записывать чсило совпадению в клю словаря, а сам ответ в ответ словаря.. и по наибольшему ключу - искать нужный
+                if changed(message.text) in changed(question):
+                    if 'скачать' in baza.dictionary[id]['question'].lower():  # так надо 2 раза
+                        download()
+                    elif 'просмотреть' in question:  # так надо 2 раза
+                        open()
+                    elif 'изображение' in question:  # так надо 2 раза
+                        photo()
+                    else:  # так надо 2 раза
+                        bot.send_message(message.chat.id, baza.dictionary[id]['answer'], reply_markup=general_menu(),
+                                         parse_mode='Markdown')
+                        bot.send_message(157758328,
+                                         "2.1 - ответ выдан не в строгом соответсвии по запросу: " + message.text)
+                        non_strict_notification = "Пользователь {0.first_name} {0.last_name} @{0.username} id {0.id}." \
+                            .format(message.from_user, message.from_user, message.from_user,
+                                    message.from_user)
+                        bot.send_message(157758328, non_strict_notification)
+                    found_result = True
+                    return found_result
 
     def find_non_strict_accordance_2(message):
         """2 - Ищет не в строгом соответсвии."""
@@ -873,7 +881,4 @@ def conversation(message):
         bot.send_message(157758328, found_result)
 
 
-try:
-    bot.polling(none_stop=True)  # запускает бота
-except Exception:
-    bot.send_message(157758328, f'{traceback.format_exc()}')
+bot.polling(none_stop=True)  # запускает бота
