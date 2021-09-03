@@ -199,7 +199,6 @@ def service_notification(message):
 
 def verification(message):
     """Верифицирует пользователя каждый раз: проверяет есть ли у него одобренный доступ к телеграм-боту."""
-    # if message.chat.id not in auth.users: для авторизации через список authorization
     if message.chat.id in dict_users.users.keys():
         return True
     else:
@@ -269,14 +268,12 @@ def find(question, user_request):
 @bot.message_handler(content_types=["text"])  #
 def conversation(message):
     """Модуль для общения и взаимодействия с пользователем. Декоратор будет вызываться когда боту напишут текст."""
-    try:
-        name = dict_users.users[message.chat.id]['name']
-        surname = dict_users.users[message.chat.id]['surname']
-        password = dict_users.users[message.chat.id]['password']
-    except Exception:
-        bot.send_message(message.chat.id, 'Доступ Вам пока не предоставлен, пожалуйста, ожидайте.')
-        bot.send_message(157758328, 'Пользователь попытался что-то нажать до предоставления доступа.')
+    if not verification(message):
         return
+
+    name = dict_users.users[message.chat.id]['name']
+    surname = dict_users.users[message.chat.id]['surname']
+    password = dict_users.users[message.chat.id]['password']
 
     def photo():
         """Отправляет пользовтелю информацию с фото"""
@@ -520,9 +517,6 @@ def conversation(message):
     global user_id
 
     # service_notification(message)
-
-    if not verification(message):
-        return
 
     if '/news' in message.text.lower():
         bot.send_message(message.chat.id,
