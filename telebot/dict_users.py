@@ -2019,4 +2019,17 @@ users = {
                  "autoconfirm": True,
                  "messaging": True,
                  "check_permissions": True},
+    183343884: {"surname": "Меденцова",
+                # TODO пропускал этот номер мимо верификации, хотя если тестировать отдельно - ничего не пропускает
+                "name": "Мария",
+                "city": "Санкт-Петербург",
+                "link": "",
+                "exp_date": "",
+                "tab_number": "87972",
+                "password": "",
+                "access": True,
+                "plan_notify": True,
+                "autoconfirm": True,
+                "messaging": True,
+                "check_permissions": True},
 }
