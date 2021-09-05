@@ -23,7 +23,6 @@ bot = telebot.TeleBot(settings.TOKEN)
 
 def cycle_plan_notify():
     while True:
-        # bot.send_message(157758328, f'бот начал проверку плана работ пользователей')
         counter_errors = 0
         counter_users = 0
         users_off_list = []
@@ -36,7 +35,7 @@ def cycle_plan_notify():
             fio = f'{user_id} {surname} {name} '
             try:
                 notification = notificator.notify(
-                    user_id)  # TODO НЕ ЗАБУДЬ ПОМЕНЯТЬ АДРЕС  ЗАПИСИ ФАЙЛА в НОТИФИКАТОРЕ!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                    user_id)  # TODO НЕ ЗАБУДЬ ПОМЕНЯТЬ АДРЕС  ЗАПИСИ ФАЙЛА в НОТИФИКАТОРЕ!!!!!!!
                 if notification != None:  # не равно none - получили план. будет ошибка, если ему не удалось отправить ему его план - по
                     plan_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()  # что такое двоеточие и что оно дает???
                     btn = types.InlineKeyboardButton(text="Открыть подробнее в OpenSky",
@@ -45,7 +44,6 @@ def cycle_plan_notify():
                     bot.send_message(user_id, notification, reply_markup=plan_btn,
                                      parse_mode='html')  # отправляем пользователю его план
                     sent_plan_counter += 1
-
                     sent_plan_list.append(fio)
                 if notification == None:  # равно None - не записан пароль пользователя, парсить не стали
                     continue  # bot.send_message(157758328, 'Нет пароля у пользователя') # в самом парсере тоже написано return если отсутсвует пароль в словаре
@@ -54,10 +52,9 @@ def cycle_plan_notify():
                 counter_errors += 1
                 error = f'{traceback.format_exc()}'  # TODO в этом месте надо предусмотреть, чтио ошибок может быть несколько от разных пользователей: добавлять в список ошибки? только нужны сами ошибки а не весь путь
                 continue
+
         if sent_plan_counter > 0:
-            bot.send_message(157758328, f'проверено пользователей {counter_users}')
             bot.send_message(157758328, f'план выслан {sent_plan_counter} пользователям: {", ".join(sent_plan_list)}')
-            bot.send_message(157758328, f'найдено ошибок {counter_errors}')
             if len(users_off_list) != 0:
                 bot.send_message(157758328, f'не удалось отправить план: {", ".join(users_off_list)}: {error}')
 
