@@ -574,8 +574,7 @@ def conversation(message):
         return
 
     message.text = find_garbage(message.text)
-    message.text = find_exception(
-        message.text.lower())  # перенесено под строгий запрос. Чтобы мог различать ответы на кпк и зайти на сайт аша аэрофлота
+    message.text = find_exception(message.text.lower())  # расшифровывает аббревиатуры
 
     if message.chat.type == 'private':  # TODO по-моему, эту строку вообще можно удалить
         if message.text.lower() in baza.greetings:
