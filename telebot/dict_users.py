@@ -1225,7 +1225,7 @@ users = {
                 'link': '',
                 'exp_date': '',
                 'tab_number': '39647',
-                'password': 'nastya290912',
+                'password': 'Nastya290912',
                 'access': True,
                 'plan_notify': True,
                 'autoconfirm': True,
