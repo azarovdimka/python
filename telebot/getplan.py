@@ -4,8 +4,20 @@ import time
 from bs4 import BeautifulSoup
 import pytz
 from datetime import datetime, timedelta, timezone
+import os
 
-current_datetime = time.strftime('%d.%m %H:%M')  # %H:%M
+current_datetime = time.strftime('%d.%m.%Y %H:%M')
+dt_utc_arrive = datetime.strptime(current_datetime, '%d.%m.%Y %H:%M').replace(tzinfo=pytz.utc)
+dt_minus_7h = dt_utc_arrive.astimezone(pytz.utc) - timedelta(hours=7)
+
+day = dt_minus_7h.strftime('%d')
+month = dt_minus_7h.strftime('%m')
+year = dt_minus_7h.strftime('%Y')
+hour = dt_minus_7h.strftime('%H')
+minute = dt_minus_7h.strftime('%M')
+
+current_dt_minus_7h = f'{day}.{month} {hour}:{minute}'
+
 cities = {
     'Внуково-а': 'Внуково ',  # 'Внуково    ',
     'Анталья-2': 'Анталья    ',
@@ -23,7 +35,8 @@ cities = {
     'Казань': 'Казань     ',  # 'Казань     ',
     'Бургас': 'Бургас     ',
     'Пермь': 'Пермь        ',
-    'Оренбург': 'Оренбург '
+    'Оренбург': 'Оренбург ',
+    'Самаракр': 'Самара ',
 
 }
 
@@ -31,11 +44,10 @@ cities = {
 def change_cities(bad_city):
     bad_city = bad_city.strip()
     for c in cities.keys():
-        if bad_city[:3] in c:
+        if bad_city in c:
             new_city = cities[c]
             return new_city
-        else:
-            return bad_city
+    return bad_city
 
 
 def extract_city(s):
@@ -49,11 +61,11 @@ def extract_arrive(s):
     arrive = s[-21:-5]
     # print(arrive)
     dt_utc_arrive = datetime.strptime(arrive, '%d.%m.%Y %H:%M').replace(tzinfo=pytz.utc)
-    dt_msk = str(dt_utc_arrive.astimezone(pytz.utc) + timedelta(hours=3))
-    day = dt_msk[8:10]
-    month = dt_msk[5:7]
-    year = dt_msk[0:4]
-    msk_arrive_time = dt_msk[11:16]
+    dt_msk = dt_utc_arrive.astimezone(pytz.utc) + timedelta(hours=3)
+    day = dt_msk.strftime('%d')
+    month = dt_msk.strftime('%m')
+    year = dt_msk.strftime('%Y')
+    msk_arrive_time = dt_msk.strftime('%H:%M')
     day_month_arr = f'{day}.{month}'
     return day_month_arr, msk_arrive_time
 
@@ -148,23 +160,24 @@ def parser(user_id):  # это надо было все обернуть в фу
             string = f'{day_month_start} {utc} utc {route_arrive_time[12:-29].title()} прил: {day_mont_arr} {msk_time} мск\n'
 
         if sick_status:
-            if current_datetime < sick_end_date:
+            if current_dt_minus_7h < sick_end_date:
                 output_info += sick_string
                 continue
             else:
                 continue
 
-        current_month = current_datetime[3:5]
+        current_month = current_dt_minus_7h[3:5]
         plan_month = string[3:5]
         plan_day = string
-        today = current_datetime
 
         if current_month <= plan_month:  # (главное, чтобы плановый месяц был не меньше текущего) сравниваем сначала месяц чтобы не получилось 31.07 больше чем 20.08 (чтобы не вылезала дата из из прошлого старого месяца)
             # если текущий месяц меньше или такой же как в плане
-            if today <= string:  # сравниваем день
+            if current_dt_minus_7h <= string:  # сравниваем день
+                # print(today_dt_minus_7)
+                # print(string)
                 output_info += string
                 continue
-            if current_month < plan_month and plan_day < today:
+            if current_month < plan_month and plan_day < current_dt_minus_7h:
                 output_info += string
 
     if output_info == 'Ваш ближайший план работ:\n':
@@ -174,5 +187,7 @@ def parser(user_id):  # это надо было все обернуть в фу
 
     return "<pre>" + output_info + "</pre>"
 
+# # TODO РАСКОМЕНТИЛ ЛИ ТЫ RETURN!!!!!!!!!!!!!!!!!!!!!!!!!
+
 # TODO ПРОВЕРЬ ПРИНТЫ ЛОГИН И ПАРОЛЬ!!!!!!!!!!!!!!!!!!!!!!!!!
-# parser(304247011)
+# parser(157758328)
