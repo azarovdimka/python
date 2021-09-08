@@ -4,22 +4,21 @@ import time
 from bs4 import BeautifulSoup
 import pytz
 from datetime import datetime, timedelta, timezone
-import os
 
 current_datetime = time.strftime('%d.%m.%Y %H:%M')
 dt_utc_arrive = datetime.strptime(current_datetime, '%d.%m.%Y %H:%M').replace(tzinfo=pytz.utc)
-dt_minus_7h = dt_utc_arrive.astimezone(pytz.utc) - timedelta(hours=7)
+dt_minus_4h = dt_utc_arrive.astimezone(pytz.utc) - timedelta(hours=4)
 
-day = dt_minus_7h.strftime('%d')
-month = dt_minus_7h.strftime('%m')
-year = dt_minus_7h.strftime('%Y')
-hour = dt_minus_7h.strftime('%H')
-minute = dt_minus_7h.strftime('%M')
+day = dt_minus_4h.strftime('%d')
+month = dt_minus_4h.strftime('%m')
+year = dt_minus_4h.strftime('%Y')
+hour = dt_minus_4h.strftime('%H')
+minute = dt_minus_4h.strftime('%M')
 
-current_dt_minus_7h = f'{day}.{month} {hour}:{minute}'
+current_dt_minus_4h = f'{day}.{month} {hour}:{minute}'
 
 cities = {
-    'Внуково-а': 'Внуково ',  # 'Внуково    ',
+    'Внуково-a': 'Внуково',  # 'Внуково    ',
     'Анталья-2': 'Анталья    ',
     'Минводы': 'Минводы  ',
     'Уфа-1': 'Уфа         ',
@@ -27,18 +26,60 @@ cities = {
     'Гумрак /': 'Гумрак     ',
     'Платов': 'Платов     ',
     'Сургут /': 'Сургут     ',
-    'Гелендж': 'Геленджк',
+    'Гелендж': 'Геленджик',
     'Грозный': 'Грозный ',
     'Барселон-1': 'Барселона ',
-    'Краснодар-1': 'Краснодр  ',
+    'Красндар-1': 'Краснодар  ',
+    'Калингрд': 'Калининград  ',
     'Сочи': 'Сочи         ',
     'Казань': 'Казань     ',  # 'Казань     ',
     'Бургас': 'Бургас     ',
     'Пермь': 'Пермь        ',
     'Оренбург': 'Оренбург ',
     'Самаракр': 'Самара ',
+    'Симфероп': 'Симферополь',
+    'Екатерин': 'Екатернбург',
+    'Минск2': 'Минск',
+    'Челябинс': 'Челябинск',
 
 }
+
+cities_code = {'Внуково-а': 'VKO',  # 'Внуково    ',
+               'Анталья-2': 'AYT',
+               'Минводы': 'MRV',
+               'Ларнака': 'LCA',
+               'Уфа-1[Пас]': 'UFAп',
+               'Уфа-1': 'UFA',
+               'Уфа-2': 'UFA',
+               'Пулково-1[Пас]': 'LEDп',
+               'Пулково[Пас]': 'LEDп',
+               'Пулково-1': 'LED',
+               'Пулково-2': 'LED',
+               'Анапа': 'AAQ',
+               'Гумрак': 'VOG',
+               'Платов': 'ROV',
+               'Сургут': 'SGS',
+               'Гелендж': 'GDZ',
+               'Грозный': 'GRV',
+               'Барселон-1': 'BCN',
+               'Красндар-2': 'KRR',
+               'Калингрд': 'KGD',
+               'Сочи': 'AER',
+               'Казань[Пас]': 'KZNп',  # 'Казань     ',
+               'Бургас': 'BOJ',
+               'Пермь': 'PEE',
+               'Оренбург': 'REN',
+               'Самаракр': 'KUF',
+               'Симфероп': 'SIP',
+               'Екатерин': 'SVX',
+               'Минск2': 'MSQ',
+               'Челябинс': 'CEK',
+               'Шеремет-D': 'SVO',
+               'Шеремет[Пас]': 'SVOп',
+               'Шарджа': 'SHJ',
+               'Череповц': 'CEE',
+               'Ярославт': 'IAR',
+               }
 
 
 def change_cities(bad_city):
@@ -48,6 +89,13 @@ def change_cities(bad_city):
             new_city = cities[c]
             return new_city
     return bad_city
+
+
+def change_to_code(rus_city):
+    if rus_city in cities_code.keys():
+        new_city = cities_code[rus_city]
+        return new_city + '-'
+    return rus_city + '-'
 
 
 def extract_city(s):
@@ -117,10 +165,26 @@ def parser(user_id):  # это надо было все обернуть в фу
         cells = tr.contents
         day_month_start = cells[1].text[:5]
         msk_start = cells[2].text
-        utc = cells[3].text
+        utc_start = cells[3].text
         flight_number = cells[4].text
         aircraft = cells[5].text
         route_arrive_time = cells[6].text
+
+        time_start = utc_start  # eval(dict_users.users[user_id]['time_depart'])
+        time_zone = dict_users.users[user_id]['time_depart'][:3]
+
+        depart_utc_dt = day_month_start + f"{' '}" + time_start
+
+        if dict_users.users[user_id]['time_depart'] == 'msk_start':
+            dt_object = datetime.strptime(depart_utc_dt, '%d.%m %H:%M').replace(tzinfo=pytz.utc)
+            start_dt = dt_object.astimezone(pytz.utc) + timedelta(hours=3)
+            day = start_dt.strftime('%d')
+            month = start_dt.strftime('%m')
+            hour = start_dt.strftime('%H')
+            minute = start_dt.strftime('%M')
+            start_dt = f'{day}.{month} {hour}:{minute}'
+        else:
+            start_dt = depart_utc_dt
 
         if 'ВХД' in cells[4].text:
             date_end, msk_end = extract_arrive(route_arrive_time)
@@ -128,60 +192,71 @@ def parser(user_id):  # это надо было все обернуть в фу
         if 'резерв' in cells[4].text:
             day_month_arr, msk_time = extract_arrive(route_arrive_time)
             reserve = 'Резерв'
-            string = f'{day_month_start} {msk_start} мск {reserve:8.8} {msk_time}\n'
+            string = f'{day_month_start} {msk_start} {reserve:11.11} {msk_time}\n'
         if 'ВЛЭК' in cells[4].text:
-            string = f'{day_month_start} {msk_start} мск ВЛЭК \n'
+            string = f'{day_month_start} {msk_start} ВЛЭК \n'
         if 'Больничный' in cells[4].text:
             sick_status = True
             sick_end_date = route_arrive_time[4:-6]
             sick_string = f"{day_month_start} Больничный лист по {sick_end_date}\n"
         if 'Англ' in cells[4].text:
-            string = f'{day_month_start} {msk_start} мск Английский\n'
+            string = f'{day_month_start} {msk_start} Английский\n'
         if 'Отпуск' in cells[4].text:
             string = f'{day_month_start} Отпуск до        {route_arrive_time[1:-6]}\n'
         if 'ШТБ' in cells[4].text:
-            string = f'{day_month_start} {msk_start} мск Вызов в Штаб\n'
+            string = f'{day_month_start} {msk_start} Вызов в Штаб\n'
         if 'КПК' in cells[4].text:
-            string = f'{day_month_start} {msk_start} мск КПК\n'
+            string = f'{day_month_start} {msk_start} КПК\n'
         if 'САН.МИН' in cells[4].text:
-            string = f'{day_month_start} {msk_start} мск Санминимум\n'
+            string = f'{day_month_start} {msk_start} Санминимум\n'
         if 'АСП' in cells[4].text:
-            string = f'{day_month_start} {msk_start} мск АСП\n'
+            string = f'{day_month_start} {msk_start} АСП\n'
         if cells[6].text.count('/') == 2:
             day_mont_arr, msk_time = extract_arrive(cells[6].text)
             city = extract_city(route_arrive_time)
             city = change_cities(city)
             if (int(day_mont_arr[:2]) - int(day_month_start[:2])) <= 1:
-                string = f'{day_month_start} {utc} utc {city:8.8} {msk_time}\n'
+                string = f'{start_dt} {city:11.11} {msk_time}\n'
             if (int(day_mont_arr[:2]) - int(day_month_start[:2])) > 1:
-                string = f'{day_month_start} {utc} utc {city} прил: {day_mont_arr} {msk_time}\n'
+                string = f'{start_dt} {city} прил: {day_mont_arr} {msk_time}\n'
         if cells[6].text.count('/') > 2:
             day_mont_arr, msk_time = extract_arrive(cells[6].text)
-            string = f'{day_month_start} {utc} utc {route_arrive_time[12:-29].title()} прил: {day_mont_arr} {msk_time} мск\n'
+
+            route = route_arrive_time.title().replace(" ", "")[:-25]
+            # start_del_part_route = route.find('[')
+            # end_del_part_route = route.find(']')
+            # route = route[:start_del_part_route]
+            route = route.split('/')[1:]  #
+            city = ''
+            for i in route:
+                city += change_to_code(i)
+            string = f'{start_dt} {city}> {day_mont_arr} {msk_time}\n'
 
         if sick_status:
-            if current_dt_minus_7h < sick_end_date:
+            if current_dt_minus_4h < sick_end_date:
                 output_info += sick_string
                 continue
             else:
                 continue
 
-        current_month = current_dt_minus_7h[3:5]
+        current_month = current_dt_minus_4h[3:5]
         plan_month = string[3:5]
         plan_day = string
 
         if current_month <= plan_month:  # (главное, чтобы плановый месяц был не меньше текущего) сравниваем сначала месяц чтобы не получилось 31.07 больше чем 20.08 (чтобы не вылезала дата из из прошлого старого месяца)
             # если текущий месяц меньше или такой же как в плане
-            if current_dt_minus_7h <= string:  # сравниваем день
-                # print(today_dt_minus_7)
-                # print(string)
+            if current_dt_minus_4h <= string:  # сравниваем день
+
                 output_info += string
                 continue
-            if current_month < plan_month and plan_day < current_dt_minus_7h:
+            if current_month < plan_month and plan_day < current_dt_minus_4h:
                 output_info += string
 
     if output_info == 'Ваш ближайший план работ:\n':
         return 'Рейсов на ближайшее время не найдено.'
+
+    if output_info != 'Ваш ближайший план работ:\n':
+        output_info += f'        {time_zone.upper()}               MSK\n'
 
     # print(output_info)
 
@@ -190,4 +265,4 @@ def parser(user_id):  # это надо было все обернуть в фу
 # # TODO РАСКОМЕНТИЛ ЛИ ТЫ RETURN!!!!!!!!!!!!!!!!!!!!!!!!!
 
 # TODO ПРОВЕРЬ ПРИНТЫ ЛОГИН И ПАРОЛЬ!!!!!!!!!!!!!!!!!!!!!!!!!
-# parser(157758328)
+# parser(1832477611)
