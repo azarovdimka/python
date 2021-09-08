@@ -1820,10 +1820,10 @@ users = {
     1641270505: {'surname': 'Лопанов',
                  'name': 'Алексей',
                  'city': 'Санкт-Петербург',
-                 'link': '@kseniiich',
+                 'link': '',
                  'exp_date': '',
                  'tab_number': '17962',
-                 'password': 'Zx334353',
+                 'password': '',  # поменял пароль
                  'access': True,
                  'plan_notify': True,
                  'autoconfirm': True,
