@@ -21,6 +21,47 @@ import check_news
 bot = telebot.TeleBot(settings.TOKEN)
 
 
+def survey(user_id):
+    """Сообщение с кнопками для проведения опроса под индивидуальные пожелания. Вызов функции прикрепляется в качестве параметра к reply_markup в bot.send_message"""
+    survey_btns = types.InlineKeyboardMarkup(row_width=1)
+    one = types.InlineKeyboardButton(text="1 - Вылет UTC, Прилёт МСК", callback_data="one")
+    two = types.InlineKeyboardButton(text="2 - Вылет МСК, Прилёт МСК", callback_data="two")
+    three = types.InlineKeyboardButton(text="3 - Вылет МСК, Прилёт UTC", callback_data="three")
+    four = types.InlineKeyboardButton(text="4 - Вылет UTC, Прилёт UTC", callback_data="four")
+    survey_btns.add(one, two, three, four)
+    bot.send_message(user_id, f"`\t\t {dict_users.users[user_id]['name']}, cейчас у Вас в плане работ "
+                              f" отображается время вылета по UTC, а время прилёта по МСК. Как Вам было бы "
+                              f"удобнее ориентироваться в предстоящем плане работ? Оставить всё как есть, "
+                              f"либо же изменить? Выберите соответсвующий вариант ответа.",
+                     reply_markup=survey_btns)
+
+
+@bot.callback_query_handler(func=lambda call: True)
+def callback_inline(call):
+    """Всего лишь Обработчик опроса, который сообщает разработчику результаты индивидуальных ответов пользоателя."""
+    if call.message:
+        if call.data == "one":
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                  text="Хорошо, спасибо за ответ.")
+            bot.send_message(157758328, f"{call.message.chat.id} {dict_users.users[call.message.chat.id]['surname']} "
+                                        f"Ответил, что хочет оставить всё как есть")
+        if call.data == "two":
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                  text="Хорошо, спасибо за ответ. Скоро исправлю")
+            bot.send_message(157758328, f"{call.message.chat.id} {dict_users.users[call.message.chat.id]['surname']} "
+                                        f"Попросил номер два: МСК МСК")
+        if call.data == "three":
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                  text="Хорошо, спасибо за ответ. Скоро исправлю")
+            bot.send_message(157758328, f"{call.message.chat.id} {dict_users.users[call.message.chat.id]['surname']} "
+                                        f"Попросил номер три: МСК UTC")
+        if call.data == "three":
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                  text="Хорошо, спасибо за ответ. Скоро исправлю")
+            bot.send_message(157758328, f"{call.message.chat.id} {dict_users.users[call.message.chat.id]['surname']} "
+                                        f"Попросил номер четыре: UTC UTC")
+
+
 def cycle_plan_notify():
     while True:
         counter_errors = 0
@@ -52,6 +93,8 @@ def cycle_plan_notify():
                 counter_errors += 1
                 error = f'{traceback.format_exc()}'  # TODO в этом месте надо предусмотреть, чтио ошибок может быть несколько от разных пользователей: добавлять в список ошибки? только нужны сами ошибки а не весь путь
                 continue
+
+            # bot.send_message(user_id, "Чуть попозже будет так, как Вы решили. Если вы уже отвечали на опрос, повторно отвечать не нужно.", reply_markup=survey(user_id))
 
         if sent_plan_counter > 0:
             bot.send_message(157758328, f'план выслан {sent_plan_counter} пользователям: {", ".join(sent_plan_list)}')
@@ -207,7 +250,7 @@ def verification(message):
                          'для новых пользователей. Теперь такие условия для дальнейшего существоания '
                          'телеграм-бота. Спасибо за понимание.')
         bot.send_message(message.chat.id, 'Уважаемый бортпроводник! К сожалению, на время ожидания вашего лётного '
-                                          'удостоверения, доступ временно ограничен. Но нам нетерпится как можно '
+                                          'удостоверения, доступ временно ограничен, но нам не терпится как можно '
                                           'быстрее предоставить Вам доступ.')
         bot.send_message(157758328,
                          "Запросили фото айдишки для верификации от пользователя id {0.id} @{0.username} {0.first_name} "
@@ -231,25 +274,27 @@ def welcome(message):
     """При первом подключении пользователя к боту - выводит приветсвенный стикер, приветсвенную речь. Также в этой
     функции обозначены кнопки, которые будут всегда отображаться под полем ввода запроса."""
     # service_notification(message)
+
+    sti = open('static/AnimatedSticker.tgs', 'rb')
+    bot.send_sticker(message.chat.id, sti)
+
+    bot.send_message(message.chat.id,
+                     '\t Привет!\n'
+                     '\t Я робот, призванный отвечать на вопросы бортпроводников: '
+                     'вопросы к МКК и КПК, справки, часы работы, телефоны, представители разных служб и в разных городах, '
+                     'настройки почты, названия самолетов по бортовым номерам, особенности рейсов, какой сейчас рацион, '
+                     'расшифровки аббревиатур и сокращений, ответы на тесты, как закрыть больничный, инструктажи, команды, '
+                     'высылаю уведомления о предстоящем плане работ и т.д. И разработчик '
+                     'ждёт ваших предложений и идей, участвуйте в развитии приложения №1 для бортпроводников АК "Россия"!\n'
+                     '\t Вопросы задавать лучше коротко.'
+                     .format(message.from_user, bot.get_me()), reply_markup=general_menu())
+    new_user_notification = "Пользователь {0.first_name} {0.last_name} @{0.username} id {0.id} подключился к телеграм-боту." \
+        .format(message.from_user, message.from_user, message.from_user,
+                message.from_user)
+    bot.send_message(157758328, new_user_notification)
+
     if not verification(message):
         return
-    else:
-        sti = open('static/AnimatedSticker.tgs', 'rb')
-        bot.send_sticker(message.chat.id, sti)
-
-        bot.send_message(message.chat.id,
-                         '\t Привет, {0.first_name}!\n'
-                         '\t Я робот, призванный отвечать на вопросы бортпроводников: '
-                         'вопросы к МКК и КПК, справки, часы работы, телефоны, представители разных служб и в разных городах, '
-                         'настройки почты, названия самолетов по бортовым номерам, особенности рейсов, какой сейчас рацион, '
-                         'расшифровки аббревиатур и сокращений, ответы на тесты, как закрыть больничный и т.д. И разработчик '
-                         'ждёт ваших предложений и идей, участвуйте в развитии приложения №1 для бортпроводников АК "Россия"!\n'
-                         '\t Задавайте свой первый вопрос. Лучше коротко.'
-                         .format(message.from_user, bot.get_me()), reply_markup=general_menu())
-        new_user_notification = "Пользователь {0.first_name} {0.last_name} @{0.username} id {0.id} подключился к телеграм-боту." \
-            .format(message.from_user, message.from_user, message.from_user,
-                    message.from_user)
-        bot.send_message(157758328, new_user_notification)
 
 
 def find(question, user_request):
@@ -479,6 +524,7 @@ def conversation(message):
                 return found_result
 
     def confirm_question(message):
+        """Сообщение с кнопками для отмены подтверждения плана работ, либо оставить всё как есть."""
         confirm_btns = types.InlineKeyboardMarkup()
         yes_off = types.InlineKeyboardButton(text="Да, отключить", callback_data="yes_off")
         no_on = types.InlineKeyboardButton(text="Нет, подтверждать", callback_data="no_on")
@@ -503,8 +549,12 @@ def conversation(message):
         document_btn.add(btn)
         if password == '':
             bot.send_message(user_id,
-                             "К сожалению, я не могу проверить сроки действия Ваших документов и допусков, т.к. в моей базе нет Вашего логина и пароля от OpenSky. Если Вы не хотите пропустить сроки дейтсивя документов и вовремя получить уведомление на телефон, пришлите в ответном одном сообщении 4 слова через пробел по шаблону: логин ...... пароль ........ А пока рекомендую вам самостоятельно перейти в раздел документов и проверить сроки там.",
-                             reply_markup=document_btn)
+                             "К сожалению, я не могу проверить сроки действия Ваших документов и допусков, т.к. "
+                             "в моей базе нет Вашего логина и пароля от OpenSky. Если Вы не хотите пропустить "
+                             "сроки дейтсивя документов и вовремя получить уведомление на телефон, пришлите в "
+                             "ответном одном сообщении 4 слова через пробел по шаблону: логин ...... пароль "
+                             "........ А пока рекомендую вам самостоятельно перейти в раздел документов и "
+                             "проверить сроки там.", reply_markup=document_btn)
         else:
             fio = f'{user_id} {surname} {name}'
             try:
@@ -523,12 +573,37 @@ def conversation(message):
 
     # service_notification(message)
 
+    if "написать пользователю по id" in message.text.lower():
+        mess = message.text.split()
+        bot.send_message(int(mess[4]), ' '.join(mess[5:]).capitalize(), reply_markup=general_menu())
+        bot.send_message(157758328, "Сообщение пользователю отправлено успешно.")
+        return
+
+    if "пройти опрос" in message.text.lower():
+        bot.send_message(message.chat.id, "Чуть попозже будет так, как Вы решили.",
+                         reply_markup=survey(message.chat.id))
+        return
+
     if '/news' in message.text.lower():
         bot.send_message(message.chat.id,
                          'Автоматическое информирование о важных изменениях и новостях включено у всех по умолчанию. Как только будет важная информация - Вам будет прислано уведомление.',
                          reply_markup=general_menu())
         bot.send_message(157758328,
                          "Сообщение об автоматически подключенном информировании о важных новстях отправлено пользователю.")
+        return
+
+    if '/donate' in message.text.lower():
+        donate_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()  # что такое двоеточие и что оно дает???
+        btn = types.InlineKeyboardButton(text="Пожертвовать на развитие",
+                                         url='https://money.alfabank.ru/p2p/web/transfer/dazarov5659')
+        donate_btn.add(btn)
+        bot.send_message(message.chat.id,
+                         'Телеграм-бот для бортпроводников - это очень крутое, нужное многофункциональное '
+                         'приложение, интегрированное в Telegram. Телеграм-бот развивается каждый день '
+                         'и требует времени и ресурсов. Есть еще много идей, которые хочется реализовать. '
+                         'Предлагайте свои идеи и свою информацию. Поддержите развитие телеграм-бота, '
+                         'осуществив перевод на любую сумму без комиссии.',
+                         parse_mode='Markdown', reply_markup=donate_btn)
         return
 
     if '/document' in message.text.lower() or 'проверить допуски' in message.text.lower() or "сроки" in message.text.lower():
@@ -543,12 +618,6 @@ def conversation(message):
 
     if "предоставить доступ" in message.text.lower():
         write_new_dict_user(message)
-        return
-
-    if "написать пользователю по id" in message.text.lower():
-        mess = message.text.split()
-        bot.send_message(int(mess[4]), ' '.join(mess[5:]).capitalize(), reply_markup=general_menu())
-        bot.send_message(157758328, "Сообщение пользователю отправлено успешно.")
         return
 
     if message.text.lower() in ['сколько рейсов', '/flight_counter', 'счетчик рейсов', "счётчик рейсов",
@@ -570,7 +639,11 @@ def conversation(message):
                          "Пользователь {0.first_name} @{0.username} id {0.id} прислал логин и пароль.".format(
                              message.from_user, message.from_user) + message.text)
         bot.send_message(message.chat.id,
-                         "ожидайте, через некоторое время можно будет нажать кнопочку план работ и получите результат. В дальнейшем, чтобы телеграм-бот знал ваш актуальный логин и пароль, и вы его не меняли в опенскае, при истечении срока годности пароля в опенская, можно установить прежний какой был, перейдя по ссылке на главной странице авторизации под формой ввода логина и пароля pwd.rossiya-airlines.com установления пароля через эту ссылку позволяет пользоваться всегда олдним и тем же паролем и не придумывать постоянно новый пароль.")
+                         "Ожидайте, через некоторое время логин и пароль будет добавлен. В дальнейшем, чтобы "
+                         "телеграм-бот знал ваш актуальный логин и пароль, и вы его не меняли в опенскае, при истечении "
+                         "срока годности пароля в опенская, можно установить прежний какой был, перейдя по ссылке на "
+                         "главной странице авторизации под формой ввода логина и пароля pwd.rossiya-airlines.com установления пароля через эту ссылку позволяет пользоваться всегда олдним и тем же паролем и не придумывать постоянно новый пароль.")
+        bot.send_message(message.chat.id, "Чуть попозже будет так, как Вы решили.", reply_markup=survey(user_id))
         return
 
     message.text = find_garbage(message.text)
@@ -667,9 +740,7 @@ def conversation(message):
                                              url='https://edu.rossiya-airlines.com/workplan/')
             plan_btn.add(btn)
             bot.send_message(message.chat.id, plan, reply_markup=plan_btn, parse_mode='html')
-            bot.send_message(157758328,
-                             "Пользователю {0.first_name} @{0.username} выдан план работ".format(message.from_user,
-                                                                                                 message.from_user))
+            bot.send_message(157758328, f"{name} {surname} получил план работ")
             return
 
     if '/plan' in message.text.lower():  # TODO сделать потом чтобы автоматически менял статус в словаре
@@ -708,9 +779,7 @@ def conversation(message):
                                              url='https://edu.rossiya-airlines.com/nalet/')
             nalet_btn.add(btn)
             bot.send_message(message.chat.id, nalet, reply_markup=nalet_btn, parse_mode='Markdown')
-            bot.send_message(157758328,
-                             "Пользователю {0.first_name} @{0.username} выдан налёт".format(message.from_user,
-                                                                                            message.from_user))
+            bot.send_message(157758328, f"Пользователю {message.chat.id} {surname} {name} выдан налёт")
             return
 
     if "исправить ответ" in message.text.lower():
@@ -756,7 +825,7 @@ def conversation(message):
             bot.send_message(157758328, "User_id не определен: кому отправлять сообщение - мне неизвестно.")
             return
 
-    if 'телефон' == message.text.lower():  # TODO наверное не очень семантично здесь размещать обработку этого запроса
+    if 'телефон' == message.text.lower() or 'номер телефона' == message.text.lower():  # TODO наверное не очень семантично здесь размещать обработку этого запроса
         bot.send_message(message.chat.id, 'Чей именно телефон Вас инетересует?', reply_markup=general_menu())
         bot.send_message(157758328, "Попросили уточнить чей телефон нужен")
         return  # TODO быть может га обработку подобных запросов, при выдаче ответов в строгом соответвии №1 добвлять ответы сначала в список, а потом считать, и если ответов много, то задавать уточняющий вопрос
