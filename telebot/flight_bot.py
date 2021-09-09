@@ -29,10 +29,9 @@ def survey(user_id):
     three = types.InlineKeyboardButton(text="3 - Вылет МСК, Прилёт UTC", callback_data="three")
     four = types.InlineKeyboardButton(text="4 - Вылет UTC, Прилёт UTC", callback_data="four")
     survey_btns.add(one, two, three, four)
-    bot.send_message(user_id, f"`\t\t {dict_users.users[user_id]['name']}, cейчас у Вас в плане работ "
-                              f" отображается время вылета по UTC, а время прилёта по МСК. Как Вам было бы "
-                              f"удобнее ориентироваться в предстоящем плане работ? Оставить всё как есть, "
-                              f"либо же изменить? Выберите соответсвующий вариант ответа.",
+    bot.send_message(user_id, f"`\t\t {dict_users.users[user_id]['name']}, Ваш логин пароль успешно отправлен. \n"
+                              f"`\t\t Для завершения персональной настройки, "
+                              f"укажите часовые пояса, в которых Вам было бы удобно получать план работ: UTC или MSK",
                      reply_markup=survey_btns)
 
 
@@ -44,7 +43,7 @@ def callback_inline(call):
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                   text="Хорошо, спасибо за ответ.")
             bot.send_message(157758328, f"{call.message.chat.id} {dict_users.users[call.message.chat.id]['surname']} "
-                                        f"Ответил, что хочет оставить всё как есть")
+                                        f"Ответил, номер один: UTC МСК")
         if call.data == "two":
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                   text="Хорошо, спасибо за ответ. Скоро исправлю")
@@ -579,10 +578,10 @@ def conversation(message):
         bot.send_message(157758328, "Сообщение пользователю отправлено успешно.")
         return
 
-    if "пройти опрос" in message.text.lower():
-        bot.send_message(message.chat.id, "Чуть попозже будет так, как Вы решили.",
-                         reply_markup=survey(message.chat.id))
-        return
+    # if "пройти опрос" in message.text.lower():
+    #     bot.send_message(message.chat.id, "Чуть попозже будет так, как Вы решили.",
+    #                      reply_markup=survey(message.chat.id))
+    #     return
 
     if '/news' in message.text.lower():
         bot.send_message(message.chat.id,
@@ -636,14 +635,14 @@ def conversation(message):
 
     if "логин" in message.text.lower() and "пароль" in message.text.lower():
         bot.send_message(157758328,
-                         "Пользователь {0.first_name} @{0.username} id {0.id} прислал логин и пароль.".format(
+                         "Пользователь {0.first_name} @{0.username} id {0.id} прислал логин и пароль: ".format(
                              message.from_user, message.from_user) + message.text)
         bot.send_message(message.chat.id,
-                         "Ожидайте, через некоторое время логин и пароль будет добавлен. В дальнейшем, чтобы "
-                         "телеграм-бот знал ваш актуальный логин и пароль, и вы его не меняли в опенскае, при истечении "
-                         "срока годности пароля в опенская, можно установить прежний какой был, перейдя по ссылке на "
-                         "главной странице авторизации под формой ввода логина и пароля pwd.rossiya-airlines.com установления пароля через эту ссылку позволяет пользоваться всегда олдним и тем же паролем и не придумывать постоянно новый пароль.")
-        bot.send_message(message.chat.id, "Чуть попозже будет так, как Вы решили.", reply_markup=survey(user_id))
+                         "\r \t Ожидайте, через некоторое время логин и пароль будет добавлен..\n \t"
+                         "В дальнейшем, можно установить тот же самый пароль, и не придумывать каждый раз новый, "
+                         "если делать это по ссылке pwd.rossiya-airlines.com (на странице авторизации OpenSky под формой "
+                         "ввода логина и пароля).\n"
+                         , reply_markup=survey(message.chat.id))
         return
 
     message.text = find_garbage(message.text)
@@ -721,15 +720,13 @@ def conversation(message):
                                              url='https://edu.rossiya-airlines.com/workplan/')
             plan_btn.add(btn)
             bot.send_message(message.chat.id, 'Ваш логин и пароль от OpenSky отсутсвует в моей базе данных, поэтому я '
-                                              'не могу запросить ваш план работ и выдать его напрямую сюда. Если вы '
+                                              'не могу запросить ваш план работ и выдать его напрямую сюда. Если Вы '
                                               'хотите легко и быстро узнавать свой план работ, а в будущем получать '
                                               'уведомления на телефон о новых рейсах - сообщите мне свой логин и пароль '
                                               'через пробел в следующем формате: \n логин ...... пароль ...... \n '
-                                              '(вместо многоточия ваш логин и пароль). Чтобы пароль у вас и уменя всегда '
-                                              'сохранялся один и тот же его не нужно было придумывать по-новой, то '
-                                              'пароль надо менять через ссылку pwd.rossiya-airlines.com и вводить старый '
-                                              'пароль как новый.\n Поэтому пока предлагаю нажать на кнопку, перейти и '
-                                              'самостоятельно просмотреть план работ, ввести логин и пароль туда вручную.',
+                                              '(4 слова через пробел вместо многоточия ваш логин и пароль). В тоже время, '
+                                              'есть возможность нажать на кнопку, перейти и '
+                                              'самостоятельно просмотреть план работ: ввести логин и пароль туда вручную.',
                              reply_markup=plan_btn)
             return
         else:
