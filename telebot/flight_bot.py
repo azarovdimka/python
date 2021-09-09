@@ -173,21 +173,23 @@ def messaging(message):
                     bot.send_message(user_id, 'Уважаемый бортпроводник, {}'.format(' '.join(mess[2:]),
                                                                                    reply_markup=general_menu()))
                 else:
-                    bot.send_message(user_id, '{}, {}'.format(name, ' '.join(mess[2:]), reply_markup=general_menu()))
-                bot.send_message(user_id,
-                                 "Если Вы не хотите получать рассылку, отправьте: отказ от рассылки")
-                sent_list.append(fio)
+                    bot.send_message(user_id, f'{name}, {mess[2:]}', reply_markup=general_menu())
+                # bot.send_message(user_id,
+                #                  "Если Вы не хотите получать рассылку, отправьте: отказ от рассылки")
+                # sent_list.append(fio)
                 counter_users += 1
-                bot.send_message(157758328,
-                                 f"Сообщение успешно разослано {counter_users} пользователям: {', '.join(sent_list)}.")  # TODO временно
-                time.sleep(0.3)
+                bot.send_message(157758328, f"Сообщение успешно отравлено {fio}")  # TODO временно
+                time.sleep(3)
             except Exception:  # если случилась ошибка при отправке сообщений пользователю
                 users_off_list.append(fio)
                 counter_errors += 1
                 bot.send_message(157758328,
-                                 f"Вероятно, отключились {counter_errors} чел.: {', '.join(users_off_list)} ошибка {traceback.format_exc()}.")  # TODO временно
+                                 f"сообщение не удалось отправить {fio} ошибка {traceback.format_exc()}.")  # TODO временно
         else:
             continue
+    bot.send_message(157758328,
+                     f"всего разослано {counter_users} чел. из {len(dict_users.users)} чел.")  # TODO временно
+
     return
 
 
@@ -242,12 +244,10 @@ def verification(message):
         return True
     else:
         bot.send_message(message.chat.id,
-                         'Прошу Вас пройти верификацию, для этого Вам необходимо отправить сюда фото своей '
-                         'айдишки (member crew certification) либо связаться с разработчиком лично '
+                         'Прошу Вас пройти верификацию, для этого Вам необходимо отправить сюда фото своего штабного '
+                         'пропуска либо связаться с разработчиком лично '
                          '@DeveloperAzarov. Нам необходимо убедиться, что вы летающий '
-                         'бортпроводник АК "Россия". \n Процедура верификации производится однократно '
-                         'для новых пользователей. Теперь такие условия для дальнейшего существоания '
-                         'телеграм-бота. Спасибо за понимание.')
+                         'бортпроводник АК "Россия". \n')
         bot.send_message(message.chat.id, 'Уважаемый бортпроводник! К сожалению, на время ожидания вашего лётного '
                                           'удостоверения, доступ временно ограничен, но нам не терпится как можно '
                                           'быстрее предоставить Вам доступ.')
@@ -665,10 +665,10 @@ def conversation(message):
         if dict_users.users[message.chat.id]['autoconfirm'] and password == '':
             bot.send_message(message.chat.id,
                              "Если вы хотите получать план работ и подтверждать его автоматически вам нужно сообщить "
-                             "через пробел в ответном сообщении: логин ..... пароль ....", reply_markup=general_menu())
+                             "ответном сообщении: логин ..... пароль .... (4 слова через пробел).",
+                             reply_markup=general_menu())
             bot.send_message(157758328,
-                             f'{message.chat.id} попытался включить автоматическое подтверждение плана автоматического подтверждения '
-                             'плана работ. но у нас нет пароля')
+                             f'{message.chat.id} попытался включить автоматическое подтверждение плана работ, но у нас нет пароля')
         if dict_users.users[message.chat.id]['autoconfirm'] and len(dict_users.users[message.chat.id]['password']) > 0:
             # """При поступлении этой команды вызывается функция confirm_question(), в которой написан основной текст c двумя кнопками"""
             @bot.callback_query_handler(func=lambda call: True)
@@ -706,11 +706,11 @@ def conversation(message):
         return
 
     if 'отказ от рассылки' in message.text.lower() or 'отказаться от рассылки' in message.text.lower():
-        bot.send_message(157758328, message.text)
         if dict_users.users[message.chat.id]['messaging']:
             bot.send_message(message.chat.id, "Хорошо, мы обязательно отключим рассылку сообщений.")
+            bot.send_message(157758328, f'{message.chat.id} {name} {surname} попросил отказаться от рассылки')
         if not dict_users.users[message.chat.id]['messaging']:
-            bot.send_message(message.chat.id, "Хорошо, мы включим рассылку сообщений. Пожалуйста, ожидайте.")
+            bot.send_message(message.chat.id, "Рассылка сообщений у Вас уже отключена.")
         return
 
     if "план работ" in message.text.lower() or "план на завтра" in message.text.lower():
