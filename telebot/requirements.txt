@@ -6,3 +6,7 @@ pyTelegramBotAPI==3.7.6
 python-dateutil==2.8.1
 requests==2.25.1
 urllib3==1.26.3
+
+# https://chromedriver.storage.googleapis.com/2.32/chromedriver_linux64.zip -o chromedriver.zip
+# (venv) $ sudo unzip chromedriver.zip -d /usr/bin/
+# (venv) $ sudo chmod +x /usr/bin/chromedriver

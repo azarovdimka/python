@@ -12,6 +12,7 @@ import getplan
 import getnalet
 import notificator
 import threading
+# import multiprocessing #  as mp
 import time
 import get_permissions
 import traceback
@@ -68,6 +69,7 @@ def cycle_plan_notify():
         users_off_list = []
         sent_plan_counter = 0
         sent_plan_list = []
+
         for user_id in dict_users.users.keys():
             counter_users += 1
             name = dict_users.users[user_id]['name']
@@ -93,18 +95,20 @@ def cycle_plan_notify():
                 error = f'{traceback.format_exc()}'  # TODO в этом месте надо предусмотреть, чтио ошибок может быть несколько от разных пользователей: добавлять в список ошибки? только нужны сами ошибки а не весь путь
                 continue
 
-            # bot.send_message(user_id, "Чуть попозже будет так, как Вы решили. Если вы уже отвечали на опрос, повторно отвечать не нужно.", reply_markup=survey(user_id))
-
         if sent_plan_counter > 0:
             bot.send_message(157758328, f'план выслан {sent_plan_counter} пользователям: {", ".join(sent_plan_list)}')
             if len(users_off_list) != 0:
                 bot.send_message(157758328, f'не удалось отправить план: {", ".join(users_off_list)}: {error}')
 
-        time.sleep(300)
+        time.sleep(30)
 
 
-plan_thread = threading.Thread(target=cycle_plan_notify)
-plan_thread.start()
+try:
+    check_plan = threading.Thread(target=cycle_plan_notify)  # TODO закомментирвоать
+    check_plan.start()
+except Exception:  # если случилась ошибка при отправке сообщений пользователю
+    error = f'{traceback.format_exc()}'  # TODO в этом месте надо предусмотреть, чтио ошибок может быть несколько от разных пользователей: добавлять в список ошибки? только нужны сами ошибки а не весь путь
+    bot.send_message(157758328, f'при проверке планов в отдельном потоке возникла ошибка: {error}')
 
 
 def check_permissions_for_everyone():
@@ -153,11 +157,12 @@ def check_new_documents():
     time.sleep(2000)
 
 
-check_new_documents_thread = threading.Thread(target=check_new_documents)  # TODO закомментирвоать
-check_new_documents_thread.start()
+# check_new_documents_thread = threading.Thread(target=check_new_documents)  # TODO закомментирвоать
+# check_new_documents_thread.start()
 
 
-def messaging(message):
+def messaging(
+        message):  # TODO надо сделать чтобы рассылка сообщений шла в отдельном потоке с блокировкой id пользователя в словаре на данный момент
     mess = message.text.split()
     counter_users = 0
     counter_errors = 0
@@ -189,7 +194,6 @@ def messaging(message):
             continue
     bot.send_message(157758328,
                      f"всего разослано {counter_users} чел. из {len(dict_users.users)} чел.")  # TODO временно
-
     return
 
 
@@ -210,16 +214,25 @@ def write_new_dict_user(message):  # TODO почему стирает весь �
     bot.send_message(157758328, "зашли в словарь юзеров.")
     try:
         mess = message.text.split()
-        with open('dict_users.py', 'r', encoding='utf-8') as original:
+        user_id = mess[2]
+        with open('dict_users.py', 'r',
+                  encoding='utf-8') as original:  # вероятно это тогда не надо если использовать методы update и функцию dict
             data = original.read()
         with open('dict_users.py', 'w', encoding='utf-8') as modified:
             modified.write(
-                data[:-1] + mess[2] + ': {"surname": "' + mess[3] + '",\n "name": "' + mess[4] + '",\n "city": "' +
-                mess[5] + '",\n "link": "' + mess[6] + '",\n "exp_date": "' + mess[7] + '",\n "tab_number": "' + mess[
-                    8] + '",\n "password": "' + mess[9] + '",\n "access": ' + mess[10] + ',\n "plan_notify": ' + mess[
-                    11] + ',\n "autoconfirm": ' + mess[12] + ',\n "messaging": ' + mess[13] + '},\n }')
+                dict_users.users.update(user_id,
+                                        dict(surname=mess[3], name=mess[4], city=str(mess[5]), link=str(mess[6]),
+                                             exp_date=str(mess[7]),
+                                             tab_number=str(mess[8]), password=str(mess[9]), access=mess[10],
+                                             plan_notify=mess[11],
+                                             autoconfirm=mess[12], messaging=mess[13], check_permissions=mess[14],
+                                             time_depart=str(mess[15]), time_arrive=str(mess[16]))))
+
         bot.send_message(int(mess[2]),
-                         f'{dict_users.users[int(mess[2])]["name"]}, Вам успешно предоставлен доступ к телеграм-боту. Спрашивайте, буду рад помочь! Если хотите получать уведомления на телефон об изменениях в плане работ, то просим Вас выслать в ответном одном сообщении через пробел логин и пароль от OpenSky (4 слова) по следующему шаблону: логин ....... пароль ......',
+                         f'{dict_users.users[int(mess[2])]["name"]}, Вам успешно предоставлен доступ к телеграм-боту. '
+                         f'Спрашивайте, буду рад помочь! Если хотите получать уведомления на телефон об изменениях в '
+                         f'плане работ, то просим Вас выслать в ответном одном сообщении через пробел логин и пароль от '
+                         f'OpenSky (4 слова) по следующему шаблону: логин ....... пароль ......',
                          reply_markup=general_menu())
         bot.send_message(157758328, "внесли запись в файл")
         bot.send_message(157758328,
@@ -610,10 +623,10 @@ def conversation(message):
         check_permissions(message.chat.id)
         return
 
-    if 'разослать сообщение' in message.text.lower():  # TODO протестирвоать потом на одном пользователе
-        messaging_thread = threading.Thread(target=messaging(message))
-        messaging_thread.start()
-        return
+    # if 'разослать сообщение' in message.text.lower():  # TODO протестирвоать потом на одном пользователе
+    #     messaging_thread = threading.Thread(target=messaging(message))
+    #     messaging_thread.start()
+    #     return
 
     if "предоставить доступ" in message.text.lower():
         write_new_dict_user(message)

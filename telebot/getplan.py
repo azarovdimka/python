@@ -192,25 +192,27 @@ def parser(user_id):  # это надо было все обернуть в фу
         if 'резерв' in cells[4].text:
             day_month_arr, msk_time = extract_arrive(route_arrive_time)
             reserve = 'Резерв'
-            string = f'{day_month_start} {msk_start} {reserve:11.11} {msk_time}\n'
+            string = f'{start_dt} {reserve:11.11} {msk_time}\n'
         if 'ВЛЭК' in cells[4].text:
-            string = f'{day_month_start} {msk_start} ВЛЭК \n'
+            string = f'{start_dt} ВЛЭК \n'
         if 'Больничный' in cells[4].text:
             sick_status = True
             sick_end_date = route_arrive_time[4:-6]
             sick_string = f"{day_month_start} Больничный лист по {sick_end_date}\n"
         if 'Англ' in cells[4].text:
-            string = f'{day_month_start} {msk_start} Английский\n'
+            string = f'{start_dt} Английский\n'
         if 'Отпуск' in cells[4].text:
             string = f'{day_month_start} Отпуск до        {route_arrive_time[1:-6]}\n'
         if 'ШТБ' in cells[4].text:
-            string = f'{day_month_start} {msk_start} Вызов в Штаб\n'
+            string = f'{start_dt} Вызов в Штаб\n'
         if 'КПК' in cells[4].text:
-            string = f'{day_month_start} {msk_start} КПК\n'
+            string = f'{start_dt} КПК\n'
         if 'САН.МИН' in cells[4].text:
-            string = f'{day_month_start} {msk_start} Санминимум\n'
+            string = f'{start_dt} Санминимум\n'
         if 'АСП' in cells[4].text:
-            string = f'{day_month_start} {msk_start} АСП\n'
+            string = f'{start_dt} АСП\n'
+        if 'МКК' in cells[4].text:
+            string = f'{start_dt} МКК\n'
         if cells[6].text.count('/') == 2:
             day_mont_arr, msk_time = extract_arrive(cells[6].text)
             city = extract_city(route_arrive_time)
@@ -265,4 +267,4 @@ def parser(user_id):  # это надо было все обернуть в фу
 # # TODO РАСКОМЕНТИЛ ЛИ ТЫ RETURN!!!!!!!!!!!!!!!!!!!!!!!!!
 
 # TODO ПРОВЕРЬ ПРИНТЫ ЛОГИН И ПАРОЛЬ!!!!!!!!!!!!!!!!!!!!!!!!!
-# parser(1832477611)
+# parser(1429522051)

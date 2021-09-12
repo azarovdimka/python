@@ -1,0 +1,38 @@
+1. в bot father сгенерирвоать токен
+
+(инструкция https://habr.com/ru/post/347106/)
+
+2. на арендованном сервере запускаем команды
+apt-get update
+apt-get install python3
+apt-get install python3-setuptools
+apt-get install python3-pip
+apt-get install systemd
+pip3 install pyTelegramBotAPI
+
+копируем файлы в директорию /usr/local/bin
+
+Создайте файл на Вашем ПК с именем bot.service с таким содержанием:
+
+[Unit]
+Description=Telegram bot 'Town Wars'
+After=syslog.target
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/usr/local/bin/bot
+ExecStart=/usr/bin/python3 /usr/local/bin/bot/bot.py
+RestartSec=10
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
+копируем bot.service в каталог /etc/systemd/system
+
+systemctl daemon-reload
+systemctl enable bot
+systemctl start bot
+systemctl status bot
