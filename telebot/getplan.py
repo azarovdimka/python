@@ -207,6 +207,8 @@ def parser(user_id):  # это надо было все обернуть в фу
             string = f'{start_dt} Вызов в Штаб\n'
         if 'КПК' in cells[4].text:
             string = f'{start_dt} КПК\n'
+        if 'КМД...[КОМАНДИРОВКА]...КПК' in cells[4].text:
+            string = f'{start_dt} КПК Командировка\n'
         if 'САН.МИН' in cells[4].text:
             string = f'{start_dt} Санминимум\n'
         if 'АСП' in cells[4].text:
@@ -233,6 +235,11 @@ def parser(user_id):  # это надо было все обернуть в фу
             for i in route:
                 city += change_to_code(i)
             string = f'{start_dt} {city}> {day_mont_arr} {msk_time}\n'
+
+        if 'plan_new' in str(tr):
+            string = '<b>' + string + '</b>'
+        if 'plan_del' in str(tr):
+            string = '\u0336'.join(string) + '\u0336'
 
         if sick_status:
             if current_dt_minus_4h < sick_end_date:
@@ -267,4 +274,4 @@ def parser(user_id):  # это надо было все обернуть в фу
 # # TODO РАСКОМЕНТИЛ ЛИ ТЫ RETURN!!!!!!!!!!!!!!!!!!!!!!!!!
 
 # TODO ПРОВЕРЬ ПРИНТЫ ЛОГИН И ПАРОЛЬ!!!!!!!!!!!!!!!!!!!!!!!!!
-# parser(1429522051)
+# parser(1029474274)
