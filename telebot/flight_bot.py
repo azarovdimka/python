@@ -1,11 +1,14 @@
 # -*- coding: utf8 -*-
 # !/usr/bin/env python3
+import sys
 
 import telebot  # чтобы работал telebot - удалить telebot, и установить Pytelegrambotapi, написанным оставить telebot
 from telebot.types import InlineKeyboardMarkup
 import baza
 from telebot import types
 from random import choice
+
+import get_weather
 import settings
 import dict_users
 import getplan
@@ -69,36 +72,41 @@ def cycle_plan_notify():
         users_off_list = []
         sent_plan_counter = 0
         sent_plan_list = []
+        try:
+            for user_id in dict_users.users.keys():
+                counter_users += 1
+                try:
+                    name = dict_users.users[user_id]['name']
+                    surname = dict_users.users[user_id]['surname']
+                    fio = f'{user_id} {surname} {name} '
 
-        for user_id in dict_users.users.keys():
-            counter_users += 1
-            name = dict_users.users[user_id]['name']
-            surname = dict_users.users[user_id]['surname']
-            fio = f'{user_id} {surname} {name} '
-            try:
-                notification = notificator.notify(
-                    user_id)  # TODO НЕ ЗАБУДЬ ПОМЕНЯТЬ АДРЕС  ЗАПИСИ ФАЙЛА в НОТИФИКАТОРЕ!!!!!!!
-                if notification != None:  # не равно none - получили план. будет ошибка, если ему не удалось отправить ему его план - по
-                    plan_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()  # что такое двоеточие и что оно дает???
-                    btn = types.InlineKeyboardButton(text="Открыть подробнее в OpenSky",
-                                                     url='https://edu.rossiya-airlines.com/workplan/')
-                    plan_btn.add(btn)
-                    bot.send_message(user_id, notification, reply_markup=plan_btn,
-                                     parse_mode='html')  # отправляем пользователю его план
-                    sent_plan_counter += 1
-                    sent_plan_list.append(fio)
-                if notification == None:  # равно None - не записан пароль пользователя, парсить не стали
-                    continue  # bot.send_message(157758328, 'Нет пароля у пользователя') # в самом парсере тоже написано return если отсутсвует пароль в словаре
-            except Exception:  # если случилась ошибка при отправке сообщений пользователю
-                users_off_list.append(fio)
-                counter_errors += 1
-                error = f'{traceback.format_exc()}'  # TODO в этом месте надо предусмотреть, чтио ошибок может быть несколько от разных пользователей: добавлять в список ошибки? только нужны сами ошибки а не весь путь
-                continue
+                    notification = notificator.notify(
+                        user_id)  # TODO НЕ ЗАБУДЬ ПОМЕНЯТЬ АДРЕС  ЗАПИСИ ФАЙЛА в НОТИФИКАТОРЕ!!!!!!!
+                    if notification != None:  # не равно none - получили план. будет ошибка, если ему не удалось отправить ему его план - по
+                        plan_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()  # что такое двоеточие и что оно дает???
+                        btn = types.InlineKeyboardButton(text="Открыть подробнее в OpenSky",
+                                                         url='https://edu.rossiya-airlines.com/workplan/')
+                        plan_btn.add(btn)
+                        bot.send_message(user_id, notification, reply_markup=plan_btn,
+                                         parse_mode='html')  # отправляем пользователю его план
+                        sent_plan_counter += 1
+                        sent_plan_list.append(fio)
+                        # bot.send_message(157758328, f'план выслан {fio}.')
+                    if notification == None:  # равно None - не записан пароль пользователя, парсить не стали
+                        continue  # bot.send_message(157758328, 'Нет пароля у пользователя') # в самом парсере тоже написано return если отсутсвует пароль в словаре
+                except Exception:  # если случилась ошибка при отправке сообщений пользователю
+                    users_off_list.append(fio)
+                    # counter_errors += 1
+                    bot.send_message(157758328,
+                                     f'не удалось отправить план: {users_off_list}: {traceback.format_exc()}')
+                    continue
 
-        if sent_plan_counter > 0:
-            bot.send_message(157758328, f'план выслан {sent_plan_counter} пользователям: {", ".join(sent_plan_list)}')
-            if len(users_off_list) != 0:
-                bot.send_message(157758328, f'не удалось отправить план: {", ".join(users_off_list)}: {error}')
+            if sent_plan_counter > 0:
+                bot.send_message(157758328,
+                                 f'план выслан {sent_plan_counter} пользователям. {", ".join(sent_plan_list)}')
+                # if len(users_off_list) != 0:
+        except Exception as e:
+            bot.send_message(157758328, f'поймали ошибку во внешнем try except: {fio}: {traceback.format_exc()}')
 
         time.sleep(30)
 
@@ -108,7 +116,7 @@ try:
     check_plan.start()
 except Exception:  # если случилась ошибка при отправке сообщений пользователю
     error = f'{traceback.format_exc()}'  # TODO в этом месте надо предусмотреть, чтио ошибок может быть несколько от разных пользователей: добавлять в список ошибки? только нужны сами ошибки а не весь путь
-    bot.send_message(157758328, f'при проверке планов в отдельном потоке возникла ошибка: {error}')
+    bot.send_message(157758328, f'try except на вызов потока: {error}')
 
 
 def check_permissions_for_everyone():
@@ -145,20 +153,20 @@ def check_new_documents():
     btn = types.InlineKeyboardButton(text="Открыть подробнее в OpenSky",
                                      url='https://edu.rossiya-airlines.com/')
     document_btn.add(btn)
+    while True:
+        try:
+            new_document = check_news.parser(157758328)
+            if new_document is not None:
+                bot.send_message(157758328, new_document, reply_markup=document_btn)  # TODO закомментировать
+        except Exception:
+            bot.send_message(157758328,
+                             f'не удалось отправить сообщение о новых документах, произошла ошибка: {traceback.format_exc()}')
 
-    try:
-        new_document = check_news.parser(157758328)
-        if new_document is not None:
-            bot.send_message(157758328, new_document, reply_markup=document_btn)  # TODO закомментировать
-    except Exception:
-        bot.send_message(157758328,
-                         f'не удалось отправить сообщение о новых документах, произошла ошибка: {traceback.format_exc()}')
-
-    time.sleep(2000)
+        time.sleep(2000)
 
 
-# check_new_documents_thread = threading.Thread(target=check_new_documents)  # TODO закомментирвоать
-# check_new_documents_thread.start()
+check_new_documents_thread = threading.Thread(target=check_new_documents)  # TODO закомментирвоать
+check_new_documents_thread.start()
 
 
 def messaging(
@@ -215,10 +223,10 @@ def write_new_dict_user(message):  # TODO почему стирает весь �
     try:
         mess = message.text.split()
         user_id = mess[2]
-        with open('dict_users.py', 'r',
+        with open('../telebot2/dict_users.py', 'r',
                   encoding='utf-8') as original:  # вероятно это тогда не надо если использовать методы update и функцию dict
             data = original.read()
-        with open('dict_users.py', 'w', encoding='utf-8') as modified:
+        with open('../telebot2/dict_users.py', 'w', encoding='utf-8') as modified:
             modified.write(
                 dict_users.users.update(user_id,
                                         dict(surname=mess[3], name=mess[4], city=str(mess[5]), link=str(mess[6]),
@@ -278,7 +286,7 @@ def handle_docs_photo(message):
                              "фото.".format(message.from_user, message.from_user, message.from_user,
                                             message.from_user)
     bot.send_message(157758328, new_photo_notification)
-    bot.send_message(message.chat.id, "Фото отправлено успешно.")
+    bot.send_message(message.chat.id, "Фото отправлено успешно. Пожалуйста, ожидайте.")
 
 
 @bot.message_handler(commands=['start'])
@@ -287,7 +295,7 @@ def welcome(message):
     функции обозначены кнопки, которые будут всегда отображаться под полем ввода запроса."""
     # service_notification(message)
 
-    sti = open('static/AnimatedSticker.tgs', 'rb')
+    sti = open('../telebot2/static/AnimatedSticker.tgs', 'rb')
     bot.send_sticker(message.chat.id, sti)
 
     bot.send_message(message.chat.id,
@@ -623,10 +631,10 @@ def conversation(message):
         check_permissions(message.chat.id)
         return
 
-    # if 'разослать сообщение' in message.text.lower():  # TODO протестирвоать потом на одном пользователе
-    #     messaging_thread = threading.Thread(target=messaging(message))
-    #     messaging_thread.start()
-    #     return
+    if 'разослать сообщение' in message.text.lower():  # TODO протестирвоать потом на одном пользователе
+        messaging_thread = threading.Thread(target=messaging(message))
+        messaging_thread.start()
+        return
 
     if "предоставить доступ" in message.text.lower():
         write_new_dict_user(message)
@@ -673,6 +681,11 @@ def conversation(message):
                              f"Пользователь {name} {surname} id {message.from_user.id} поблагодарил или попрощался.",
                              reply_markup=general_menu())
             return
+
+    if message.text in get_weather.cities or 'погода' in message.text.lower():
+        weather = get_weather.what_weather(message.text.lower())
+        bot.send_message(message.chat.id, weather, reply_markup=general_menu())
+        bot.send_message(157758328, f'{message.chat.id} отправили погоду {message.text}')
 
     if 'не подтверждать план работ' in message.text.lower() or "/confirm" in message.text.lower():
         if dict_users.users[message.chat.id]['autoconfirm'] and password == '':
