@@ -89,11 +89,15 @@ def cycle_plan_notify():
                         plan_btn.add(btn)
                         bot.send_message(user_id, notification, reply_markup=plan_btn,
                                          parse_mode='html')  # отправляем пользователю его план
+                        bot.send_message(157758328, f'отправили план {fio}', reply_markup=plan_btn,
+                                         parse_mode='html')
+                        bot.send_message(157758328, notification, reply_markup=plan_btn,
+                                         parse_mode='html')
                         sent_plan_counter += 1
                         sent_plan_list.append(fio)
                         # bot.send_message(157758328, f'план выслан {fio}.')
                     if notification == None:  # равно None - не записан пароль пользователя, парсить не стали
-                        continue  # bot.send_message(157758328, 'Нет пароля у пользователя') # в самом парсере тоже написано return если отсутсвует пароль в словаре
+                        continue  # в самом парсере тоже написано return если отсутсвует пароль в словаре
                 except Exception:  # если случилась ошибка при отправке сообщений пользователю
                     users_off_list.append(fio)
                     # counter_errors += 1
@@ -103,7 +107,7 @@ def cycle_plan_notify():
 
             if sent_plan_counter > 0:
                 bot.send_message(157758328,
-                                 f'план выслан {sent_plan_counter} пользователям. {", ".join(sent_plan_list)}')
+                                 f'общий отчет: план выслан {sent_plan_counter} чел. {", ".join(sent_plan_list)}')
                 # if len(users_off_list) != 0:
         except Exception as e:
             bot.send_message(157758328, f'поймали ошибку во внешнем try except: {fio}: {traceback.format_exc()}')
@@ -141,7 +145,7 @@ def check_permissions_for_everyone():
                 bot.send_message(157758328,
                                  f'Пользователю {fio} не удалось отправить сообщение об истекающих допусках, произошла ошибка: {traceback.format_exc()}')
                 continue
-    time.sleep(3000)
+    time.sleep(300)
 
 
 # permissions_thread = threading.Thread(target=check_permissions_for_everyone) #TODO закомментирвоать
@@ -223,10 +227,10 @@ def write_new_dict_user(message):  # TODO почему стирает весь �
     try:
         mess = message.text.split()
         user_id = mess[2]
-        with open('../telebot2/dict_users.py', 'r',
+        with open('dict_users.py', 'r',
                   encoding='utf-8') as original:  # вероятно это тогда не надо если использовать методы update и функцию dict
             data = original.read()
-        with open('../telebot2/dict_users.py', 'w', encoding='utf-8') as modified:
+        with open('dict_users.py', 'w', encoding='utf-8') as modified:
             modified.write(
                 dict_users.users.update(user_id,
                                         dict(surname=mess[3], name=mess[4], city=str(mess[5]), link=str(mess[6]),
@@ -336,7 +340,8 @@ def conversation(message):
     name = dict_users.users[message.chat.id]['name']
     surname = dict_users.users[message.chat.id]['surname']
     password = dict_users.users[message.chat.id]['password']
-    fio = f'{name} {surname}'
+    user_id = message.chat.id
+    fio = f'{user_id} {name} {surname}'
 
     def photo():
         """Отправляет пользовтелю информацию с фото"""
@@ -589,7 +594,7 @@ def conversation(message):
         return
 
     found_result = False  # TODO сделать чтобы запрос превр в список слов, и обрабат-е вопрос в словаре тоже в список и проверялось количество совпадений, но как-то тогда надо отделать хорошие соотсевтвия от плохих и опредлять сколько выдавать значений в результат. Третья ступень поиска так и ищет по списку, может так и оставить как есть, но тогда первые способы находят не все что нужно - так ли это - проверить
-    global user_id
+    # global user_id
 
     # service_notification(message)
 
@@ -599,17 +604,20 @@ def conversation(message):
         bot.send_message(157758328, "Сообщение пользователю отправлено успешно.")
         return
 
-    # if "пройти опрос" in message.text.lower():
-    #     bot.send_message(message.chat.id, "Чуть попозже будет так, как Вы решили.",
-    #                      reply_markup=survey(message.chat.id))
-    #     return
-
     if '/news' in message.text.lower():
-        bot.send_message(message.chat.id,
-                         'Автоматическое информирование о важных изменениях и новостях включено у всех по умолчанию. Как только будет важная информация - Вам будет прислано уведомление.',
-                         reply_markup=general_menu())
-        bot.send_message(157758328,
-                         "Сообщение об автоматически подключенном информировании о важных новстях отправлено пользователю.")
+        if dict_users.users[message.chat.id]['messaging']:
+            bot.send_message(message.chat.id,
+                             'Автоматическое информирование о важных изменениях и новостях у вас включено по умолчанию. Как только будет важная информация - Вам будет прислано уведомление.',
+                             reply_markup=general_menu())
+            bot.send_message(157758328,
+                             f"{fio} Сообщение об автоматически подключенном информировании о важных новстях отправлено пользователю.")
+        else:
+            bot.send_message(message.chat.id,
+                             'Автоматическое информирование о важных изменениях у вас ранее было отключено. Чуть позже мы его включим Вам обратно, и будем прысылать сообщения при наличии важной информации.',
+                             reply_markup=general_menu())
+            bot.send_message(157758328,
+                             f"{fio} Информирование о важной информации было отключено, попросили включить..")
+
         return
 
     if '/donate' in message.text.lower():
@@ -690,11 +698,13 @@ def conversation(message):
     if 'не подтверждать план работ' in message.text.lower() or "/confirm" in message.text.lower():
         if dict_users.users[message.chat.id]['autoconfirm'] and password == '':
             bot.send_message(message.chat.id,
-                             "Если вы хотите получать план работ и подтверждать его автоматически вам нужно сообщить "
+                             "По у молчанию у вас включено автоматическое подтверждение пароля, но нет Вашего пароля, "
+                             "поэтому мы не сможем ни получать ваш план, ни подтверждать его. Если вы хотите получать "
+                             "план работ и подтверждать его автоматически вам нужно сообщить "
                              "ответном сообщении: логин ..... пароль .... (4 слова через пробел).",
                              reply_markup=general_menu())
             bot.send_message(157758328,
-                             f'{message.chat.id} попытался включить автоматическое подтверждение плана работ, но у нас нет пароля')
+                             f'{message.chat.id} {surname} попытался включить автоматическое подтверждение плана работ, но у нас нет пароля')
         if dict_users.users[message.chat.id]['autoconfirm'] and len(dict_users.users[message.chat.id]['password']) > 0:
             # """При поступлении этой команды вызывается функция confirm_question(), в которой написан основной текст c двумя кнопками"""
             @bot.callback_query_handler(func=lambda call: True)
@@ -763,6 +773,7 @@ def conversation(message):
                                              url='https://edu.rossiya-airlines.com/workplan/')
             plan_btn.add(btn)
             bot.send_message(message.chat.id, plan, reply_markup=plan_btn, parse_mode='html')
+            bot.send_message(157758328, plan, reply_markup=plan_btn, parse_mode='html')
             bot.send_message(157758328, f"{name} {surname} получил план работ")
             return
 
@@ -955,7 +966,6 @@ def conversation(message):
             found_result = True
 
     if not found_result:  # если ничего не найдено
-        user_id = message.from_user.id
         if len(message.text) > 6:  # для отправки развернутой аббревиатуры, в случае если расшифровка была найдена, но
             bot.send_message(message.chat.id, message.text)  # подробного ответа на нее не было выдано. Расшифровывает.
         bot.send_message(message.chat.id,
@@ -965,7 +975,7 @@ def conversation(message):
                          '\n \tЕсли Вы заметите ошибки, устаревшую информцию или обнаружите факты некорректной работы '
                          'бота - просьба написать об этом также разработчику @DeveloperAzarov.\n',
                          reply_markup=general_menu())
-        found_result = f"Пользователь {name} {surname} id {message.from_user.id} не смог найти запрос: {message.text}"
+        found_result = f"Пользователь {fio} не смог найти запрос: {message.text}"
         bot.send_message(157758328, found_result)
 
 
