@@ -3,7 +3,7 @@ import dict_users
 import time
 from bs4 import BeautifulSoup
 import pytz
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 current_datetime = time.strftime('%d.%m.%Y %H:%M')
 dt_utc_arrive = datetime.strptime(current_datetime, '%d.%m.%Y %H:%M').replace(tzinfo=pytz.utc)
@@ -70,6 +70,7 @@ cities_code = {'Внуково-а': 'VKO',  # 'Внуково    ',
                'Пермь': 'PEE',
                'Оренбург': 'REN',
                'Самаракр': 'KUF',
+               'Самаракр[Пас]': 'KUFп',
                'Симфероп': 'SIP',
                'Екатерин': 'SVX',
                'Минск2': 'MSQ',
@@ -79,6 +80,13 @@ cities_code = {'Внуково-а': 'VKO',  # 'Внуково    ',
                'Шарджа': 'SHJ',
                'Череповц': 'CEE',
                'Ярославт': 'IAR',
+               'Новосибт': 'OVB',
+               'Новосибт[Пас]': 'OVBп',
+               'Нижновгр': 'GOJ',
+               'Челябинск[Пас]': 'CEKп',
+               'Шармшейх-1': 'SSH',
+               'Казань': 'KZN',
+               'Тюмень': 'TJM',
                }
 
 
@@ -128,8 +136,8 @@ def parser(user_id):  # это надо было все обернуть в фу
         'login': '1',
         'user_id': '',
         'backend_url': 'https://sup.rossiya-airlines.com:8080',
-        'username': dict_users.users[user_id]['tab_number'],  # '119229', #  '119221', #
-        'userpass': dict_users.users[user_id]['password'],  # 'Parshina15', #  '2DH64rf2', #
+        'username': dict_users.users[user_id]['tab_number'],
+        'userpass': dict_users.users[user_id]['password'],
         'domain': 'stc.local',
         'submit': 'войти'
     }  # TODO ПРОВЕРЬ ПРИНТЫ ЛОГИН И ПАРОЛЬ!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -161,7 +169,7 @@ def parser(user_id):  # это надо было все обернуть в фу
     output_info = 'Ваш ближайший план работ:\n'
 
     for tr in rows:
-        sick_status = False
+        string1 = False
         cells = tr.contents
         day_month_start = cells[1].text[:5]
         msk_start = cells[2].text
@@ -170,10 +178,13 @@ def parser(user_id):  # это надо было все обернуть в фу
         aircraft = cells[5].text
         route_arrive_time = cells[6].text
 
-        time_start = utc_start  # eval(dict_users.users[user_id]['time_depart'])
-        time_zone = dict_users.users[user_id]['time_depart'][:3]
+        if utc_start == '':
+            time_start = '00:00'
+        else:
+            time_start = utc_start  # eval(dict_users.users[user_id]['time_depart'])
+        time_zona = dict_users.users[user_id]['time_depart'][:3]
 
-        depart_utc_dt = day_month_start + f"{' '}" + time_start
+        depart_utc_dt = f"{day_month_start} {time_start}"
 
         if dict_users.users[user_id]['time_depart'] == 'msk_start':
             dt_object = datetime.strptime(depart_utc_dt, '%d.%m %H:%M').replace(tzinfo=pytz.utc)
@@ -189,6 +200,7 @@ def parser(user_id):  # это надо было все обернуть в фу
         if 'ВХД' in cells[4].text:
             date_end, msk_end = extract_arrive(route_arrive_time)
             string = f'{date_end} Заказанный выходной\n'
+            start_dt = ''
         if 'резерв' in cells[4].text:
             day_month_arr, msk_time = extract_arrive(route_arrive_time)
             reserve = 'Резерв'
@@ -196,9 +208,9 @@ def parser(user_id):  # это надо было все обернуть в фу
         if 'ВЛЭК' in cells[4].text:
             string = f'{start_dt} ВЛЭК \n'
         if 'Больничный' in cells[4].text:
-            sick_status = True
             sick_end_date = route_arrive_time[4:-6]
-            sick_string = f"{day_month_start} Больничный лист по {sick_end_date}\n"
+            string = f"{day_month_start} Больничный лист по {sick_end_date}\n"
+            start_dt = ''
         if 'Англ' in cells[4].text:
             string = f'{start_dt} Английский\n'
         if 'Отпуск' in cells[4].text:
@@ -227,26 +239,15 @@ def parser(user_id):  # это надо было все обернуть в фу
             day_mont_arr, msk_time = extract_arrive(cells[6].text)
 
             route = route_arrive_time.title().replace(" ", "")[:-25]
-            # start_del_part_route = route.find('[')
-            # end_del_part_route = route.find(']')
-            # route = route[:start_del_part_route]
             route = route.split('/')[1:]  #
             city = ''
             for i in route:
                 city += change_to_code(i)
-            string = f'{start_dt} {city}> {day_mont_arr} {msk_time}\n'
+            string = f'{start_dt} {city[:-6]}..\n' \
+                     f'{day_mont_arr}       >{city[-9:-1]:11.11} {msk_time}\n'
 
-        if 'plan_new' in str(tr):
-            string = '<b>' + string + '</b>'
         if 'plan_del' in str(tr):
-            string = '\u0336'.join(string) + '\u0336'
-
-        if sick_status:
-            if current_dt_minus_4h < sick_end_date:
-                output_info += sick_string
-                continue
-            else:
-                continue
+            string = ''
 
         current_month = current_dt_minus_4h[3:5]
         plan_month = string[3:5]
@@ -255,7 +256,6 @@ def parser(user_id):  # это надо было все обернуть в фу
         if current_month <= plan_month:  # (главное, чтобы плановый месяц был не меньше текущего) сравниваем сначала месяц чтобы не получилось 31.07 больше чем 20.08 (чтобы не вылезала дата из из прошлого старого месяца)
             # если текущий месяц меньше или такой же как в плане
             if current_dt_minus_4h <= string:  # сравниваем день
-
                 output_info += string
                 continue
             if current_month < plan_month and plan_day < current_dt_minus_4h:
@@ -263,9 +263,9 @@ def parser(user_id):  # это надо было все обернуть в фу
 
     if output_info == 'Ваш ближайший план работ:\n':
         return 'Рейсов на ближайшее время не найдено.'
-
-    if output_info != 'Ваш ближайший план работ:\n':
-        output_info += f'        {time_zone.upper()}               MSK\n'
+    if len(start_dt) == 11:
+        if output_info != 'Ваш ближайший план работ:\n':
+            output_info += f'        {time_zona.upper()}               MSK\n'
 
     # print(output_info)
 
@@ -274,4 +274,4 @@ def parser(user_id):  # это надо было все обернуть в фу
 # # TODO РАСКОМЕНТИЛ ЛИ ТЫ RETURN!!!!!!!!!!!!!!!!!!!!!!!!!
 
 # TODO ПРОВЕРЬ ПРИНТЫ ЛОГИН И ПАРОЛЬ!!!!!!!!!!!!!!!!!!!!!!!!!
-# parser(1029474274)
+# parser(816830262)
