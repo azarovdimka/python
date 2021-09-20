@@ -45,22 +45,22 @@ def callback_inline(call):
     if call.message:
         if call.data == "one":
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                                  text="Хорошо, спасибо за ответ.")
+                                  text="Хорошо, спасибо. Совсем скоро настрока убдет завершена. Ожидайте.")
             bot.send_message(157758328, f"{call.message.chat.id} {dict_users.users[call.message.chat.id]['surname']} "
                                         f"Ответил, номер один: UTC МСК")
         if call.data == "two":
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                                  text="Хорошо, спасибо за ответ. Скоро исправлю")
+                                  text="Хорошо, спасибо. Совсем скоро настрока убдет завершена. Ожидайте.")
             bot.send_message(157758328, f"{call.message.chat.id} {dict_users.users[call.message.chat.id]['surname']} "
                                         f"Попросил номер два: МСК МСК")
         if call.data == "three":
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                                  text="Хорошо, спасибо за ответ. Скоро исправлю")
+                                  text="Хорошо, спасибо. Совсем скоро настрока убдет завершена. Ожидайте.")
             bot.send_message(157758328, f"{call.message.chat.id} {dict_users.users[call.message.chat.id]['surname']} "
                                         f"Попросил номер три: МСК UTC")
         if call.data == "three":
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                                  text="Хорошо, спасибо за ответ. Скоро исправлю")
+                                  text="Хорошо, спасибо. Совсем скоро настрока убдет завершена. Ожидайте.")
             bot.send_message(157758328, f"{call.message.chat.id} {dict_users.users[call.message.chat.id]['surname']} "
                                         f"Попросил номер четыре: UTC UTC")
 
@@ -89,8 +89,7 @@ def cycle_plan_notify():
                         plan_btn.add(btn)
                         bot.send_message(user_id, notification, reply_markup=plan_btn,
                                          parse_mode='html')  # отправляем пользователю его план
-                        bot.send_message(157758328, f'отправили план {fio}', reply_markup=plan_btn,
-                                         parse_mode='html')
+                        bot.send_message(157758328, f'отправили план {fio}')
                         bot.send_message(157758328, notification, reply_markup=plan_btn,
                                          parse_mode='html')
                         sent_plan_counter += 1
@@ -111,16 +110,13 @@ def cycle_plan_notify():
                 # if len(users_off_list) != 0:
         except Exception as e:
             bot.send_message(157758328, f'поймали ошибку во внешнем try except: {fio}: {traceback.format_exc()}')
+        # dummy_event = threading.Event()
+        # dummy_event.wait(timeout=1)
+        time.sleep(300)
 
-        time.sleep(30)
 
-
-try:
-    check_plan = threading.Thread(target=cycle_plan_notify)  # TODO закомментирвоать
-    check_plan.start()
-except Exception:  # если случилась ошибка при отправке сообщений пользователю
-    error = f'{traceback.format_exc()}'  # TODO в этом месте надо предусмотреть, чтио ошибок может быть несколько от разных пользователей: добавлять в список ошибки? только нужны сами ошибки а не весь путь
-    bot.send_message(157758328, f'try except на вызов потока: {error}')
+check_plan = threading.Thread(target=cycle_plan_notify)  # TODO закомментирвоать
+check_plan.start()
 
 
 def check_permissions_for_everyone():
@@ -187,10 +183,10 @@ def messaging(
             fio = f'{user_id} {name} {surname}'
             try:
                 if len(name) == 0:
-                    bot.send_message(user_id, 'Уважаемый бортпроводник, {}'.format(' '.join(mess[2:]),
-                                                                                   reply_markup=general_menu()))
+                    bot.send_message(user_id, f'Уважаемый бортпроводник, {" ".join(mess[2:])}',
+                                     reply_markup=general_menu())
                 else:
-                    bot.send_message(user_id, f'{name}, {mess[2:]}', reply_markup=general_menu())
+                    bot.send_message(user_id, f'{name}, {" ".join(mess[2:])}', reply_markup=general_menu())
                 # bot.send_message(user_id,
                 #                  "Если Вы не хотите получать рассылку, отправьте: отказ от рассылки")
                 # sent_list.append(fio)
@@ -202,8 +198,8 @@ def messaging(
                 counter_errors += 1
                 bot.send_message(157758328,
                                  f"сообщение не удалось отправить {fio} ошибка {traceback.format_exc()}.")  # TODO временно
-        else:
-            continue
+        # else:
+        #     continue
     bot.send_message(157758328,
                      f"всего разослано {counter_users} чел. из {len(dict_users.users)} чел.")  # TODO временно
     return
@@ -345,10 +341,14 @@ def conversation(message):
 
     def photo():
         """Отправляет пользовтелю информацию с фото"""
-        pic = baza.dictionary[id].get('photo')
-        bot.send_message(message.chat.id, baza.dictionary[id].get('answer'),
-                         parse_mode='Markdown', )  # reply_markup=photo_btn
-        bot.send_photo(message.chat.id, pic)
+        try:  # TODO временный try except посмотреть почему падает в этом месте
+            pic = baza.dictionary[id].get('photo')
+            bot.send_message(message.chat.id, baza.dictionary[id].get('answer'),
+                             parse_mode='Markdown', )  # reply_markup=photo_btn
+            bot.send_photo(message.chat.id, pic)
+        except Exception:
+            bot.send_message(157758328,
+                             f"Поймали ошибку на стадии выдачи изображени из функции photo() при запросе {message.text}: {traceback.format_exc()}")
         bot.send_message(157758328, "Выдали фото по запросу: " + message.text)
 
     def open():
@@ -728,7 +728,7 @@ def conversation(message):
             bot.send_message(message.chat.id,
                              "Вам не приходят уведомления и не подтверждается план работ, так как Вы ранее не сообщали "
                              "свой логин и пароль. Если Вы хотите подтверждать план работ автоматически и получать план работ в качестве "
-                             "уведомлений в телеграм, Вам нужно прислать в ответном сообщении через пробел: "
+                             "уведомлений в телеграм, Вам нужно прислать в ответном сообщении 4 слова через пробел в однеу строку: "
                              "логин ...... пароль ......", reply_markup=general_menu())
             bot.send_message(157758328,
                              '{} попытался включить автоматическое подтверждение плана автоматического подтверждения '
@@ -782,7 +782,7 @@ def conversation(message):
             bot.send_message(message.chat.id, 'Вам не приходят автоматические уведомление о предстоящем плане работ, '
                                               'так как Вы ранее не сообщили свой логин и пароль от OpenSky. Чтобы получать '
                                               'уведомления о предстоящем плане работ, Вам неообходимо сообщить свой логин и '
-                                              'пароль в сообщении по следующему шаблону: логин ...... пароль ........')
+                                              'пароль в сообщении по следующему шаблону: логин ...... пароль ........ (4 слова через пробел в одну строку)')
         if len(password) > 0 and dict_users.users[message.chat.id]['plan_notify']:
             bot.send_message(message.chat.id,
                              'Хорошо, будет сделано. Чуть позже уведомления о предстоящем плане работ у '
@@ -802,11 +802,12 @@ def conversation(message):
                              'Ваш логин и пароль от OpenSky отсутсвует в моей базе данных, поэтому я не могу запросить '
                              'ваш налёт и выдать его напрямую сюда в чат. Если вы хотите легко и быстро узнавать свой '
                              'налёт - в ответном сообщении отправьте свой логин и пароль через пробел в следующем '
-                             'формате: \n логин ...... пароль ...... \n (вместо многоточия ваш логин и пароль). \n '
+                             'формате: \n логин ...... пароль ...... \n (вместо многоточия ваш логин и пароль - 4 слова через пробел). \n '
                              'Поэтому пока предлагаю нажать на кнопку, перейти и самостоятельно просмотреть Ваш налёт, '
                              'ввести логин и пароль туда вручную.', reply_markup=nalet_btn)
             return
         else:
+            bot.send_message(message.chat.id, "Уже считаю Ваш налёт. Пожалуйста, подождите...")
             nalet = getnalet.parser(message.chat.id)
             nalet_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()  # что такое двоеточие и что оно дает???
             btn = types.InlineKeyboardButton(text="Открыть подробнее в OpenSky",
