@@ -1,20 +1,17 @@
-import time
-import multiprocessing
-import traceback
-
 import getplan
 import dict_users
 import os
 
 
-def timer():
-    time.sleep()
+#
+# def timer():
+#     time.sleep()
 
 
 def write_check_relevance(plan, chat_id):  # TODO НЕ ЗАБУДЬ ПОМЕНЯТЬ АДРЕС!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    file_path = "C:\\PycharmProjects\\Probe\\мои примеры\\GitHub\\telebot\\plans\\plans" + str(
-        chat_id) + ".txt"  # "/usr/local/bin/bot/plans/plans" + str(chat_id) + ".txt"
-    # "C:\\PycharmProjects\\Probe\\мои примеры\\GitHub\\telebot\\plans\\plans" + str(chat_id) + ".txt"  #
+    file_path = "/usr/local/bin/bot/plans/plans" + str(chat_id) + ".txt"
+    # "C:\\PycharmProjects\\Probe\\мои примеры\\GitHub\\telebot\\plans\\plans" + str(chat_id) + ".txt"
+
     # если пароля у пользователя в словаре нет - то для него он не будет дальше проверять и функция закончится
     if dict_users.users[chat_id]['password'] == '' or not dict_users.users[chat_id]['plan_notify']:
         return None
@@ -34,7 +31,7 @@ def write_check_relevance(plan, chat_id):  # TODO НЕ ЗАБУДЬ ПОМЕНЯ
             lines_old_file = original.readlines()  # преобразовали в список для будущего построчного сравнения
         # если имеющийся файл совпадает с полученными данными парсера
         if plan == old_file:
-            return  # ничего не происходит, ничего не уведомляет
+            return  # ничего не происходит, ничего не уведомляет # TODO быть может так что файлы равны, и программа не завершается, а интерпретатор продолжает читать код дальше и
         lines = []  # создание нового списка строк из файла без \n для корректного сравнения строк
         for i in lines_old_file:
             lines.append(i[:-1])  # убираем символ переноса каретки
@@ -64,10 +61,17 @@ def write_check_relevance(plan, chat_id):  # TODO НЕ ЗАБУДЬ ПОМЕНЯ
 
 def notify(user_id):
     plan = getplan.parser(user_id)
-    result = write_check_relevance(plan, user_id)
-    if result:
-        return result
-    else:
-        return
+    # plan не может сожержать None в результате работы функции getplan.parser
+    # TODO если функция getplan.parser() будет прервана внутренним return ... может л
+    if plan is not None:
+        result = write_check_relevance(plan,
+                                       user_id)  # TODO если эта функция возвращает None, то функция просто должна завершиться, но plan=None может послужить причиной исключения
+        if result:
+            # print(result)
+            return result
+        else:
+            return
+
+# notify(716423609)
 
 # TODO НЕ ЗАБУДЬ ПОМЕНЯТЬ АДРЕС!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
