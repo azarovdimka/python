@@ -41,7 +41,10 @@ cities = {
     'Екатерин': 'Екатернбург',
     'Минск2': 'Минск',
     'Челябинс': 'Челябинск',
-
+    'Дюселдрф': 'Дюсельдорф',
+    'Новосибт': 'Новосибирск',
+    'Махачкал': 'Махачкала',
+    'Краснярс-1': 'Краснярск',
 }
 
 cities_code = {'Внуково-а': 'VKO',  # 'Внуково    ',
@@ -84,9 +87,12 @@ cities_code = {'Внуково-а': 'VKO',  # 'Внуково    ',
                'Новосибт[Пас]': 'OVBп',
                'Нижновгр': 'GOJ',
                'Челябинск[Пас]': 'CEKп',
+               'Челябинс[Пас]': 'CEKп',
                'Шармшейх-1': 'SSH',
                'Казань': 'KZN',
                'Тюмень': 'TJM',
+               'Платов[Пас]': 'ROVп',
+               'Хургада-2': 'HRG'
                }
 
 
@@ -154,9 +160,17 @@ def parser(user_id):  # это надо было все обернуть в фу
             'time_type': 'UTC',
             'accept': '1',  # подтверждение плана работ
         }
+    try:
+        work_plan = s.post(url, data=data, headers=dict(Referer=url))
+    except Exception as exc:  # ConnectionResetError(10054, 'Удаленный хост принудительно разорвал существующее подключение'
+        print(f'{type(exc).__name__} {exc}')
+        return
 
-    work_plan = s.post(url, data=data, headers=dict(Referer=url))  # work_plan = response 200
-    soup = BeautifulSoup(work_plan.content, 'html.parser')  # .find_all('div', {'class': ['dhx_cal_event_line_start']})
+    soup = BeautifulSoup(work_plan.content, 'html.parser')
+
+    work_plan.close()  # TODO проверить помогает ли это устртанить ошибку
+    # ConnectionResetError(10054, 'Удаленный хост принудительно разорвал существующее подключение',
+    #                      # # как результата открытия более одного клиентского соединения, что провоцирует данную ошибку
 
     events = soup.select('.table.table-striped.table-hover.table-condensed')
     try:
@@ -209,12 +223,12 @@ def parser(user_id):  # это надо было все обернуть в фу
             string = f'{start_dt} ВЛЭК \n'
         if 'Больничный' in cells[4].text:
             sick_end_date = route_arrive_time[4:-6]
-            string = f"{day_month_start} Больничный лист по {sick_end_date}\n"
+            string = f"{day_month_start} Больничный л.  по {sick_end_date}\n"
             start_dt = ''
         if 'Англ' in cells[4].text:
             string = f'{start_dt} Английский\n'
         if 'Отпуск' in cells[4].text:
-            string = f'{day_month_start} Отпуск до        {route_arrive_time[1:-6]}\n'
+            string = f'{day_month_start} Отпуск         по {route_arrive_time[4:-6]}\n'
         if 'ШТБ' in cells[4].text:
             string = f'{start_dt} Вызов в Штаб\n'
         if 'КПК' in cells[4].text:
@@ -243,8 +257,8 @@ def parser(user_id):  # это надо было все обернуть в фу
             city = ''
             for i in route:
                 city += change_to_code(i)
-            string = f'{start_dt} {city[:-6]}..\n' \
-                     f'{day_mont_arr}       >{city[-9:-1]:11.11} {msk_time}\n'
+            string = f'{start_dt} {city[:12]}..\n' \
+                     f'{day_mont_arr}       ..{city[-9:-1]:9.9} {msk_time}\n'
 
         if 'plan_del' in str(tr):
             string = ''
@@ -267,6 +281,16 @@ def parser(user_id):  # это надо было все обернуть в фу
         if output_info != 'Ваш ближайший план работ:\n':
             output_info += f'        {time_zona.upper()}               MSK\n'
 
+    # log_out_url = 'https://edu.rossiya-airlines.com/?logout'
+    # TODO Правильно ли сделатн выход из клиентского соединения
+
+    # попытка избежать ошибки ConnectionResetError(10054, 'Удаленный хост принудительно разорвал существующее подключение',
+    # # как результата открытия более одного клиентского соединения, что провоцирует данную ошибку
+    # try:
+    #     s.post(log_out_url, headers=dict(Referer=log_out_url))
+    # except Exception as exc:
+    #     print(f'{type(exc).__name__} {exc}')
+    #     return
     # print(output_info)
 
     return "<pre>" + output_info + "</pre>"
@@ -274,4 +298,4 @@ def parser(user_id):  # это надо было все обернуть в фу
 # # TODO РАСКОМЕНТИЛ ЛИ ТЫ RETURN!!!!!!!!!!!!!!!!!!!!!!!!!
 
 # TODO ПРОВЕРЬ ПРИНТЫ ЛОГИН И ПАРОЛЬ!!!!!!!!!!!!!!!!!!!!!!!!!
-# parser(816830262)
+# parser(716423609)
