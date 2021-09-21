@@ -117,6 +117,8 @@ def cycle_plan_notify():
 
 check_plan = threading.Thread(target=cycle_plan_notify)  # TODO закомментирвоать
 check_plan.start()
+if not check_plan.is_alive():
+    check_plan.start()
 
 
 def check_permissions_for_everyone():
@@ -167,6 +169,8 @@ def check_new_documents():
 
 check_new_documents_thread = threading.Thread(target=check_new_documents)  # TODO закомментирвоать
 check_new_documents_thread.start()
+if not check_new_documents_thread.is_alive():
+    check_new_documents_thread.start()
 
 
 def messaging(
@@ -187,9 +191,6 @@ def messaging(
                                      reply_markup=general_menu())
                 else:
                     bot.send_message(user_id, f'{name}, {" ".join(mess[2:])}', reply_markup=general_menu())
-                # bot.send_message(user_id,
-                #                  "Если Вы не хотите получать рассылку, отправьте: отказ от рассылки")
-                # sent_list.append(fio)
                 counter_users += 1
                 bot.send_message(157758328, f"Сообщение успешно отравлено {fio}")  # TODO временно
                 time.sleep(3)
@@ -198,8 +199,6 @@ def messaging(
                 counter_errors += 1
                 bot.send_message(157758328,
                                  f"сообщение не удалось отправить {fio} ошибка {traceback.format_exc()}.")  # TODO временно
-        # else:
-        #     continue
     bot.send_message(157758328,
                      f"всего разослано {counter_users} чел. из {len(dict_users.users)} чел.")  # TODO временно
     return
