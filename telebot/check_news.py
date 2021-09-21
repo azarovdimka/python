@@ -19,7 +19,10 @@ def parser(user_id):  # это надо было все обернуть в фу
         'submit': 'войти'
     }
 
-    main_page = s.post(url, data=data, headers=dict(Referer=url))  # main_page = response 200
+    try:
+        main_page = s.post(url, data=data, headers=dict(Referer=url))  # main_page = response 200
+    except:
+        return
     soup = BeautifulSoup(main_page.content, 'html.parser')  # .find_all('div', {'class': ['dhx_cal_event_line_start']})
 
     events = soup.select('.table.table-striped.table-condensed.table-hover')
