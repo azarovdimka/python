@@ -3,6 +3,8 @@ import dict_users
 import time
 from bs4 import BeautifulSoup
 
+import exception_logger
+
 
 def parser(user_id):  # это надо было все обернуть в функцию чтобы потом при импорте вызвать модуль.функция()
     url = 'https://edu.rossiya-airlines.com/nalet/'
@@ -20,13 +22,21 @@ def parser(user_id):  # это надо было все обернуть в фу
         'submit': 'войти'
     }
 
-    nalet = s.post(url, data=data, headers=dict(Referer=url))  # work_plan = response 200
+    try:
+        nalet = s.post(url, data=data, headers=dict(Referer=url))  # work_plan = response 200
+    except Exception as exc:
+        exception_logger.writer(exc=exc, request=url, user_id=dict_users.users[user_id])
+        return
+
     month_year = time.strftime('%m.%Y')
     current_date = time.strftime('%d.%m.%Y')
 
     url = f'https://edu.rossiya-airlines.com/nalet/userNalet-7113/periodWith-01.{month_year}/periodToOn-{current_date}/ajax-1/'
-
-    nalet = s.post(url, headers=dict(Referer=url))  # work_plan = response 200
+    try:
+        nalet = s.post(url, headers=dict(Referer=url))  # work_plan = response 200
+    except Exception as exc:
+        exception_logger.writer(exc=exc, request=url, user_id=dict_users.users[user_id])
+        return
 
     soup = BeautifulSoup(nalet.content, 'html.parser')  # .find_all('div', {'class': ['dhx_cal_data']})
 
