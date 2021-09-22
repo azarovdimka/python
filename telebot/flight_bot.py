@@ -7,7 +7,7 @@ from telebot.types import InlineKeyboardMarkup
 import baza
 from telebot import types
 from random import choice
-
+import exception_logger
 import get_weather
 import settings
 import dict_users
@@ -15,7 +15,6 @@ import getplan
 import getnalet
 import notificator
 import threading
-# import multiprocessing #  as mp
 import time
 import get_permissions
 import traceback
@@ -67,11 +66,11 @@ def callback_inline(call):
 
 def cycle_plan_notify():
     while True:
-        counter_errors = 0
         counter_users = 0
         users_off_list = []
         sent_plan_counter = 0
         sent_plan_list = []
+        # bot.send_message(157758328, "бот начал проверку планов пользователей в атоматическом режиме")
         try:
             for user_id in dict_users.users.keys():
                 counter_users += 1
@@ -79,16 +78,13 @@ def cycle_plan_notify():
                     name = dict_users.users[user_id]['name']
                     surname = dict_users.users[user_id]['surname']
                     fio = f'{user_id} {surname} {name} '
-
-                    notification = notificator.notify(
-                        user_id)  # TODO НЕ ЗАБУДЬ ПОМЕНЯТЬ АДРЕС  ЗАПИСИ ФАЙЛА в НОТИФИКАТОРЕ!!!!!!!
+                    notification = notificator.notify(user_id)  # TODO НЕ ЗАБУДЬ ПОМЕНЯТЬ АДРЕС ФАЙЛА в НОТИФИКАТОРЕ!!!
                     if notification != None:  # не равно none - получили план. будет ошибка, если ему не удалось отправить ему его план - по
                         plan_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()  # что такое двоеточие и что оно дает???
                         btn = types.InlineKeyboardButton(text="Открыть подробнее в OpenSky",
                                                          url='https://edu.rossiya-airlines.com/workplan/')
                         plan_btn.add(btn)
-                        bot.send_message(user_id, notification, reply_markup=plan_btn,
-                                         parse_mode='html')  # отправляем пользователю его план
+                        bot.send_message(user_id, notification, reply_markup=plan_btn, parse_mode='html')
                         bot.send_message(157758328, f'отправили план {fio}')
                         bot.send_message(157758328, notification, reply_markup=plan_btn,
                                          parse_mode='html')
@@ -96,10 +92,12 @@ def cycle_plan_notify():
                         sent_plan_list.append(fio)
                         # bot.send_message(157758328, f'план выслан {fio}.')
                     if notification == None:  # равно None - не записан пароль пользователя, парсить не стали
+                        # bot.send_message(157758328, f'{counter_users} из {len(dict_users.users)}: у {fio} нового плана нет, либо логин и пароль не указан')
                         continue  # в самом парсере тоже написано return если отсутсвует пароль в словаре
-                except Exception:  # если случилась ошибка при отправке сообщений пользователю
+                except Exception as exc:  # если случилась ошибка при отправке сообщений пользователю
                     users_off_list.append(fio)
-                    # counter_errors += 1
+                    exception_logger.writer(exc=exc, request="отправка плана пользователю в атоматическом режиме",
+                                            user_id=user_id, fio=fio, answer='не удалось отправить план')
                     bot.send_message(157758328,
                                      f'не удалось отправить план: {users_off_list}: {traceback.format_exc()}')
                     continue
@@ -109,15 +107,19 @@ def cycle_plan_notify():
                                  f'общий отчет: план выслан {sent_plan_counter} чел. {", ".join(sent_plan_list)}')
                 # if len(users_off_list) != 0:
         except Exception as e:
+            exception_logger.writer(exc=e, request="извлечение ключа словаря user_id при автоматической отправке плана",
+                                    user_id=user_id, fio=fio, answer='поймали ошибку во внешнем try except')
             bot.send_message(157758328, f'поймали ошибку во внешнем try except: {fio}: {traceback.format_exc()}')
         # dummy_event = threading.Event()
         # dummy_event.wait(timeout=1)
+        # bot.send_message(157758328, "бот закончил проверку планов пользователей в атоматическом режиме, уснул на 5 мин.")
         time.sleep(300)
 
 
 check_plan = threading.Thread(target=cycle_plan_notify)  # TODO закомментирвоать
 check_plan.start()
 if not check_plan.is_alive():
+    exception_logger.writer(exc="поток проверки планов умер", request=None, user_id=None, fio=None, answer=None)
     check_plan.start()
 
 
@@ -167,10 +169,10 @@ def check_new_documents():
         time.sleep(2000)
 
 
-check_new_documents_thread = threading.Thread(target=check_new_documents)  # TODO закомментирвоать
-check_new_documents_thread.start()
-if not check_new_documents_thread.is_alive():
-    check_new_documents_thread.start()
+# check_new_documents_thread = threading.Thread(target=check_new_documents)  # TODO закомментирвоать
+# check_new_documents_thread.start()
+# if not check_new_documents_thread.is_alive():
+#     check_new_documents_thread.start()
 
 
 def messaging(
@@ -194,7 +196,9 @@ def messaging(
                 counter_users += 1
                 bot.send_message(157758328, f"Сообщение успешно отравлено {fio}")  # TODO временно
                 time.sleep(3)
-            except Exception:  # если случилась ошибка при отправке сообщений пользователю
+            except Exception as exc:  # если случилась ошибка при отправке сообщений пользователю
+                exception_logger.writer(exc=exc, request='рассылка сообщений пользователям', user_id=user_id, fio=fio,
+                                        answer='сообщение не удалось отправить ')
                 users_off_list.append(fio)
                 counter_errors += 1
                 bot.send_message(157758328,
@@ -245,6 +249,9 @@ def write_new_dict_user(message):  # TODO почему стирает весь �
         bot.send_message(157758328,
                          "Сообщение о предоставлении доступа пользователю отправлено успешно. \n\n ОБНОВИ СЕРВЕР!")
     except Exception as exc:
+        exception_logger.writer(exc=exc, request='Внесение нового пользователя в словарь удаленно через диалог',
+                                user_id=dict_users.users[user_id],
+                                answer='произошла ошибка при предоставлении доступа. Словарь пользователей стерся полностью.')
         bot.send_message(157758328,
                          f"произошла ошибка при предоставлении доступа {exc}. Словарь пользователей стерся полностью. \n Используй шаблон заполнения словаря: предоставить доступ id фамилия имя город ссылка срок табельный пароль access plan_notify autoconfirm messaging")
 
@@ -619,21 +626,24 @@ def conversation(message):
 
         return
 
-    if '/donate' in message.text.lower():
+    if message.text.lower() in ['/donate', 'пожертвовать', 'поддержать', 'перевести', 'задонатить']:
         donate_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()  # что такое двоеточие и что оно дает???
         btn = types.InlineKeyboardButton(text="Пожертвовать на развитие",
-                                         url='https://money.alfabank.ru/p2p/web/transfer/dazarov5659')
+                                         url='https://www.tinkoff.ru/rm/azarov.dmitriy51/5j9Aj68907')
         donate_btn.add(btn)
         bot.send_message(message.chat.id,
-                         'Телеграм-бот для бортпроводников - это очень крутое, нужное многофункциональное '
-                         'приложение, интегрированное в Telegram. Телеграм-бот развивается каждый день '
-                         'и требует времени и ресурсов. Есть еще много идей, которые хочется реализовать. '
+                         f'{name}, Вы счастливчик! Вы явялетесь пользователем уникального Telegram-бота для '
+                         f'бортпроводников, подобных аналогов которому нет в других авиакомпаниях. '
+                         f'Этот Telegram-бот это очень крутое, нужное многофункциональное '
+                         'приложение, интегрированное в Telegram. Telegram-бот развивается каждый день '
+                         'и требует времени и дополнительных расходов. Есть еще много идей, которые хочется реализовать. '
                          'Предлагайте свои идеи и свою информацию. Поддержите развитие телеграм-бота, '
                          'осуществив перевод на любую сумму без комиссии.',
                          parse_mode='Markdown', reply_markup=donate_btn)
+        bot.send_message(157758328, f"{fio} Рассказали про донаты")
         return
 
-    if '/document' in message.text.lower() or 'проверить допуски' in message.text.lower() or "сроки" in message.text.lower():
+    if message.text.lower() in ['/document', 'проверить допуски', "сроки"]:
         bot.send_message(message.chat.id, f"{name}, запрос отправлен, ожидайте несколько секунд...")
         check_permissions(message.chat.id)
         return
@@ -697,8 +707,8 @@ def conversation(message):
     if 'не подтверждать план работ' in message.text.lower() or "/confirm" in message.text.lower():
         if dict_users.users[message.chat.id]['autoconfirm'] and password == '':
             bot.send_message(message.chat.id,
-                             "По у молчанию у вас включено автоматическое подтверждение пароля, но нет Вашего пароля, "
-                             "поэтому мы не сможем ни получать ваш план, ни подтверждать его. Если вы хотите получать "
+                             "У нас нет Вашего пароля от OpenSky, "
+                             "поэтому мы не сможем ни получать ваш план, ни подтверждить его автоматически. Если вы хотите получать "
                              "план работ и подтверждать его автоматически вам нужно сообщить "
                              "ответном сообщении: логин ..... пароль .... (4 слова через пробел).",
                              reply_markup=general_menu())
@@ -773,7 +783,7 @@ def conversation(message):
             plan_btn.add(btn)
             bot.send_message(message.chat.id, plan, reply_markup=plan_btn, parse_mode='html')
             bot.send_message(157758328, plan, reply_markup=plan_btn, parse_mode='html')
-            bot.send_message(157758328, f"{name} {surname} получил план работ")
+            bot.send_message(157758328, f"{name} {surname} получил план работ по индивидуальному запросу")
             return
 
     if '/plan' in message.text.lower():  # TODO сделать потом чтобы автоматически менял статус в словаре
