@@ -4,6 +4,7 @@ import time
 from bs4 import BeautifulSoup
 import pytz
 from datetime import datetime, timedelta
+import exception_logger
 
 current_datetime = time.strftime('%d.%m.%Y %H:%M')
 dt_utc_arrive = datetime.strptime(current_datetime, '%d.%m.%Y %H:%M').replace(tzinfo=pytz.utc)
@@ -45,6 +46,7 @@ cities = {
     'Новосибт': 'Новосибирск',
     'Махачкал': 'Махачкала',
     'Краснярс-1': 'Красноярск',
+    'Сыктывкр': 'Сыктывкар',
 }
 
 cities_code = {'Внуково-а': 'VKO',  # 'Внуково    ',
@@ -163,24 +165,39 @@ def parser(user_id):  # это надо было все обернуть в фу
     try:
         work_plan = s.post(url, data=data, headers=dict(Referer=url))
     except Exception as exc:  # ConnectionResetError(10054, 'Удаленный хост принудительно разорвал существующее подключение'
-        print(f'{type(exc).__name__} {exc}')
+        exception_logger.writer(exc=exc, request=url, user_id=dict_users.users[user_id])
         return
 
     soup = BeautifulSoup(work_plan.content, 'html.parser')
 
     work_plan.close()  # TODO проверить помогает ли это устртанить ошибку
-    # ConnectionResetError(10054, 'Удаленный хост принудительно разорвал существующее подключение',
-    #                      # # как результата открытия более одного клиентского соединения, что провоцирует данную ошибку
+    # log_out_url = 'https://edu.rossiya-airlines.com/?logout'
+    # # TODO Правильно ли сделатн выход из клиентского соединения
+    #
+    # # попытка избежать ошибки ConnectionResetError(10054, 'Удаленный хост принудительно разорвал существующее подключение',
+    # # # как результата открытия более одного клиентского соединения, что провоцирует данную ошибку
+    # try:
+    #     s.post(log_out_url, headers=dict(Referer=log_out_url))
+    # except Exception as exc:
+    #     print(f'{type(exc).__name__} {exc}')
+    #     return
 
     events = soup.select('.table.table-striped.table-hover.table-condensed')
     try:
         table = events[0]
-    except Exception:
-        error = f"Проблема с получением плана работ. Вероятно, в базе указан неверный логин {dict_users.users[user_id]['tab_number']} и пароль {dict_users.users[user_id]['password']}"
+    except Exception as exc:
+        error = f"Проблема с получением плана работ. Вероятно, в базе указан неверный логин {dict_users.users[user_id]['tab_number']} " \
+                f"и пароль {dict_users.users[user_id]['password']}. Если это действиетльно так, то вы можете сообщить " \
+                f"новый логин и пароль отправив в ответном сообщении 4 слова через пробел в следующем формате в одну " \
+                f"строку: логин ....... пароль ......."
+        exception_logger.writer(exc=exc, request='парсинг плана', user_id=dict_users.users[user_id],
+                                answer='неверный логин и пароль')
         return error
+
     tbody = table.contents[1]
     rows = tbody.contents
     output_info = 'Ваш ближайший план работ:\n'
+    string_copy = None
 
     for tr in rows:
         string1 = False
@@ -227,8 +244,10 @@ def parser(user_id):  # это надо было все обернуть в фу
             start_dt = ''
         if 'Англ' in cells[4].text:
             string = f'{start_dt} Английский\n'
-        if 'Отпуск' in cells[4].text:
+        if 'отпуск' in cells[4].text.lower():
             string = f'{day_month_start} Отпуск         по {route_arrive_time[4:-6]}\n'
+            if string_copy == string:
+                string = ''
         if 'ШТБ' in cells[4].text:
             string = f'{start_dt} Вызов в Штаб\n'
         if 'КПК' in cells[4].text:
@@ -248,7 +267,7 @@ def parser(user_id):  # это надо было все обернуть в фу
             if (int(day_mont_arr[:2]) - int(day_month_start[:2])) <= 1:
                 string = f'{start_dt} {city:11.11} {msk_time}\n'
             if (int(day_mont_arr[:2]) - int(day_month_start[:2])) > 1:
-                string = f'{start_dt} {city} прил: {day_mont_arr} {msk_time}\n'
+                string = f'{start_dt} {city} {day_mont_arr} {msk_time}\n'
         if cells[6].text.count('/') > 2:
             day_mont_arr, msk_time = extract_arrive(cells[6].text)
 
@@ -266,6 +285,7 @@ def parser(user_id):  # это надо было все обернуть в фу
         current_month = current_dt_minus_4h[3:5]
         plan_month = string[3:5]
         plan_day = string
+        string_copy = string
 
         if current_month <= plan_month:  # (главное, чтобы плановый месяц был не меньше текущего) сравниваем сначала месяц чтобы не получилось 31.07 больше чем 20.08 (чтобы не вылезала дата из из прошлого старого месяца)
             # если текущий месяц меньше или такой же как в плане
@@ -281,21 +301,10 @@ def parser(user_id):  # это надо было все обернуть в фу
         if output_info != 'Ваш ближайший план работ:\n':
             output_info += f'        {time_zona.upper()}               MSK\n'
 
-    # log_out_url = 'https://edu.rossiya-airlines.com/?logout'
-    # TODO Правильно ли сделатн выход из клиентского соединения
-
-    # попытка избежать ошибки ConnectionResetError(10054, 'Удаленный хост принудительно разорвал существующее подключение',
-    # # как результата открытия более одного клиентского соединения, что провоцирует данную ошибку
-    # try:
-    #     s.post(log_out_url, headers=dict(Referer=log_out_url))
-    # except Exception as exc:
-    #     print(f'{type(exc).__name__} {exc}')
-    #     return
     # print(output_info)
-
     return "<pre>" + output_info + "</pre>"
 
 # # TODO РАСКОМЕНТИЛ ЛИ ТЫ RETURN!!!!!!!!!!!!!!!!!!!!!!!!!
 
 # TODO ПРОВЕРЬ ПРИНТЫ ЛОГИН И ПАРОЛЬ!!!!!!!!!!!!!!!!!!!!!!!!!
-# parser(716423609)
+# parser(512766466)
