@@ -1,3 +1,4 @@
+import exception_logger
 import getplan
 import dict_users
 import os
@@ -33,19 +34,21 @@ def write_check_relevance(plan, chat_id):  # TODO НЕ ЗАБУДЬ ПОМЕНЯ
         # если имеющийся файл совпадает с полученными данными парсера
         if plan == old_file:
             return  # ничего не происходит, ничего не уведомляет # TODO быть может так что файлы равны, и программа не завершается, а интерпретатор продолжает читать код дальше и
-        lines = []  # создание нового списка строк из файла без \n для корректного сравнения строк
+        file_lines = []  # создание нового списка строк из файла без \n для корректного сравнения строк
         for i in lines_old_file:
-            lines.append(i[:-1])  # убираем символ переноса каретки
+            file_lines.append(i[:-1])  # убираем символ переноса каретки
 
         plan_list = plan.split('\n')  # создает из плана список чтобы можно было построчно сравнивать
         # если первая строка не совпадает и длина полученного плана меньше на одну строку:
         try:
-            if lines[1] != plan_list[1] and (len(lines) - len(
+            if file_lines[1] != plan_list[1] and (len(file_lines) - len(
                     plan_list) + 1 == 1):  # приходится плюсовать единицу, потому что при plan.split('\n') он бобавляет в конце еще одну пустую строку, так как в конце последней строки тоже стоит \n
                 with open(file_path, 'w', encoding='utf-8') as modified:
                     modified.write(plan)  # изменения в файл запишет
                     return  # но уведомлять не будет если ночью просто прошел день, а соовтетсенно рейс отлетал, а нового ничего не появилось
-        except Exception:  # todo попробовать перенести except в 42 строку чтобы witn open два раза не вызывать
+        except Exception as exc:  # todo попробовать перенести except в 42 строку чтобы witn open два раза не вызывать
+            exception_logger.writer(exc=exc, request='сравнение старого и нового плана на предмет прошедшего рейса',
+                                    user_id=dict_users.users[chat_id])
             with open(file_path, 'w', encoding='utf-8') as modified:
                 modified.write(plan)  # изменения в файл запишет
 
@@ -73,6 +76,6 @@ def notify(user_id):
         else:
             return
 
-# notify(716423609)
+# notify(512766466)
 
 # TODO НЕ ЗАБУДЬ ПОМЕНЯТЬ АДРЕС!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
