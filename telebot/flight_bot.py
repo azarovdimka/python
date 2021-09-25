@@ -33,9 +33,15 @@ def survey(user_id):
     four = types.InlineKeyboardButton(text="4 - Вылет UTC, Прилёт UTC", callback_data="four")
     survey_btns.add(one, two, three, four)
     bot.send_message(user_id, f"`\t\t {dict_users.users[user_id]['name']}, Ваш логин пароль успешно отправлен. \n"
-                              f"`\t\t Для завершения персональной настройки, "
-                              f"укажите часовые пояса, в которых Вам было бы удобно получать план работ: UTC или MSK",
+                              f"`\t\t Укажите часовые пояса, в которых Вам было бы удобно получать план работ: UTC или MSK",
                      reply_markup=survey_btns)
+    next_survey_btns = types.InlineKeyboardMarkup(row_width=1)
+    confirm = types.InlineKeyboardButton(text="Подтверждать план автоматически", callback_data="confirm")
+    not_confirm = types.InlineKeyboardButton(text="Не подтверждать план автоматически", callback_data="not_confirm")
+    next_survey_btns.add(confirm, not_confirm)
+    bot.send_message(user_id, f"`\t\t {dict_users.users[user_id]['name']} для завершения персональной настройки, "
+                              f"сообщите, подтверждать ли план работ в OpenSky автоматически при отправке его Вам в Telegram?",
+                     reply_markup=next_survey_btns)
 
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -44,24 +50,34 @@ def callback_inline(call):
     if call.message:
         if call.data == "one":
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                                  text="Хорошо, спасибо. Совсем скоро настрока убдет завершена. Ожидайте.")
+                                  text="Хорошо, план работ Вам будет высылаться в указанных часовых поясах: вылет по UTC, прилёт по МСК.")
             bot.send_message(157758328, f"{call.message.chat.id} {dict_users.users[call.message.chat.id]['surname']} "
                                         f"Ответил, номер один: UTC МСК")
         if call.data == "two":
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                                  text="Хорошо, спасибо. Совсем скоро настрока убдет завершена. Ожидайте.")
+                                  text="Хорошо, план работ Вам будет высылаться в указанных часовых поясах: вылет и прилёт по МСК.")
             bot.send_message(157758328, f"{call.message.chat.id} {dict_users.users[call.message.chat.id]['surname']} "
                                         f"Попросил номер два: МСК МСК")
         if call.data == "three":
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                                  text="Хорошо, спасибо. Совсем скоро настрока убдет завершена. Ожидайте.")
+                                  text="Хорошо, план работ Вам будет высылаться в указанных часовых поясах: вылет по МСК, прилёт по UTC.")
             bot.send_message(157758328, f"{call.message.chat.id} {dict_users.users[call.message.chat.id]['surname']} "
                                         f"Попросил номер три: МСК UTC")
-        if call.data == "three":
+        if call.data == "four":
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                                  text="Хорошо, спасибо. Совсем скоро настрока убдет завершена. Ожидайте.")
+                                  text="Хорошо, план работ Вам будет высылаться в указанных часовых поясах: вылет и прилёт по UTC.")
             bot.send_message(157758328, f"{call.message.chat.id} {dict_users.users[call.message.chat.id]['surname']} "
                                         f"Попросил номер четыре: UTC UTC")
+        if call.data == "confirm":
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                  text="Ваш план работ будет подтверждаться автоматически при отправке его Вам в Telegram.")
+            bot.send_message(157758328, f"{call.message.chat.id} {dict_users.users[call.message.chat.id]['surname']} "
+                                        f"Попросил подтверждать план работ")
+        if call.data == "not_confirm":
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                  text="Ваш план работ не будет подтверждаться автоматически при отправке его Вам в Telegram.")
+            bot.send_message(157758328, f"{call.message.chat.id} {dict_users.users[call.message.chat.id]['surname']} "
+                                        f"Попросил не подтверждать план работ")
 
 
 def cycle_plan_notify():
@@ -70,7 +86,7 @@ def cycle_plan_notify():
         users_off_list = []
         sent_plan_counter = 0
         sent_plan_list = []
-        # bot.send_message(157758328, "бот начал проверку планов пользователей в атоматическом режиме")
+        bot.send_message(157758328, "бот начал проверку планов пользователей в атоматическом режиме")
         try:
             for user_id in dict_users.users.keys():
                 counter_users += 1
@@ -112,7 +128,8 @@ def cycle_plan_notify():
             bot.send_message(157758328, f'поймали ошибку во внешнем try except: {fio}: {traceback.format_exc()}')
         # dummy_event = threading.Event()
         # dummy_event.wait(timeout=1)
-        # bot.send_message(157758328, "бот закончил проверку планов пользователей в атоматическом режиме, уснул на 5 мин.")
+        bot.send_message(157758328,
+                         "бот закончил проверку планов пользователей в атоматическом режиме, уснул на 5 мин.")
         time.sleep(300)
 
 
@@ -279,8 +296,8 @@ def verification(message):
                                           'удостоверения, доступ временно ограничен, но нам не терпится как можно '
                                           'быстрее предоставить Вам доступ.')
         bot.send_message(157758328,
-                         "Запросили фото айдишки для верификации от пользователя id {0.id} @{0.username} {0.first_name} "
-                         "{0.last_name}".format(message.from_user, message.from_user, message.from_user))
+                         f"Запросили фото айдишки для верификации от пользователя id {message.from_user.id} @{message.from_user.username} {message.from_user.first_name} "
+                         f"{message.from_user.last_name} Пользователь спрашивал {message.text}")
         return False
 
 
@@ -301,7 +318,7 @@ def welcome(message):
     функции обозначены кнопки, которые будут всегда отображаться под полем ввода запроса."""
     # service_notification(message)
 
-    sti = open('../telebot2/static/AnimatedSticker.tgs', 'rb')
+    sti = open('static/AnimatedSticker.tgs', 'rb')
     bot.send_sticker(message.chat.id, sti)
 
     bot.send_message(message.chat.id,
@@ -604,6 +621,30 @@ def conversation(message):
 
     # service_notification(message)
 
+    if "логин" in message.text.lower() and "пароль" in message.text.lower():
+        bot.send_message(157758328,
+                         "Пользователь {0.first_name} @{0.username} id {0.id} прислал логин и пароль: ".format(
+                             message.from_user, message.from_user) + message.text)
+        bot.send_message(message.chat.id,
+                         "\r \t Ожидайте, логин и пароль отправлен успешно. Через некоторое время новые настройки будут активированы.\n \t"
+                         "В дальнейшем, можно установить тот же самый пароль, и не придумывать каждый раз новый, "
+                         "если делать это по ссылке pwd.rossiya-airlines.com (на странице авторизации OpenSky под формой "
+                         "ввода логина и пароля).\n"
+                         , reply_markup=survey(message.chat.id))
+        return
+
+    for i in message.text.split():
+        if 4 <= len(i) <= 6 and i.isdigit() and len(message.text.split()) == 2:
+            bot.send_message(157758328,
+                             f"Пользователь {message.from_user.first_name} @{message.from_user.username} id {message.from_user.id} прислал логин и пароль: {message.text}")
+            bot.send_message(message.chat.id,
+                             "\r \t Логин и пароль отправлен успешно. Новые настройки скоро будут активированы. Пожалуйста, ожидайте.\n \t"
+                             "В дальнейшем, можно установить тот же самый пароль, и не придумывать каждый раз новый, "
+                             "если делать это по ссылке pwd.rossiya-airlines.com (на странице авторизации OpenSky под формой "
+                             "ввода логина и пароля).\n"
+                             , reply_markup=survey(message.chat.id))
+            return
+
     if "написать пользователю по id" in message.text.lower():
         mess = message.text.split()
         bot.send_message(int(mess[4]), ' '.join(mess[5:]).capitalize(), reply_markup=general_menu())
@@ -671,16 +712,9 @@ def conversation(message):
             found_result = True
         return found_result
 
-    if "логин" in message.text.lower() and "пароль" in message.text.lower():
-        bot.send_message(157758328,
-                         "Пользователь {0.first_name} @{0.username} id {0.id} прислал логин и пароль: ".format(
-                             message.from_user, message.from_user) + message.text)
-        bot.send_message(message.chat.id,
-                         "\r \t Ожидайте, через некоторое время логин и пароль будет добавлен..\n \t"
-                         "В дальнейшем, можно установить тот же самый пароль, и не придумывать каждый раз новый, "
-                         "если делать это по ссылке pwd.rossiya-airlines.com (на странице авторизации OpenSky под формой "
-                         "ввода логина и пароля).\n"
-                         , reply_markup=survey(message.chat.id))
+    if "хорошо" in message.text.lower():
+        with open('static/AnimatedSticker.tgs', 'rb') as sti:
+            bot.send_sticker(message.chat.id, sti)
         return
 
     message.text = find_garbage(message.text)
