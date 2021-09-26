@@ -11,7 +11,7 @@ import os
 
 def write_check_relevance(plan, chat_id):  # TODO НЕ ЗАБУДЬ ПОМЕНЯТЬ АДРЕС!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     file_path = "C:\\PycharmProjects\\Probe\\мои примеры\\GitHub\\telebot\\plans\\plans" + str(
-        chat_id) + ".txt"  # "/usr/local/bin/bot/plans/plans" + str(chat_id) + ".txt"
+        chat_id) + ".txt"  # "/usr/local/bin/bot/plans/plans" + str(chat_id) + ".txt" #
     #
 
     # если пароля у пользователя в словаре нет - то для него он не будет дальше проверять и функция закончится
