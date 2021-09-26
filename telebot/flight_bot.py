@@ -527,6 +527,7 @@ def conversation(message):
                     bot.send_message(message.chat.id, each_answer, parse_mode='Markdown',
                                      reply_markup=open_btn)
                     found_result = True
+                    photo = None
                 if photo:
                     photo()
                     found_result = True
