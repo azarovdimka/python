@@ -47,9 +47,15 @@ cities = {
     'Махачкал': 'Махачкала',
     'Краснярс-1': 'Красноярск',
     'Сыктывкр': 'Сыктывкар',
+    'Нвартовс-1': 'Нижневартовск',
+    'Хомутово': 'Южно-Сахалинск',
+
 }
 
 cities_code = {'Внуково-а': 'VKO',  # 'Внуково    ',
+               'Воронеж': 'VOZ',
+               'Ижевск': 'IJK',
+               'Сыктывкр': 'SCW',
                'Анталья-2': 'AYT',
                'Минводы': 'MRV',
                'Ларнака': 'LCA',
@@ -76,11 +82,13 @@ cities_code = {'Внуково-а': 'VKO',  # 'Внуково    ',
                'Оренбург': 'REN',
                'Самаракр': 'KUF',
                'Самаракр[Пас]': 'KUFп',
+               'Саранск': 'SKX',
                'Симфероп': 'SIP',
                'Екатерин': 'SVX',
                'Минск2': 'MSQ',
                'Челябинс': 'CEK',
                'Шеремет-D': 'SVO',
+               'Шеремет-B': 'SVO',
                'Шеремет[Пас]': 'SVOп',
                'Шарджа': 'SHJ',
                'Череповц': 'CEE',
@@ -134,6 +142,10 @@ def extract_arrive(s):
     return day_month_arr, msk_arrive_time
 
 
+def extract_destination(s):
+    destination = s[-21:-5]
+
+
 def parser(user_id):  # это надо было все обернуть в функцию чтобы потом при импорте вызвать модуль.функция()
     url = 'https://edu.rossiya-airlines.com/workplan/'
 
@@ -171,16 +183,6 @@ def parser(user_id):  # это надо было все обернуть в фу
     soup = BeautifulSoup(work_plan.content, 'html.parser')
 
     work_plan.close()  # TODO проверить помогает ли это устртанить ошибку
-    # log_out_url = 'https://edu.rossiya-airlines.com/?logout'
-    # # TODO Правильно ли сделатн выход из клиентского соединения
-    #
-    # # попытка избежать ошибки ConnectionResetError(10054, 'Удаленный хост принудительно разорвал существующее подключение',
-    # # # как результата открытия более одного клиентского соединения, что провоцирует данную ошибку
-    # try:
-    #     s.post(log_out_url, headers=dict(Referer=log_out_url))
-    # except Exception as exc:
-    #     print(f'{type(exc).__name__} {exc}')
-    #     return
 
     events = soup.select('.table.table-striped.table-hover.table-condensed')
     try:
@@ -208,7 +210,8 @@ def parser(user_id):  # это надо было все обернуть в фу
         flight_number = cells[4].text
         aircraft = cells[5].text
         route_arrive_time = cells[6].text
-
+        destination = cells[6].text.split(' ')[0].title()
+        # print(tr)
         if utc_start == '':
             time_start = '00:00'
         else:
@@ -260,6 +263,7 @@ def parser(user_id):  # это надо было все обернуть в фу
             string = f'{start_dt} АСП\n'
         if 'МКК' in cells[4].text:
             string = f'{start_dt} МКК\n'
+
         if cells[6].text.count('/') == 2:
             day_mont_arr, msk_time = extract_arrive(cells[6].text)
             city = extract_city(route_arrive_time)
@@ -267,10 +271,12 @@ def parser(user_id):  # это надо было все обернуть в фу
             if (int(day_mont_arr[:2]) - int(day_month_start[:2])) <= 1:
                 string = f'{start_dt} {city:11.11} {msk_time}\n'
             if (int(day_mont_arr[:2]) - int(day_month_start[:2])) > 1:
-                string = f'{start_dt} {city} {day_mont_arr} {msk_time}\n'
+                # string = f'{start_dt} {city} {day_mont_arr} {msk_time}\n'
+                string = f'{start_dt} {city[:12]}..\n' \
+                         f'{day_mont_arr}       ..{destination} {msk_time}\n'
+
         if cells[6].text.count('/') > 2:
             day_mont_arr, msk_time = extract_arrive(cells[6].text)
-
             route = route_arrive_time.title().replace(" ", "")[:-25]
             route = route.split('/')[1:]  #
             city = ''
@@ -307,4 +313,4 @@ def parser(user_id):  # это надо было все обернуть в фу
 # # TODO РАСКОМЕНТИЛ ЛИ ТЫ RETURN!!!!!!!!!!!!!!!!!!!!!!!!!
 
 # TODO ПРОВЕРЬ ПРИНТЫ ЛОГИН И ПАРОЛЬ!!!!!!!!!!!!!!!!!!!!!!!!!
-# parser(512766466)
+# parser(1449884151)
