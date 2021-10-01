@@ -49,6 +49,9 @@ cities = {
     'Сыктывкр': 'Сыктывкар',
     'Нвартовс-1': 'Нижневартовск',
     'Хомутово': 'Южно-Сахалинск',
+    'Ницца-2': 'Ницца',
+    'Нижновгр': 'Н.Новгород',
+    'Архангск': 'Архангельск',
 
 }
 
@@ -85,6 +88,8 @@ cities_code = {'Внуково-а': 'VKO',  # 'Внуково    ',
                'Саранск': 'SKX',
                'Симфероп': 'SIP',
                'Екатерин': 'SVX',
+               'Екатерин[Пас]': 'SVXп',
+               'Дубай-2': 'DXB',
                'Минск2': 'MSQ',
                'Челябинс': 'CEK',
                'Шеремет-D': 'SVO',
@@ -96,6 +101,7 @@ cities_code = {'Внуково-а': 'VKO',  # 'Внуково    ',
                'Новосибт': 'OVB',
                'Новосибт[Пас]': 'OVBп',
                'Нижновгр': 'GOJ',
+               'Нижновгр[Пас]': 'GOJп',
                'Челябинск[Пас]': 'CEKп',
                'Челябинс[Пас]': 'CEKп',
                'Шармшейх-1': 'SSH',
@@ -263,7 +269,8 @@ def parser(user_id):  # это надо было все обернуть в фу
             string = f'{start_dt} АСП\n'
         if 'МКК' in cells[4].text:
             string = f'{start_dt} МКК\n'
-
+        if 'Переподготовка' in cells[4].text:
+            string = f'{start_dt} Переподготовка {destination.upper()}\n'
         if cells[6].text.count('/') == 2:
             day_mont_arr, msk_time = extract_arrive(cells[6].text)
             city = extract_city(route_arrive_time)
@@ -274,6 +281,8 @@ def parser(user_id):  # это надо было все обернуть в фу
                 # string = f'{start_dt} {city} {day_mont_arr} {msk_time}\n'
                 string = f'{start_dt} {city[:12]}..\n' \
                          f'{day_mont_arr}       ..{destination} {msk_time}\n'
+            if string_copy == string:
+                string = ''
 
         if cells[6].text.count('/') > 2:
             day_mont_arr, msk_time = extract_arrive(cells[6].text)
@@ -313,4 +322,4 @@ def parser(user_id):  # это надо было все обернуть в фу
 # # TODO РАСКОМЕНТИЛ ЛИ ТЫ RETURN!!!!!!!!!!!!!!!!!!!!!!!!!
 
 # TODO ПРОВЕРЬ ПРИНТЫ ЛОГИН И ПАРОЛЬ!!!!!!!!!!!!!!!!!!!!!!!!!
-# parser(1449884151)
+# parser(496197476)
