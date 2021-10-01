@@ -648,8 +648,11 @@ def conversation(message):
 
     if "написать пользователю по id" in message.text.lower():
         mess = message.text.split()
-        bot.send_message(int(mess[4]), ' '.join(mess[5:]).capitalize(), reply_markup=general_menu())
-        bot.send_message(157758328, "Сообщение пользователю отправлено успешно.")
+        try:
+            bot.send_message(int(mess[4]), ' '.join(mess[5:]).capitalize(), reply_markup=general_menu())
+            bot.send_message(157758328, "Сообщение пользователю отправлено успешно.")
+        except Exception:
+            bot.send_message(157758328, f"Пользователь не подключен к телеграм-боту.\n {traceback.format_exc()}")
         return
 
     if '/news' in message.text.lower():
