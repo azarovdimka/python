@@ -13,8 +13,8 @@ def parser(user_id):  # это надо было все обернуть в фу
         'login': '1',
         'user_id': '',
         'backend_url': 'https://sup.rossiya-airlines.com:8080',
-        'username': '119221',  # dict_users.users[user_id]['tab_number'],  # '119229',
-        'userpass': '2DH64rf2',  # dict_users.users[user_id]['password'],  # 'Parshina15',
+        'username': dict_users.users[user_id]['tab_number'],  # '119229',
+        'userpass': dict_users.users[user_id]['password'],  # 'Parshina15',
         'domain': 'stc.local',
         'submit': 'войти'
     }
@@ -46,7 +46,9 @@ def parser(user_id):  # это надо было все обернуть в фу
         if name_button == "Скачать":
             doc_list.append(name_document)
     if len(doc_list) != 0:
-        report += f"Появились новые документы в опенскае: {doc_list}"
+        unpacked_list = '\n- '.join('{}' for _ in range(len(doc_list))).format()
+        report += f"Появились новые документы в OpenSky: \n" \
+                  f"{unpacked_list}"
         return report
     else:
         return None
