@@ -97,7 +97,7 @@ def cycle_plan_notify():
                     notification = notificator.notify(user_id)  # TODO НЕ ЗАБУДЬ ПОМЕНЯТЬ АДРЕС ФАЙЛА в НОТИФИКАТОРЕ!!!
                     if notification != None:  # не равно none - получили план. будет ошибка, если ему не удалось отправить ему его план - по
                         plan_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()  # что такое двоеточие и что оно дает???
-                        btn = types.InlineKeyboardButton(text="Открыть подробнее в OpenSky",
+                        btn = types.InlineKeyboardButton(text="Открыть план работ в OpenSky",
                                                          url='https://edu.rossiya-airlines.com/workplan/')
                         plan_btn.add(btn)
                         bot.send_message(user_id, notification, reply_markup=plan_btn, parse_mode='html')
@@ -106,9 +106,7 @@ def cycle_plan_notify():
                                          parse_mode='html')
                         sent_plan_counter += 1
                         sent_plan_list.append(fio)
-                        # bot.send_message(157758328, f'план выслан {fio}.')
                     if notification == None:  # равно None - не записан пароль пользователя, парсить не стали
-                        # bot.send_message(157758328, f'{counter_users} из {len(dict_users.users)}: у {fio} нового плана нет, либо логин и пароль не указан')
                         continue  # в самом парсере тоже написано return если отсутсвует пароль в словаре
                 except Exception as exc:  # если случилась ошибка при отправке сообщений пользователю
                     users_off_list.append(fio)
@@ -121,15 +119,11 @@ def cycle_plan_notify():
             if sent_plan_counter > 0:
                 bot.send_message(157758328,
                                  f'общий отчет: план выслан {sent_plan_counter} чел. {", ".join(sent_plan_list)}')
-                # if len(users_off_list) != 0:
         except Exception as e:
             exception_logger.writer(exc=e, request="извлечение ключа словаря user_id при автоматической отправке плана",
                                     user_id=user_id, fio=fio, answer='поймали ошибку во внешнем try except')
             bot.send_message(157758328, f'поймали ошибку во внешнем try except: {fio}: {traceback.format_exc()}')
-        # dummy_event = threading.Event()
-        # dummy_event.wait(timeout=1)
-        bot.send_message(157758328,
-                         "бот закончил проверку планов пользователей в атоматическом режиме, уснул на 5 мин.")
+        bot.send_message(157758328, "бот закончил проверку планов проводников в атоматическом режиме, уснул на 5 мин.")
         time.sleep(300)
 
 
@@ -169,27 +163,18 @@ def check_permissions_for_everyone():
 # permissions_thread.start()
 
 
-def check_new_documents():
+def check_new_documents(user_id):
     document_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()  # что такое двоеточие и что оно дает???
     btn = types.InlineKeyboardButton(text="Открыть подробнее в OpenSky",
                                      url='https://edu.rossiya-airlines.com/')
     document_btn.add(btn)
-    while True:
-        try:
-            new_document = check_news.parser(157758328)
-            if new_document is not None:
-                bot.send_message(157758328, new_document, reply_markup=document_btn)  # TODO закомментировать
-        except Exception:
-            bot.send_message(157758328,
-                             f'не удалось отправить сообщение о новых документах, произошла ошибка: {traceback.format_exc()}')
-
-        time.sleep(2000)
-
-
-# check_new_documents_thread = threading.Thread(target=check_new_documents)  # TODO закомментирвоать
-# check_new_documents_thread.start()
-# if not check_new_documents_thread.is_alive():
-#     check_new_documents_thread.start()
+    try:
+        new_document = check_news.parser(user_id)
+        if new_document is not None:
+            bot.send_message(user_id, new_document, reply_markup=document_btn)  # TODO закомментировать
+    except Exception:
+        bot.send_message(157758328,
+                         f'не удалось отправить сообщение о новых документах, произошла ошибка: {traceback.format_exc()}')
 
 
 def messaging(
@@ -575,21 +560,15 @@ def conversation(message):
     def confirm_question(message):
         """Сообщение с кнопками для отмены подтверждения плана работ, либо оставить всё как есть."""
         confirm_btns = types.InlineKeyboardMarkup()
-        yes_off = types.InlineKeyboardButton(text="Да, отключить", callback_data="yes_off")
-        no_on = types.InlineKeyboardButton(text="Нет, подтверждать", callback_data="no_on")
+        yes_off = types.InlineKeyboardButton(text="Да, отключить", callback_data="not_confirm")
+        no_on = types.InlineKeyboardButton(text="Нет, подтверждать", callback_data="confirm")
         confirm_btns.add(yes_off, no_on)
-        bot.send_message(message.chat.id, f"`\t\t {dict_users.users[message.chat.id]['name']}, cейчас у Вас план работ "
-                                          f"подтверждается автоматически. Вы хотите отключить подтверждение ознакомления "
-                                          "с планом работ? Уведомления сюда будут приходить, но план не будет подтвержден в "
-                                          "OpenSky автоматически. \n \t\t При проверке Telegram видит все "
-                                          "рейсы, в том числе те, которые у Вас уже сняли, но которые еще висят в плане, "
-                                          "потому что Вы еще не подтвердили ознакомление с планом. Поэтому эти рейсмы будут "
-                                          "добавляться в уведомление. Чтобы информация в уведомлении была актуальной,  было "
-                                          "решено активировать сразу ознакомление с планом, чтобы удалить снятые рейсы. Если "
-                                          "это отключить автоподтверждение, то на телефон будут приходить уведомления  "
-                                          "вместе с теми рейсами, которые у Вас уже убрали из плана. Такая информация не "
-                                          "будет достоверной. \n\t\t Всё равно отключить автоподтверждение плана работ?",
-                         reply_markup=confirm_btns)
+
+        if dict_users.users[message.chat.id]['autoconfirm']:
+            bot.send_message(message.chat.id,
+                             f"`\t\t {dict_users.users[message.chat.id]['name']}, cейчас у Вас план работ "
+                             f"подтверждается автоматически. Вы хотите отключить подтверждение ознакомления "
+                             f"с планом работ?", reply_markup=confirm_btns)
 
     def check_permissions(user_id):
         document_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()  # что такое двоеточие и что оно дает???
@@ -624,7 +603,7 @@ def conversation(message):
 
     if "логин" in message.text.lower() and "пароль" in message.text.lower():
         bot.send_message(157758328,
-                         "Пользователь {0.first_name} @{0.username} id {0.id} прислал логин и пароль: ".format(
+                         "Пользователь {0.first_name} @{0.username} id {0.id} прислал логин и пароль (если в конце пароля точка, то она входит в состав пароля): ".format(
                              message.from_user, message.from_user) + message.text)
         bot.send_message(message.chat.id,
                          "\r \t Ожидайте, логин и пароль отправлен успешно. Через некоторое время новые настройки будут активированы.\n \t"
@@ -743,7 +722,7 @@ def conversation(message):
         bot.send_message(157758328, f'{message.chat.id} отправили погоду {message.text}')
 
     if 'не подтверждать план работ' in message.text.lower() or "/confirm" in message.text.lower():
-        if dict_users.users[message.chat.id]['autoconfirm'] and password == '':
+        if password == '':
             bot.send_message(message.chat.id,
                              "У нас нет Вашего пароля от OpenSky, "
                              "поэтому мы не сможем ни получать ваш план, ни подтверждить его автоматически. Если вы хотите получать "
@@ -971,6 +950,9 @@ def conversation(message):
                         bot.send_message(157758328, f"при запросе '{message.text}' при поиске в строгом соответствии "
                                                     f"возникала ошибка {type(exc).__name__} {exc} ")
                     found_result = True
+
+    if "новости" in message.text.lower():
+        check_new_documents(user_id)
 
     """2.1 - ищет в нестрогом соответсвии"""
     if not found_result:  # НЕСТРОГОЕ СООТВЕТСВИЕ 2.1
