@@ -53,6 +53,7 @@ cities = {
     'Нижновгр': 'Н.Новгород',
     'Архангск': 'Архангельск',
     'Дубай-2': 'Дубай',
+    'Вена-3': 'Вена',
 
 }
 
@@ -109,7 +110,8 @@ cities_code = {'Внуково-а': 'VKO',  # 'Внуково    ',
                'Казань': 'KZN',
                'Тюмень': 'TJM',
                'Платов[Пас]': 'ROVп',
-               'Хургада-2': 'HRG'
+               'Хургада-2': 'HRG',
+               'Нурсулта-1': 'NQZ',
                }
 
 
@@ -271,7 +273,7 @@ def parser(user_id):  # это надо было все обернуть в фу
         if 'МКК' in cells[4].text:
             string = f'{start_dt} МКК\n'
         if 'Переподготовка' in cells[4].text:
-            string = f'{start_dt} Переподготовка {destination.upper()}\n'
+            string = f'{start_dt} Переподготовка {destination.upper():2.2}\n'
         if cells[6].text.count('/') == 2:
             day_mont_arr, msk_time = extract_arrive(cells[6].text)
             city = extract_city(route_arrive_time)
@@ -282,8 +284,6 @@ def parser(user_id):  # это надо было все обернуть в фу
                 # string = f'{start_dt} {city} {day_mont_arr} {msk_time}\n'
                 string = f'{start_dt} {city[:12]}..\n' \
                          f'{day_mont_arr}       ..{destination} {msk_time}\n'
-            if string_copy == string:
-                string = ''
 
         if cells[6].text.count('/') > 2:
             day_mont_arr, msk_time = extract_arrive(cells[6].text)
@@ -296,6 +296,8 @@ def parser(user_id):  # это надо было все обернуть в фу
                      f'{day_mont_arr}       ..{city[-9:-1]:9.9} {msk_time}\n'
 
         if 'plan_del' in str(tr):
+            string = ''
+        if string_copy == string:
             string = ''
 
         current_month = current_dt_minus_4h[3:5]
