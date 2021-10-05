@@ -1,6 +1,5 @@
 # -*- coding: utf8 -*-
 # !/usr/bin/env python3
-import sys
 
 import telebot  # чтобы работал telebot - удалить telebot, и установить Pytelegrambotapi, написанным оставить telebot
 from telebot.types import InlineKeyboardMarkup
@@ -22,6 +21,18 @@ import flight_counter
 import check_news
 
 bot = telebot.TeleBot(settings.TOKEN)
+
+
+def general_menu():
+    general_menu = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=False)
+    btn1 = types.KeyboardButton('План работ')
+    btn2 = types.KeyboardButton('Мой налет')
+    btn3 = types.KeyboardButton('Расчётный лист')
+    btn4 = types.KeyboardButton('Новости')
+    btn5 = types.KeyboardButton('Добавить  информацию')
+    btn6 = types.KeyboardButton('Обратная связь')  # InlineKeyBoard (callback_data='Внести информацию')
+    general_menu.add(btn1, btn2, btn3, btn4, btn5, btn6)
+    return general_menu
 
 
 def survey(user_id):
@@ -210,18 +221,6 @@ def messaging(
     return
 
 
-def general_menu():
-    general_menu = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=False)
-    btn1 = types.KeyboardButton('План работ')
-    btn2 = types.KeyboardButton('Мой налет')
-    btn3 = types.KeyboardButton('Расчётный лист')
-    btn4 = types.KeyboardButton('Новости')
-    btn5 = types.KeyboardButton('Исправить ответ')
-    btn6 = types.KeyboardButton('Добавить  информацию')  # InlineKeyBoard (callback_data='Внести информацию')
-    general_menu.add(btn1, btn2, btn3, btn4, btn5, btn6)
-    return general_menu
-
-
 def write_new_dict_user(message):  # TODO почему стирает весь файл?
     """Предоставление доступа пользователю: внесение новго пользователя в словарь непосредлственно сразу через чат телеграм-бота."""
     bot.send_message(157758328, "зашли в словарь юзеров.")
@@ -366,11 +365,7 @@ def conversation(message):
         download_btn.add(btn)
         bot.send_message(message.chat.id, baza.dictionary[id].get('answer'), parse_mode='Markdown',
                          reply_markup=download_btn)
-        bot.send_message(157758328, "Предложили ОТКРЫТЬ: " + message.text)
-        new_file_notification = "Пользователь {0.first_name} {0.last_name} @{0.username} id {0.id}." \
-            .format(message.from_user, message.from_user, message.from_user,
-                    message.from_user)
-        bot.send_message(157758328, new_file_notification)
+        bot.send_message(157758328, f"Пользователю {fio} предложили ОТКРЫТЬ: {message.text}")
 
     def download():
         """Предлагает скачать файл"""
@@ -380,11 +375,7 @@ def conversation(message):
         download_btn.add(btn)
         bot.send_message(message.chat.id, baza.dictionary[id].get('answer'), parse_mode='Markdown',
                          reply_markup=download_btn)
-        bot.send_message(157758328, "Предложили скачать: " + message.text)
-        new_file_notification = "Пользователь {0.first_name} {0.last_name} @{0.username} id {0.id}." \
-            .format(message.from_user, message.from_user, message.from_user,
-                    message.from_user)
-        bot.send_message(157758328, new_file_notification)
+        bot.send_message(157758328, f"Пользователю {fio} предложили СКАЧАТЬ: {message.text}")
 
     def changed(text):
         """Видоизменяет текст поступающего запроса от пользователя и искомого текста в базе для успешного поиска:
@@ -403,17 +394,6 @@ def conversation(message):
                     message = message.replace(word, changed_word)
                     return message
         return message
-
-    def find_abbreviation(message):
-        """все запросы от пользователя сначала прогоняет через словарь исключений, если функция находит его там, то
-        заменяет его на такое же развернутое значение, которое следует использовать при дальнейшем поиске. ищет слова
-        для преобразования чтобы обойти минимально допустимое разрешение на длину слова"""
-        for word in message.split(' '):
-            for id in baza.exceptions:
-                if word == baza.exceptions[id]['word']:
-                    return baza.exceptions[id]['changed_word']
-        answer = f"Как расшифровывается {word.upper()} мне пока неизвестно."
-        return answer
 
     def find_garbage(message):
         """Ищет лишние слова-сорняки, которые вешают программу (как, кто, где) и меняет их на пустую строку"""
@@ -446,11 +426,7 @@ def conversation(message):
                         bot.send_message(message.chat.id, baza.dictionary[id]['answer'], reply_markup=general_menu(),
                                          parse_mode='Markdown')
                         bot.send_message(157758328,
-                                         "2.1 - ответ выдан не в строгом соответсвии по запросу: " + message.text)
-                        non_strict_notification = "Пользователь {0.first_name} {0.last_name} @{0.username} id {0.id}." \
-                            .format(message.from_user, message.from_user, message.from_user,
-                                    message.from_user)
-                        bot.send_message(157758328, non_strict_notification)
+                                         f"2.1 - Пользователю {fio} выдан ответ не в строгом соответсвии по запросу:\n{message.text}")
                     found_result = True
                     return found_result
 
@@ -470,11 +446,7 @@ def conversation(message):
                     bot.send_message(message.chat.id, baza.dictionary[id]['answer'], reply_markup=general_menu(),
                                      parse_mode='Markdown')
                     bot.send_message(157758328,
-                                     "2.2 - ответ выдан не в строгом соответсвии по запросу: " + message.text)
-                    non_strict_notification = "Пользователь {0.first_name} {0.last_name} @{0.username} id {0.id}." \
-                        .format(message.from_user, message.from_user, message.from_user,
-                                message.from_user)
-                    bot.send_message(157758328, non_strict_notification)
+                                     f"2.2 - Пользователю {fio} выдан ответ не в строгом соответсвии по запросу:\n{message.text}")
                 found_result = True  # в таком положении не ищет в следующем случайном порядке ставит что всё найдено уже но ищет много с отсеченными окончаниями коктейли
                 return found_result
 
@@ -519,10 +491,9 @@ def conversation(message):
                 if link is None:
                     bot.send_message(message.chat.id, each_answer, reply_markup=general_menu(), parse_mode='Markdown')
                     found_result = True
-                report = "3.1 - Пользователю {0.first_name} {0.last_name} @{0.username} id {0.id} выдан ответ в случайном порядке по запросу:\n" \
-                             .format(message.from_user, message.from_user, message.from_user,
-                                     message.from_user) + message.text
-                bot.send_message(157758328, report)
+
+                bot.send_message(157758328,
+                                 f"3.1 - Пользователю {fio} выдан ответ в случайном порядке по запросу:\n{message.text}")
                 return found_result
 
     def find_in_random_order(message):
@@ -551,10 +522,8 @@ def conversation(message):
                 if link:
                     bot.send_message(message.chat.id, link, reply_markup=general_menu(), parse_mode='Markdown')
                 found_result = True
-                report = "3.2 - Пользователю {0.first_name} {0.last_name} @{0.username} id {0.id} выдан ответ в случайном порядке по запросу:\n" \
-                             .format(message.from_user, message.from_user, message.from_user,
-                                     message.from_user) + message.text
-                bot.send_message(157758328, report)
+                bot.send_message(157758328,
+                                 f"3.2 - Пользователю {fio} выдан ответ в случайном порядке c отсчением окончаний по запросу:\n{message.text}")
                 return found_result
 
     def confirm_question(message):
@@ -584,7 +553,6 @@ def conversation(message):
                              "........ А пока рекомендую вам самостоятельно перейти в раздел документов и "
                              "проверить сроки там.", reply_markup=document_btn)
         else:
-            fio = f'{user_id} {surname} {name}'
             try:
                 documents_info = get_permissions.parser(user_id, name, surname)
                 bot.send_message(user_id, documents_info, reply_markup=document_btn)
@@ -602,9 +570,8 @@ def conversation(message):
     # service_notification(message)
 
     if "логин" in message.text.lower() and "пароль" in message.text.lower():
-        bot.send_message(157758328,
-                         "Пользователь {0.first_name} @{0.username} id {0.id} прислал логин и пароль (если в конце пароля точка, то она входит в состав пароля): ".format(
-                             message.from_user, message.from_user) + message.text)
+        bot.send_message(157758328, f"{fio} прислал логин и пароль (если в конце пароля точка, то она входит в состав "
+                                    f"пароля): {message.text}")
         bot.send_message(message.chat.id,
                          "\r \t Ожидайте, логин и пароль отправлен успешно. Через некоторое время новые настройки будут активированы.\n \t"
                          "В дальнейшем, можно установить тот же самый пароль, и не придумывать каждый раз новый, "
@@ -662,7 +629,7 @@ def conversation(message):
                          'приложение, интегрированное в Telegram. Telegram-бот развивается каждый день '
                          'и требует времени и дополнительных расходов. Есть еще много идей, которые хочется реализовать. '
                          'Предлагайте свои идеи и свою информацию. Поддержите развитие телеграм-бота, '
-                         'осуществив перевод на любую сумму без комиссии.',
+                         'осуществив перевод на любую сумму по номеру телефона 89992023315 или с карты без комиссии.',
                          parse_mode='Markdown', reply_markup=donate_btn)
         bot.send_message(157758328, f"{fio} Рассказали про донаты")
         return
@@ -690,7 +657,7 @@ def conversation(message):
             bot.send_message(message.chat.id, "Уже считаю Ваши рейсы. Пожалуйста, подождите...")
             result = flight_counter.parser(message.chat.id)
             bot.send_message(message.chat.id, result, reply_markup=general_menu())
-            bot.send_message(157758328, f"Пользователю {surname} {name} отправлен счетчик рейсов",
+            bot.send_message(157758328, f"Пользователю {fio} отправлен счетчик рейсов",
                              reply_markup=general_menu())
             found_result = True
         return found_result
@@ -712,8 +679,7 @@ def conversation(message):
         if "спасибо" in message.text.lower() or message.text.lower() in baza.good_bye:
             bot.send_message(message.chat.id, choice(baza.best_wishes))
             bot.send_message(157758328,
-                             f"Пользователь {name} {surname} id {message.from_user.id} поблагодарил или попрощался.",
-                             reply_markup=general_menu())
+                             f"{fio} поблагодарил.", reply_markup=general_menu())
             return
 
     if message.text in get_weather.cities or 'погода' in message.text.lower():
@@ -730,7 +696,7 @@ def conversation(message):
                              "ответном сообщении: логин ..... пароль .... (4 слова через пробел).",
                              reply_markup=general_menu())
             bot.send_message(157758328,
-                             f'{message.chat.id} {surname} попытался включить автоматическое подтверждение плана работ, но у нас нет пароля')
+                             f'{fio} попытался включить автоматическое подтверждение плана работ, но у нас нет пароля')
         if dict_users.users[message.chat.id]['autoconfirm'] and len(dict_users.users[message.chat.id]['password']) > 0:
             # """При поступлении этой команды вызывается функция confirm_question(), в которой написан основной текст c двумя кнопками"""
             @bot.callback_query_handler(func=lambda call: True)
@@ -781,18 +747,19 @@ def conversation(message):
             btn = types.InlineKeyboardButton(text="Открыть план работ в OpenSky",
                                              url='https://edu.rossiya-airlines.com/workplan/')
             plan_btn.add(btn)
-            bot.send_message(message.chat.id, 'Ваш логин и пароль от OpenSky отсутсвует в моей базе данных, поэтому я '
-                                              'не могу запросить ваш план работ и выдать его напрямую сюда. Если Вы '
-                                              'хотите легко и быстро узнавать свой план работ, а в будущем получать '
-                                              'уведомления на телефон о новых рейсах - сообщите мне свой логин и пароль '
-                                              'через пробел в следующем формате: \n логин ...... пароль ...... \n '
-                                              '(4 слова через пробел вместо многоточия ваш логин и пароль). В тоже время, '
-                                              'есть возможность нажать на кнопку, перейти и '
-                                              'самостоятельно просмотреть план работ: ввести логин и пароль туда вручную.',
+            bot.send_message(message.chat.id,
+                             f'{name}, Ваш логин и пароль от OpenSky отсутсвует в моей базе данных, поэтому я '
+                             'не могу запросить ваш план работ и выдать его напрямую сюда. Если Вы '
+                             'хотите легко и быстро узнавать свой план работ, а в будущем получать '
+                             'уведомления на телефон о новых рейсах - сообщите мне свой логин и пароль '
+                             'через пробел в следующем формате: \n логин ...... пароль ...... \n '
+                             '(4 слова через пробел вместо многоточия ваш логин и пароль). В тоже время, '
+                             'есть возможность нажать на кнопку, перейти и '
+                             'самостоятельно просмотреть план работ: ввести логин и пароль туда вручную.',
                              reply_markup=plan_btn)
             return
         else:
-            bot.send_message(message.chat.id, "Запрос отправлен. Ожидайте несколько секунд...")
+            bot.send_message(message.chat.id, f"{name}, запрос отправлен. Ожидайте несколько секунд...")
             plan = getplan.parser(message.chat.id)
             plan_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()  # что такое двоеточие и что оно дает???
             btn = types.InlineKeyboardButton(text="Открыть подробнее в OpenSky",
@@ -800,7 +767,7 @@ def conversation(message):
             plan_btn.add(btn)
             bot.send_message(message.chat.id, plan, reply_markup=plan_btn, parse_mode='html')
             bot.send_message(157758328, plan, reply_markup=plan_btn, parse_mode='html')
-            bot.send_message(157758328, f"{name} {surname} получил план работ по индивидуальному запросу")
+            bot.send_message(157758328, f"{fio} получил план работ по индивидуальному запросу")
             return
 
     if '/plan' in message.text.lower():  # TODO сделать потом чтобы автоматически менял статус в словаре
@@ -833,22 +800,30 @@ def conversation(message):
                              'ввести логин и пароль туда вручную.', reply_markup=nalet_btn)
             return
         else:
-            bot.send_message(message.chat.id, "Уже считаю Ваш налёт. Пожалуйста, подождите...")
+            bot.send_message(message.chat.id, f"{name}, уже считаю Ваш налёт. Пожалуйста, подождите...")
             nalet = getnalet.parser(message.chat.id)
             nalet_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()  # что такое двоеточие и что оно дает???
             btn = types.InlineKeyboardButton(text="Открыть подробнее в OpenSky",
                                              url='https://edu.rossiya-airlines.com/nalet/')
             nalet_btn.add(btn)
             bot.send_message(message.chat.id, nalet, reply_markup=nalet_btn, parse_mode='Markdown')
-            bot.send_message(157758328, f"Пользователю {message.chat.id} {surname} {name} выдан налёт")
+            bot.send_message(157758328, f"Пользователю {fio} выдан налёт")
             return
 
-    if "исправить ответ" in message.text.lower():
-        bot.send_message(message.chat.id,
-                         'В следующем сообщении еще раз коротко напишите свой вопрос и свой вариант ответа в произвольной '
-                         'форме, но начинаться Ваше сообщение должно со слова "исправить", например:\n\n '
-                         'Исправить: добавочный номер бухгалтерии 1017.\n\n '
-                         'Пожалуйста, не забывайте пояснять к какому вопросу правка (не просто 1017).')
+    if "обратная связь" in message.text.lower():
+        def send_feedback(message):
+            bot.send_message(157758328, f'{fio} оставил обратную связь: \n {message.text}')
+            if message.text.lower() == 'отмена':
+                bot.send_message(message.chat.id, 'Надумаете - пишите! Успехов!)')
+            else:
+                bot.send_message(message.chat.id, 'Вы успешно отправили сообщение. Спасибо за обратную связь.')
+
+        mesg = bot.send_message(message.chat.id, f'{name}, я буду рад узнать Ваше мнение о работе Telegram-бота. '
+                                                 f'Ваши жалобы, предложения, просьбы и пожелания. \n'
+                                                 f'Бот ждет Вашего сообщения, '
+                                                 f'если Вы передумаете оставлять обратную связь - отправьте слово Отмена')
+
+        bot.register_next_step_handler(mesg, send_feedback)
         return
 
     if 'исправить' in message.text.lower():
@@ -901,21 +876,6 @@ def conversation(message):
         bot.send_message(157758328, "Попросили уточнить какие именно особенности интересуют")
         return
 
-    if 'виза' == message.text.lower():  # TODO наверное не очень семантично здесь размещать обработку этого запроса
-        bot.send_message(message.chat.id,
-                         'Какая виза? Никакой информации про визу у меня нет. Обратитесь в посольство.',
-                         reply_markup=general_menu())
-        bot.send_message(157758328, "Зачем-то спросили про визу.")
-        return
-
-    if (
-            "аббревиатура" in message.text.lower() or "абривиатура" in message.text.lower() or "расшифровывается" in message.text.lower() or "означает" in message.text.lower() or "значит" in message.text.lower()) and (
-            'команда' not in message.text.lower()):
-        decrypt = find_abbreviation(message.text.lower())
-        bot.send_message(message.chat.id, decrypt, reply_markup=general_menu())
-        bot.send_message(157758328, f"Отправили расшифровку аббревиатуры по запросу: {message.text.lower()}")
-        return
-
     if len(message.text) <= 2:  # было changed(message.text) - есть ли смысл вернуть чтобы не сыпал на короткие запросы
         bot.send_message(message.chat.id, 'Слишком короткий запрос. Пожалуйста, чуть подробнее, или измените запрос.',
                          reply_markup=general_menu())
@@ -944,8 +904,7 @@ def conversation(message):
                                          reply_markup=general_menu(),
                                          parse_mode='Markdown')
                         bot.send_message(157758328,
-                                         f"1 - пользователю {message.from_user.first_name} {message.from_user.last_name} " \
-                                         f"@{message.from_user.username} id {message.from_user.id} выдана информация в строгом соответвии по запросу {message.text}.")
+                                         f"Пользователю {fio} выдали информацию в строгом соответствии по запросу: {message.text}")
                     except Exception as exc:
                         bot.send_message(157758328, f"при запросе '{message.text}' при поиске в строгом соответствии "
                                                     f"возникала ошибка {type(exc).__name__} {exc} ")
