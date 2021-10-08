@@ -46,9 +46,12 @@ def parser(user_id):  # это надо было все обернуть в фу
         if name_button == "Скачать":
             doc_list.append(name_document)
     if len(doc_list) != 0:
-        unpacked_list = '\n- '.join('{}' for _ in range(len(doc_list))).format()
-        report += f"Появились новые документы в OpenSky: \n" \
-                  f"{unpacked_list}"
-        return report
+        report += f"Появились новые документы в OpenSky: \n- "
+        for doc in doc_list:
+            report += doc[:-23] + '\n- '
+        # print(report[:-2])
+        return report[:-2]
     else:
         return None
+
+# parser(157758328)
