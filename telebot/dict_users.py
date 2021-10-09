@@ -1917,4 +1917,18 @@ users = {
                  'check_permissions': True,
                  'time_depart': 'msk_start',
                  'time_arrive': 'msk'},
+    440986331: {'surname': 'Козинец',
+                'name': 'Вилина',
+                'city': "",
+                'link': '@vilinakozinets',
+                'exp_date': '31.08.23',  # штабной
+                'tab_number': '124094',
+                'password': '',
+                'access': True,
+                'plan_notify': True,
+                'autoconfirm': False,
+                'messaging': True,
+                'check_permissions': True,
+                'time_depart': 'msk_start',
+                'time_arrive': 'msk'},
 }
