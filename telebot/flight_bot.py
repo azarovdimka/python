@@ -98,6 +98,8 @@ def cycle_plan_notify():
         sent_plan_counter = 0
         sent_plan_list = []
         bot.send_message(157758328, "бот начал проверку планов пользователей в атоматическом режиме")
+        if time.strftime('%H:%M') == '00:00':
+            time.sleep(60)
         try:
             for user_id in dict_users.users.keys():
                 counter_users += 1
@@ -667,6 +669,11 @@ def conversation(message):
             bot.send_sticker(message.chat.id, sti)
         return
 
+    if "не верно" in message.text.lower() or 'данные устарели' in message.text.lower() or 'неправильн' in message.text.lower() or 'неверн' in message.text.lower():
+        bot.send_message(message.chat.id,
+                         'Буду искренне благодарен, если предоставите актуальные данные и корректную информацию. @DeveloperAzarov')
+        return
+
     message.text = find_garbage(message.text)
     message.text = find_exception(message.text.lower())  # расшифровывает аббревиатуры
 
@@ -726,11 +733,6 @@ def conversation(message):
                              '{} попытался включить автоматическое подтверждение плана автоматического подтверждения '
                              'плана работ но у нас нет его пароля'.format(message.chat.id))
 
-        return
-
-    if "не верно" in message.text.lower() or 'данные устарели' in message.text.lower() or 'неправильн' in message.text.lower() or 'неверн' in message.text.lower():
-        bot.send_message(message.chat.id,
-                         'Буду искренне благодарен, если предоставите актуальные данные и корректную информацию. @DeveloperAzarov')
         return
 
     if 'отказ от рассылки' in message.text.lower() or 'отказаться от рассылки' in message.text.lower():
@@ -824,6 +826,10 @@ def conversation(message):
                                                  f'если Вы передумаете оставлять обратную связь - отправьте слово Отмена')
 
         bot.register_next_step_handler(mesg, send_feedback)
+        return
+
+    if 'время на сервере' in message.text.lower():
+        bot.send_message(157758328, time.strftime('%d.%m.%Y %H:%M'))
         return
 
     if 'исправить' in message.text.lower():
