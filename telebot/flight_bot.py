@@ -472,10 +472,13 @@ def conversation(message):
                 max_of_found_words = matches  # в максимум записываем новую цифру соответсвия
                 results.append(baza.dictionary[id].get('answer'))
                 if 'скачать' in question or 'просмотреть' in question:  # так надо 2 раза
-                    link = baza.dictionary[id].get(
-                        'link')  # TODO кнопки скачать и просмотреть не передаются через try except
-                elif 'изображение' in question:  # так надо 2 раза
+                    link = baza.dictionary[id].get('link')
+                else:
+                    link = None
+                if 'изображение' in question:  # так надо 2 раза
                     photo = baza.dictionary[id].get('photo')
+                else:
+                    photo = None
 
         if len(results) < 8:  # выдает ответы при оптимальном количстве результатов
             for each_answer in results:  # TODO не прикрепляет кнопки к ответу, если выдается ответ в случайном порядке
@@ -593,6 +596,10 @@ def conversation(message):
                              "ввода логина и пароля).\n"
                              , reply_markup=survey(message.chat.id))
             return
+
+    if "сколько бортпроводников" in message.text.lower():
+        bot.send_message(message.chat.id, f"К Telegram-боту подключено сейчас {len(dict_users.users)} бортпроводников.")
+        return
 
     if "написать пользователю по id" in message.text.lower():
         mess = message.text.split()
