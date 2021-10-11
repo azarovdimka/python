@@ -900,7 +900,7 @@ users = {
                 'autoconfirm': True,
                 'messaging': True,
                 'check_permissions': True},
-    1567871581: {'surname': 'Романюк',
+    1567871581: {'surname': 'Романюк',  # отключилась
                  'name': 'Анна',
                  "city": "Санкт-Петербург",
                  'link': '',
