@@ -254,12 +254,12 @@ def parser(user_id):  # это надо было все обернуть в фу
             string = f'{start_dt} ВЛЭК \n'
         if 'Больничный' in cells[4].text:
             sick_end_date = route_arrive_time[4:-6]
-            string = f"{day_month_start} Больничный л.  по {sick_end_date}\n"
+            string = f"{day_month_start} Больничный лст по {sick_end_date}\n"
             start_dt = ''
         if 'Англ' in cells[4].text:
             string = f'{start_dt} Английский\n'
         if 'отпуск' in cells[4].text.lower():
-            string = f'{day_month_start} Отпуск         по {route_arrive_time[4:-6]}\n'
+            string = f'{day_month_start}       Отпуск   по {route_arrive_time[4:-6]}\n'
             if string_copy == string:
                 string = ''
         if 'ШТБ' in cells[4].text:
