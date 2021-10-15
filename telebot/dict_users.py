@@ -1716,7 +1716,7 @@ users = {
                 'password': 'Afl31011990^',
                 'access': True,
                 'plan_notify': True,
-                'autoconfirm': False,
+                'autoconfirm': True,
                 'messaging': True,
                 'check_permissions': True,
                 'time_depart': 'msk_start',
