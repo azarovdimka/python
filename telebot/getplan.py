@@ -58,7 +58,7 @@ cities = {
 
 }
 
-cities_code = {'Внуково-а': 'VKO',  # 'Внуково    ',
+cities_code = {'Внуково-A': 'VKO',  # 'Внуково    ',
                'Воронеж': 'VOZ',
                'Ижевск': 'IJK',
                'Сыктывкр': 'SCW',
@@ -294,8 +294,14 @@ def parser(user_id):  # это надо было все обернуть в фу
             city = ''
             for i in route:
                 city += change_to_code(i)
-            string = f'{start_dt} {city[:12]}..\n' \
-                     f'{day_mont_arr}       ..{city[-9:-1]:9.9} {msk_time}\n'
+            city = city[:-1]
+            if 'LED--LED' in city:
+                city = city.replace('LED--LED', 'LED')
+            if len(city) == 12:
+                string = f'{start_dt} {city[:12]}{msk_time}\n'
+            else:
+                string = f'{start_dt} {city[:11]}..\n' \
+                         f'{day_mont_arr}         ..{city[-7:]:7.7} {msk_time}\n'
 
         if 'plan_del' in str(tr):
             string = ''
@@ -328,4 +334,4 @@ def parser(user_id):  # это надо было все обернуть в фу
 # # TODO РАСКОМЕНТИЛ ЛИ ТЫ RETURN!!!!!!!!!!!!!!!!!!!!!!!!!
 
 # TODO ПРОВЕРЬ ПРИНТЫ ЛОГИН И ПАРОЛЬ!!!!!!!!!!!!!!!!!!!!!!!!!
-# parser(157758328)
+# parser(1661378364)
