@@ -97,7 +97,7 @@ def cycle_plan_notify():
         users_off_list = []
         sent_plan_counter = 0
         sent_plan_list = []
-        bot.send_message(157758328, "бот начал проверку планов пользователей в атоматическом режиме")
+        # bot.send_message(157758328, "бот начал проверку планов пользователей в атоматическом режиме")
         if time.strftime('%H:%M') == '00:00':
             time.sleep(60)
         try:
@@ -136,7 +136,7 @@ def cycle_plan_notify():
             exception_logger.writer(exc=e, request="извлечение ключа словаря user_id при автоматической отправке плана",
                                     user_id=user_id, fio=fio, answer='поймали ошибку во внешнем try except')
             bot.send_message(157758328, f'поймали ошибку во внешнем try except: {fio}: {traceback.format_exc()}')
-        bot.send_message(157758328, "бот закончил проверку планов проводников в атоматическом режиме, уснул на 5 мин.")
+        # bot.send_message(157758328, "бот закончил проверку планов проводников в атоматическом режиме, уснул на 5 мин.")
         time.sleep(300)
 
 
@@ -684,17 +684,18 @@ def conversation(message):
     message.text = find_garbage(message.text)
     message.text = find_exception(message.text.lower())  # расшифровывает аббревиатуры
 
-    if message.chat.type == 'private':  # TODO по-моему, эту строку вообще можно удалить
-        if message.text.lower() in baza.greetings:
-            bot.send_message(message.chat.id, 'Привет! Буду рад тебе помочь, задавай свой вопрос.',
-                             reply_markup=general_menu())
-            return
+    # TODO вызвать функцию болтовни
+    # if message.chat.type == 'private':  # TODO по-моему, эту строку вообще можно удалить
+    if message.text.lower() in baza.greetings:
+        bot.send_message(message.chat.id, 'Привет! Буду рад тебе помочь, задавай свой вопрос.',
+                         reply_markup=general_menu())
+        return
 
-        if "спасибо" in message.text.lower() or message.text.lower() in baza.good_bye:
-            bot.send_message(message.chat.id, choice(baza.best_wishes))
-            bot.send_message(157758328,
-                             f"{fio} поблагодарил.", reply_markup=general_menu())
-            return
+    if "спасибо" in message.text.lower() or message.text.lower() in baza.good_bye:
+        bot.send_message(message.chat.id, choice(baza.best_wishes))
+        bot.send_message(157758328,
+                         f"{fio} поблагодарил.", reply_markup=general_menu())
+        return
 
     if message.text in get_weather.cities or 'погода' in message.text.lower():
         weather = get_weather.what_weather(message.text.lower())
@@ -827,10 +828,10 @@ def conversation(message):
             else:
                 bot.send_message(message.chat.id, 'Вы успешно отправили сообщение. Спасибо за обратную связь.')
 
-        mesg = bot.send_message(message.chat.id, f'{name}, я буду рад узнать Ваше мнение о работе Telegram-бота. '
-                                                 f'Ваши жалобы, предложения, просьбы и пожелания. \n'
-                                                 f'Бот ждет Вашего сообщения, '
-                                                 f'если Вы передумаете оставлять обратную связь - отправьте слово Отмена')
+        mesg = bot.send_message(message.chat.id, f'{name}, я буду рад узнать Ваше мнение о работе Telegram-бота: '
+                                                 f'жалобы, предложения, просьбы и пожелания. \n'
+                                                 f'Если Вы обнаружили факты некорректной работы - обязательно сообщите.\n'
+                                                 f'Бот ждет Вашего сообщения. Если Вы передумаете оставлять обратную связь - отправьте слово Отмена.')
 
         bot.register_next_step_handler(mesg, send_feedback)
         return
