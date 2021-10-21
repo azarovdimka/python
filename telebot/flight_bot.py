@@ -275,12 +275,8 @@ def verification(message):
     else:
         bot.send_message(message.chat.id,
                          'Прошу Вас пройти верификацию, для этого Вам необходимо отправить сюда фото своего штабного '
-                         'пропуска либо связаться с разработчиком лично '
-                         '@DeveloperAzarov. Нам необходимо убедиться, что вы летающий '
-                         'бортпроводник АК "Россия". \n')
-        bot.send_message(message.chat.id, 'Уважаемый бортпроводник! К сожалению, на время ожидания вашего лётного '
-                                          'удостоверения, доступ временно ограничен, но нам не терпится как можно '
-                                          'быстрее предоставить Вам доступ.')
+                         'пропуска. Нам необходимо убедиться, что вы летающий '
+                         'бортпроводник АК "Россия". На время ожидания доступ временно ограничен.')
         bot.send_message(157758328,
                          f"Запросили фото айдишки для верификации от пользователя id {message.from_user.id} @{message.from_user.username} {message.from_user.first_name} "
                          f"{message.from_user.last_name} Пользователь спрашивал {message.text}")
@@ -357,7 +353,7 @@ def conversation(message):
             bot.send_photo(message.chat.id, pic)
         except Exception:
             bot.send_message(157758328,
-                             f"Поймали ошибку на стадии выдачи изображени из функции photo() при запросе {message.text}: {traceback.format_exc()}")
+                             f"Поймали ошибку на стадии выдачи изображения из функции photo() при запросе {message.text}: {traceback.format_exc()}")
         bot.send_message(157758328, "Выдали фото по запросу: " + message.text)
 
     def open():
@@ -626,10 +622,11 @@ def conversation(message):
 
         return
 
-    if message.text.lower() in ['/donate', 'пожертвовать', 'поддержать', 'перевести', 'задонатить']:
+    if message.text.lower() in ['/donate', 'пожертвовать', 'поддержать', 'перечислить деньги', 'перевести',
+                                'задонатить']:
         donate_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()  # что такое двоеточие и что оно дает???
         btn = types.InlineKeyboardButton(text="Пожертвовать на развитие",
-                                         url='https://www.tinkoff.ru/rm/azarov.dmitriy51/5j9Aj68907')
+                                         url='https://www.tinkoff.ru/cf/2baJRGWKnrf')
         donate_btn.add(btn)
         bot.send_message(message.chat.id,
                          f'{name}, Вы счастливчик! Вы явялетесь пользователем уникального Telegram-бота для '
@@ -638,7 +635,7 @@ def conversation(message):
                          'приложение, интегрированное в Telegram. Telegram-бот развивается каждый день '
                          'и требует времени и дополнительных расходов. Есть еще много идей, которые хочется реализовать. '
                          'Предлагайте свои идеи и свою информацию. Поддержите развитие телеграм-бота, '
-                         'осуществив перевод на любую сумму по номеру телефона 89992023315 или с карты без комиссии.',
+                         'осуществив перевод на любую сумму без комиссии.',
                          parse_mode='Markdown', reply_markup=donate_btn)
         bot.send_message(157758328, f"{fio} Рассказали про донаты")
         return
