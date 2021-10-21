@@ -213,6 +213,7 @@ def parser(user_id):  # это надо было все обернуть в фу
     string_copy = None
 
     for tr in rows:
+        event_detected = False
         string1 = False
         cells = tr.contents
         day_month_start = cells[1].text[:5]
@@ -246,36 +247,55 @@ def parser(user_id):  # это надо было все обернуть в фу
             date_end, msk_end = extract_arrive(route_arrive_time)
             string = f'{date_end} Заказанный выходной\n'
             start_dt = ''
+            event_detected = True
         if 'резерв' in cells[4].text:
             day_month_arr, msk_time = extract_arrive(route_arrive_time)
             reserve = 'Резерв'
             string = f'{start_dt} {reserve:11.11} {msk_time}\n'
+            event_detected = True
         if 'ВЛЭК' in cells[4].text:
             string = f'{start_dt} ВЛЭК \n'
+            event_detected = True
         if 'Больничный' in cells[4].text:
             sick_end_date = route_arrive_time[4:-6]
             string = f"{day_month_start} Больничный лст по {sick_end_date}\n"
             start_dt = ''
+            event_detected = True
         if 'Англ' in cells[4].text:
             string = f'{start_dt} Английский\n'
+            event_detected = True
         if 'отпуск' in cells[4].text.lower():
             string = f'{day_month_start}       Отпуск   по {route_arrive_time[4:-6]}\n'
             if string_copy == string:
                 string = ''
+            event_detected = True
         if 'ШТБ' in cells[4].text:
             string = f'{start_dt} Вызов в Штаб\n'
+            event_detected = True
         if 'КПК' in cells[4].text:
             string = f'{start_dt} КПК\n'
+            event_detected = True
         if 'КМД...[КОМАНДИРОВКА]...КПК' in cells[4].text:
             string = f'{start_dt} КПК Командировка\n'
+            event_detected = True
         if 'САН.МИН' in cells[4].text:
             string = f'{start_dt} Санминимум\n'
+            event_detected = True
         if 'АСП' in cells[4].text:
             string = f'{start_dt} АСП\n'
+            event_detected = True
         if 'МКК' in cells[4].text:
             string = f'{start_dt} МКК\n'
+            event_detected = True
         if 'Переподготовка' in cells[4].text:
             string = f'{start_dt} Переподготовка {destination.upper():2.2}\n'
+            event_detected = True
+        if 'Учеба СБЭ' in cells[4].text:
+            string = f'{start_dt} Учёба на СБ\n'
+            event_detected = True
+        if 'Тест' in cells[4].text:
+            string = f'{start_dt} Тест\n'
+            event_detected = True
         if cells[6].text.count('/') == 2:
             day_mont_arr, msk_time = extract_arrive(cells[6].text)
             city = extract_city(route_arrive_time)
@@ -286,6 +306,7 @@ def parser(user_id):  # это надо было все обернуть в фу
                 # string = f'{start_dt} {city} {day_mont_arr} {msk_time}\n'
                 string = f'{start_dt} {city[:12]}..\n' \
                          f'{day_mont_arr}       ..{destination} {msk_time}\n'
+            event_detected = True
 
         if cells[6].text.count('/') > 2:
             day_mont_arr, msk_time = extract_arrive(cells[6].text)
@@ -301,7 +322,10 @@ def parser(user_id):  # это надо было все обернуть в фу
                 string = f'{start_dt} {city[:12]}{msk_time}\n'
             else:
                 string = f'{start_dt} {city[:11]}..\n' \
-                         f'{day_mont_arr}         ..{city[-7:]:7.7} {msk_time}\n'
+                         f'{day_mont_arr}        ..{city[-8:]:8.8} {msk_time}\n'  # первая цифра добавляет пробела после строки - определеяет размер поля, вторая цифра определяет начало строки - пробелы перед строкой
+            event_detected = True
+        if not event_detected:
+            string = f'{start_dt} {cells[4].text}'
 
         if 'plan_del' in str(tr):
             string = ''
@@ -334,4 +358,4 @@ def parser(user_id):  # это надо было все обернуть в фу
 # # TODO РАСКОМЕНТИЛ ЛИ ТЫ RETURN!!!!!!!!!!!!!!!!!!!!!!!!!
 
 # TODO ПРОВЕРЬ ПРИНТЫ ЛОГИН И ПАРОЛЬ!!!!!!!!!!!!!!!!!!!!!!!!!
-# parser(1661378364)
+# parser(744739034)
