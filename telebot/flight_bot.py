@@ -35,14 +35,15 @@ def general_menu():
     return general_menu
 
 
+
 def survey(user_id):
     """Сообщение с кнопками для проведения опроса под индивидуальные пожелания. Вызов функции прикрепляется в качестве параметра к reply_markup в bot.send_message"""
     survey_btns = types.InlineKeyboardMarkup(row_width=1)
     one = types.InlineKeyboardButton(text="1 - Вылет UTC, Прилёт МСК", callback_data="one")
     two = types.InlineKeyboardButton(text="2 - Вылет МСК, Прилёт МСК", callback_data="two")
-    three = types.InlineKeyboardButton(text="3 - Вылет МСК, Прилёт UTC", callback_data="three")
-    four = types.InlineKeyboardButton(text="4 - Вылет UTC, Прилёт UTC", callback_data="four")
-    survey_btns.add(one, two, three, four)
+    # three = types.InlineKeyboardButton(text="3 - Вылет МСК, Прилёт UTC", callback_data="three")
+    # four = types.InlineKeyboardButton(text="4 - Вылет UTC, Прилёт UTC", callback_data="four")
+    survey_btns.add(one, two)  # , three, four
     bot.send_message(user_id, f"`\t\t {dict_users.users[user_id]['name']}, Ваш логин пароль успешно отправлен. \n"
                               f"`\t\t Укажите часовые пояса, в которых Вам было бы удобно получать план работ: UTC или MSK",
                      reply_markup=survey_btns)
@@ -53,6 +54,10 @@ def survey(user_id):
     bot.send_message(user_id, f"`\t\t {dict_users.users[user_id]['name']} для завершения персональной настройки, "
                               f"сообщите, подтверждать ли план работ в OpenSky автоматически при отправке его Вам в Telegram?",
                      reply_markup=next_survey_btns)
+    yes_no_btns = types.InlineKeyboardMarkup(row_width=1)
+    yes = types.InlineKeyboardButton(text="да", callback_data="yes")
+    no = types.InlineKeyboardButton(text="нет", callback_data="no")
+    yes_no_btns.add(yes, no)
 
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -69,16 +74,16 @@ def callback_inline(call):
                                   text="Хорошо, план работ Вам будет высылаться в указанных часовых поясах: вылет и прилёт по МСК.")
             bot.send_message(157758328, f"{call.message.chat.id} {dict_users.users[call.message.chat.id]['surname']} "
                                         f"Попросил номер два: МСК МСК")
-        if call.data == "three":
-            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                                  text="Хорошо, план работ Вам будет высылаться в указанных часовых поясах: вылет по МСК, прилёт по UTC.")
-            bot.send_message(157758328, f"{call.message.chat.id} {dict_users.users[call.message.chat.id]['surname']} "
-                                        f"Попросил номер три: МСК UTC")
-        if call.data == "four":
-            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                                  text="Хорошо, план работ Вам будет высылаться в указанных часовых поясах: вылет и прилёт по UTC.")
-            bot.send_message(157758328, f"{call.message.chat.id} {dict_users.users[call.message.chat.id]['surname']} "
-                                        f"Попросил номер четыре: UTC UTC")
+        # if call.data == "three":
+        #     bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+        #                           text="Хорошо, план работ Вам будет высылаться в указанных часовых поясах: вылет по МСК, прилёт по UTC.")
+        #     bot.send_message(157758328, f"{call.message.chat.id} {dict_users.users[call.message.chat.id]['surname']} "
+        #                                 f"Попросил номер три: МСК UTC")
+        # if call.data == "four":
+        #     bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+        #                           text="Хорошо, план работ Вам будет высылаться в указанных часовых поясах: вылет и прилёт по UTC.")
+        #     bot.send_message(157758328, f"{call.message.chat.id} {dict_users.users[call.message.chat.id]['surname']} "
+        #                                 f"Попросил номер четыре: UTC UTC")
         if call.data == "confirm":
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                   text="Ваш план работ будет подтверждаться автоматически при отправке его Вам в Telegram.")
@@ -89,6 +94,16 @@ def callback_inline(call):
                                   text="Ваш план работ не будет подтверждаться автоматически при отправке его Вам в Telegram.")
             bot.send_message(157758328, f"{call.message.chat.id} {dict_users.users[call.message.chat.id]['surname']} "
                                         f"Попросил не подтверждать план работ")
+        if call.data == "yes":
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                  text="Хорошо, я понял.")
+            bot.send_message(157758328, f"{call.message.chat.id} {dict_users.users[call.message.chat.id]['surname']} "
+                                        f"пользователь ответил да")
+        if call.data == "no":
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                  text="Хорошо, я понял.")
+            bot.send_message(157758328, f"{call.message.chat.id} {dict_users.users[call.message.chat.id]['surname']} "
+                                        f"пользователь ответил нет")
 
 
 def cycle_plan_notify():
@@ -678,6 +693,37 @@ def conversation(message):
                          'Буду искренне благодарен, если предоставите актуальные данные и корректную информацию. @DeveloperAzarov')
         return
 
+    if "обратная связь" in message.text.lower():
+        def send_feedback(message):
+            bot.send_message(157758328, f'{fio} оставил обратную связь: \n {message.text}')
+            if message.text.lower() == 'отмена':
+                bot.send_message(message.chat.id, 'Надумаете - пишите! Успехов!)')
+            else:
+                bot.send_message(message.chat.id, 'Вы успешно отправили сообщение. Спасибо за обратную связь.')
+
+        mesg = bot.send_message(message.chat.id, f'{name}, я буду рад узнать Ваше мнение о работе Telegram-бота: '
+                                                 f'жалобы, предложения, просьбы и пожелания. \n'
+                                                 f'Если Вы обнаружили факты некорректной работы - обязательно сообщите.\n'
+                                                 f'Бот ждет Вашего сообщения. Если Вы передумаете оставлять обратную связь - отправьте слово Отмена.')
+
+        bot.register_next_step_handler(mesg, send_feedback)
+        return
+
+    # if "спросить пользователя" in message.text.lower():
+    #     to_whom = int(message.text.split()[2])
+    #     question = message.text.split()
+    #
+    #     def send_question(message, to_whom):
+    #         bot.send_message(157758328, f'{fio} ответил на вопрос: \n {message.text}')
+    #         if message.text.lower() == 'отмена':
+    #             bot.send_message(message.chat.id, 'Надумаете - пишите! Успехов!)')
+    #         else:
+    #             bot.send_message(message.chat.id, 'Вы успешно ответили. Спасибо.')
+    #
+    #     mesg = bot.send_message(to_whom, question)
+    #     bot.register_next_step_handler(mesg, send_question)
+    #     return
+
     message.text = find_garbage(message.text)
     message.text = find_exception(message.text.lower())  # расшифровывает аббревиатуры
 
@@ -817,22 +863,6 @@ def conversation(message):
             bot.send_message(157758328, f"Пользователю {fio} выдан налёт")
             return
 
-    if "обратная связь" in message.text.lower():
-        def send_feedback(message):
-            bot.send_message(157758328, f'{fio} оставил обратную связь: \n {message.text}')
-            if message.text.lower() == 'отмена':
-                bot.send_message(message.chat.id, 'Надумаете - пишите! Успехов!)')
-            else:
-                bot.send_message(message.chat.id, 'Вы успешно отправили сообщение. Спасибо за обратную связь.')
-
-        mesg = bot.send_message(message.chat.id, f'{name}, я буду рад узнать Ваше мнение о работе Telegram-бота: '
-                                                 f'жалобы, предложения, просьбы и пожелания. \n'
-                                                 f'Если Вы обнаружили факты некорректной работы - обязательно сообщите.\n'
-                                                 f'Бот ждет Вашего сообщения. Если Вы передумаете оставлять обратную связь - отправьте слово Отмена.')
-
-        bot.register_next_step_handler(mesg, send_feedback)
-        return
-
     if 'время на сервере' in message.text.lower():
         bot.send_message(157758328, time.strftime('%d.%m.%Y %H:%M'))
         return
@@ -890,6 +920,11 @@ def conversation(message):
     if 'особенности' == message.text.lower():  # TODO наверное не очень семантично здесь размещать обработку этого запроса
         bot.send_message(message.chat.id, 'Какие именно особенности Вас инетересуют?', reply_markup=general_menu())
         bot.send_message(157758328, "Попросили уточнить какие именно особенности интересуют")
+        return
+
+    if 'супервайзер' == message.text.lower():  # TODO наверное не очень семантично здесь размещать обработку этого запроса
+        bot.send_message(message.chat.id, 'Какой именно супервайзер Вас инетересует?', reply_markup=general_menu())
+        bot.send_message(157758328, "Попросили уточнить какой именно супервайзер интересуют")
         return
 
     if len(message.text) <= 2:  # было changed(message.text) - есть ли смысл вернуть чтобы не сыпал на короткие запросы
