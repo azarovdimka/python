@@ -325,7 +325,7 @@ def parser(user_id):  # это надо было все обернуть в фу
                          f'{day_mont_arr}        ..{city[-8:]:8.8} {msk_time}\n'  # первая цифра добавляет пробела после строки - определеяет размер поля, вторая цифра определяет начало строки - пробелы перед строкой
             event_detected = True
         if not event_detected:
-            string = f'{start_dt} {cells[4].text}'
+            string = f'{start_dt} {cells[4].text}\n'
 
         if 'plan_del' in str(tr):
             string = ''
