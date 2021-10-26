@@ -19,8 +19,8 @@ def parser(user_id, name,
         'login': '1',
         'user_id': '',
         'backend_url': 'https://sup.rossiya-airlines.com:8080',
-        'username': dict_users.users[user_id]['tab_number'],  # '119229', #  '119221', #
-        'userpass': dict_users.users[user_id]['password'],  # 'Parshina15', #  '2DH64rf2', #
+        'username': dict_users.users[user_id]['tab_number'],
+        'userpass': dict_users.users[user_id]['password'],
         'domain': 'stc.local',
         'submit': 'войти'
     }
