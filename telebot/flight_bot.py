@@ -74,16 +74,6 @@ def callback_inline(call):
                                   text="Хорошо, план работ Вам будет высылаться в указанных часовых поясах: вылет и прилёт по МСК.")
             bot.send_message(157758328, f"{call.message.chat.id} {dict_users.users[call.message.chat.id]['surname']} "
                                         f"Попросил номер два: МСК МСК")
-        # if call.data == "three":
-        #     bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
-        #                           text="Хорошо, план работ Вам будет высылаться в указанных часовых поясах: вылет по МСК, прилёт по UTC.")
-        #     bot.send_message(157758328, f"{call.message.chat.id} {dict_users.users[call.message.chat.id]['surname']} "
-        #                                 f"Попросил номер три: МСК UTC")
-        # if call.data == "four":
-        #     bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
-        #                           text="Хорошо, план работ Вам будет высылаться в указанных часовых поясах: вылет и прилёт по UTC.")
-        #     bot.send_message(157758328, f"{call.message.chat.id} {dict_users.users[call.message.chat.id]['surname']} "
-        #                                 f"Попросил номер четыре: UTC UTC")
         if call.data == "confirm":
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                   text="Ваш план работ будет подтверждаться автоматически при отправке его Вам в Telegram.")
@@ -315,8 +305,8 @@ def welcome(message):
     функции обозначены кнопки, которые будут всегда отображаться под полем ввода запроса."""
     # service_notification(message)
 
-    sti = open('static/AnimatedSticker.tgs', 'rb')
-    bot.send_sticker(message.chat.id, sti)
+    with open('static/AnimatedSticker.tgs', 'rb') as sti:
+        bot.send_sticker(message.chat.id, sti)
 
     bot.send_message(message.chat.id,
                      '\t Привет!\n'
@@ -371,7 +361,7 @@ def conversation(message):
                              f"Поймали ошибку на стадии выдачи изображения из функции photo() при запросе {message.text}: {traceback.format_exc()}")
         bot.send_message(157758328, "Выдали фото по запросу: " + message.text)
 
-    def open():
+    def open_link():
         """Предлагает открыть сайт"""
         download_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()  # что такое двоеточие и что оно дает???
         btn = types.InlineKeyboardButton(text="ОТКРЫТЬ", url=baza.dictionary[id]['link'])
@@ -432,7 +422,7 @@ def conversation(message):
                     if 'скачать' in baza.dictionary[id]['question'].lower():  # так надо 2 раза
                         download()
                     elif 'просмотреть' in question:  # так надо 2 раза
-                        open()
+                        open_link()
                     elif 'изображение' in question:  # так надо 2 раза
                         photo()
                     else:  # так надо 2 раза
@@ -452,7 +442,7 @@ def conversation(message):
                 if 'скачать' in baza.dictionary[id]['question'].lower():  # так надо 2 раза
                     download()
                 elif 'просмотреть' in question:  # так надо 2 раза
-                    open()
+                    open_link()
                 elif 'изображение' in question:  # так надо 2 раза
                     photo()
                 else:  # так надо 2 раза
@@ -587,7 +577,7 @@ def conversation(message):
 
     if "логин" in message.text.lower() and "пароль" in message.text.lower():
         bot.send_message(157758328, f"{fio} прислал логин и пароль (если в конце пароля точка, то она входит в состав "
-                                    f"пароля): {message.text}")
+                                    f"пароля): \n{message.text}")
         bot.send_message(message.chat.id,
                          "\r \t Ожидайте, логин и пароль отправлен успешно. Через некоторое время новые настройки будут активированы.\n \t"
                          "В дальнейшем, можно установить тот же самый пароль, и не придумывать каждый раз новый, "
@@ -601,7 +591,7 @@ def conversation(message):
             bot.send_message(157758328,
                              f"Пользователь {message.from_user.first_name} @{message.from_user.username} id {message.from_user.id} прислал логин и пароль: {message.text}")
             bot.send_message(message.chat.id,
-                             "\r \t Логин и пароль отправлен успешно. Новые настройки скоро будут активированы. Пожалуйста, ожидайте.\n \t"
+                             "\r \t Логин и пароль отправлен успешно. Новые настройки будут скоро активированы, максимум - через сутки. Пожалуйста, ожидайте.\n \t"
                              "В дальнейшем, можно установить тот же самый пароль, и не придумывать каждый раз новый, "
                              "если делать это по ссылке pwd.rossiya-airlines.com (на странице авторизации OpenSky под формой "
                              "ввода логина и пароля).\n"
@@ -660,6 +650,17 @@ def conversation(message):
         check_permissions(message.chat.id)
         return
 
+    if 'проверить допуски у всех проводников' in message.text.lower():
+        for user_id in dict_users.users.keys():
+            try:
+                permissions = get_permissions.parser(user_id, name, surname)
+                bot.send_message(user_id, permissions)
+            except Exception as exc:
+                bot.send_message(157758328,
+                                 f"при проверке допусков у всех проводников возникала ошибка {type(exc).__name__} {exc} ")
+
+        return
+
     if 'разослать сообщение' in message.text.lower():  # TODO протестирвоать потом на одном пользователе
         messaging_thread = threading.Thread(target=messaging(message))
         messaging_thread.start()
@@ -684,6 +685,7 @@ def conversation(message):
         return found_result
 
     if "хорошо" in message.text.lower():
+
         with open('static/AnimatedSticker.tgs', 'rb') as sti:
             bot.send_sticker(message.chat.id, sti)
         return
@@ -944,7 +946,7 @@ def conversation(message):
                     download()  # TODO кнопки скачать и просмотреть не передаются через try except
                     found_result = True
                 elif 'просмотреть' in question:  # так надо 2 раза
-                    open()
+                    open_link()
                     found_result = True
                 elif 'изображение' in question:  # так надо 2 раза
                     photo()
