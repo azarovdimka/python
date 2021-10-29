@@ -119,9 +119,9 @@ def cycle_plan_notify():
                                                          url='https://edu.rossiya-airlines.com/workplan/')
                         plan_btn.add(btn)
                         bot.send_message(user_id, notification, reply_markup=plan_btn, parse_mode='html')
-                        bot.send_message(157758328, f'отправили план {fio}')
-                        bot.send_message(157758328, notification, reply_markup=plan_btn,
-                                         parse_mode='html')
+                        # bot.send_message(157758328, f'отправили план {fio}')
+                        # bot.send_message(157758328, notification, reply_markup=plan_btn,
+                        #                  parse_mode='html')
                         sent_plan_counter += 1
                         sent_plan_list.append(fio)
                     if notification == None:  # равно None - не записан пароль пользователя, парсить не стали
@@ -148,6 +148,7 @@ def cycle_plan_notify():
 check_plan = threading.Thread(target=cycle_plan_notify)  # TODO закомментирвоать
 check_plan.start()
 if not check_plan.is_alive():
+    bot.send_message(157758328, f'поток проверки планов умер')
     exception_logger.writer(exc="поток проверки планов умер", request=None, user_id=None, fio=None, answer=None)
     check_plan.start()
 
@@ -195,8 +196,7 @@ def check_new_documents(user_id):
                          f'не удалось отправить сообщение о новых документах, произошла ошибка: {traceback.format_exc()}')
 
 
-def messaging(
-        message):  # TODO надо сделать чтобы рассылка сообщений шла в отдельном потоке с блокировкой id пользователя в словаре на данный момент
+def messaging(message):
     mess = message.text.split()
     counter_users = 0
     counter_errors = 0
@@ -355,7 +355,8 @@ def conversation(message):
             pic = baza.dictionary[id].get('photo')
             bot.send_message(message.chat.id, baza.dictionary[id].get('answer'),
                              parse_mode='Markdown', )  # reply_markup=photo_btn
-            bot.send_photo(message.chat.id, pic)
+            with open(pic, 'rb') as f:
+                bot.send_photo(message.chat.id, f)
         except Exception:
             bot.send_message(157758328,
                              f"Поймали ошибку на стадии выдачи изображения из функции photo() при запросе {message.text}: {traceback.format_exc()}")
@@ -627,7 +628,8 @@ def conversation(message):
 
         return
 
-    if message.text.lower() in ['/donate', 'пожертвовать', 'поддержать', 'перечислить деньги', 'перевести',
+    if message.text.lower() in ['/donate', 'пожертвовать', 'пожертвовать на развитие', 'поддержать',
+                                'перечислить деньги', 'перевести',
                                 'задонатить']:
         donate_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()  # что такое двоеточие и что оно дает???
         btn = types.InlineKeyboardButton(text="Пожертвовать на развитие",
@@ -650,7 +652,7 @@ def conversation(message):
         check_permissions(message.chat.id)
         return
 
-    if 'проверить допуски у всех проводников' in message.text.lower():
+    if 'проверить допуски у всех проводников' in message.text.lower():  # TODO еще не тестировал это
         for user_id in dict_users.users.keys():
             try:
                 permissions = get_permissions.parser(user_id, name, surname)
@@ -661,7 +663,7 @@ def conversation(message):
 
         return
 
-    if 'разослать сообщение' in message.text.lower():  # TODO протестирвоать потом на одном пользователе
+    if 'разослать сообщение' in message.text.lower():
         messaging_thread = threading.Thread(target=messaging(message))
         messaging_thread.start()
         return
@@ -711,6 +713,7 @@ def conversation(message):
         bot.register_next_step_handler(mesg, send_feedback)
         return
 
+    # TODO не могу доделать "спросить пользователя"
     # if "спросить пользователя" in message.text.lower():
     #     to_whom = int(message.text.split()[2])
     #     question = message.text.split()
@@ -742,10 +745,11 @@ def conversation(message):
                          f"{fio} поблагодарил.", reply_markup=general_menu())
         return
 
-    if message.text in get_weather.cities or 'погода' in message.text.lower():
-        weather = get_weather.what_weather(message.text.lower())
-        bot.send_message(message.chat.id, weather, reply_markup=general_menu())
-        bot.send_message(157758328, f'{message.chat.id} отправили погоду {message.text}')
+    # TODO стал выдавать ошибку Unknown location; please try ~46.37093535,6.23116849372243
+    # if message.text in get_weather.cities or 'погода' in message.text.lower():
+    #     weather = get_weather.what_weather(message.text.lower())
+    #     bot.send_message(message.chat.id, weather, reply_markup=general_menu())
+    #     bot.send_message(157758328, f'{message.chat.id} отправили погоду {message.text}')
 
     if 'не подтверждать план работ' in message.text.lower() or "/confirm" in message.text.lower():
         if password == '':
