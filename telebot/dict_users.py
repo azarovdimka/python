@@ -804,7 +804,7 @@ users = {
                 'autoconfirm': True,
                 'messaging': True,
                 'check_permissions': True},  # Елена,Бенина,-,
-    401096446: {'surname': '',
+    401096446: {'surname': 'Несетерова',
                 'name': 'Наталия',
                 "city": "Санкт-Петербург",
                 'link': '',
