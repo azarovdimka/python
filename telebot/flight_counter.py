@@ -82,6 +82,9 @@ def parser(user_id):  # это надо было все обернуть в фу
         dt_msk = dt_utc_arrive.astimezone(pytz.utc) + timedelta(days=1)
         month_site = int(dt_msk.month)
 
+        if current_month < month_site:
+            break
+
         flight_number = cells[4].text
         aircraft = cells[5].text
         last_date = cells[6].text
@@ -90,11 +93,11 @@ def parser(user_id):  # это надо было все обернуть в фу
 
             if general_counter_prev <= 18:
                 general_types_counter_till_18_prev += 1
-                sukhoj_till_18_prev = counter_sukhoj_prev
+                sukhoj_till_18_prev = counter_sukhoj_prev  # TODO эту строку удалить и счетчики тоже?
             if '/' in flight_number:
                 pair_flights_list = flight_number.split('/')
                 for flight in pair_flights_list:
-                    flight_list_prev.append(flight)
+                    flight_list_prev.append(flight)  # TODO почему не написать проще pair_flight_list.count()?
                     general_counter_prev += 1
                 if 'СУ' in aircraft:
                     counter_sukhoj_prev += flight_number.count('/') + 1  # TODO уточнить систему расчетов
@@ -107,6 +110,8 @@ def parser(user_id):  # это надо было все обернуть в фу
             if '/' in flight_number:
                 pair_flights_list = flight_number.split('/')
                 for flight in pair_flights_list:
+                    if flight == '':
+                        continue
                     flight_list.append(flight)
                     general_counter += 1
                 if 'п' in flight_number:
@@ -132,11 +137,12 @@ def parser(user_id):  # это надо было все обернуть в фу
     output_info = f'За прошлый месяц у вас всего {flight_counter_prev} рейс{get_end(flight_counter_prev)}:\n ' \
                   f'- {counter_sukhoj_prev} рейс{get_end(counter_sukhoj_prev)} на Сухом;\n ' \
                   f'- {other_types_prev} рейс{get_end(other_types_prev)} на других типах.\n' \
-                  f'C 1 по 18 рейс выполнено {sukhoj_till_18_prev} рейсов на Cухом (доплата +440 руб.) за каждый рейс до 31.12.21 г.\n\n' \
+                  f'C 1 по 18 плечо выполнено {sukhoj_till_18_prev} на Cухом (+440 р/плечо)\n' \
+                  '\n' \
                   f'За этот месяц c 1 по {last_date} у вас всего {flight_counter} рейс{get_end(flight_counter)}:\n ' \
                   f'- {counter_sukhoj} рейс{get_end(counter_sukhoj)} на Сухом;\n ' \
                   f'- {other_types} рейс{get_end(other_types)} на других типах.\n' \
-                  f'C 1 по 18 рейс выполнено {sukhoj_till_18} рейсов на Cухом (доплата +440 руб.) за каждый рейс до 31.12.21 г.\n\n' \
+                  f'C 1 по 18 плечо выполнено {sukhoj_till_18} на Cухом (+440 р/плечо)\n' \
                   f'Если у Вас есть закрутки, переходящие на следующий месяц - пока такие случаи расчленять и считать не умею.'
 
     # print(output_info)
@@ -144,4 +150,4 @@ def parser(user_id):  # это надо было все обернуть в фу
     # return "<pre>" + output_info + "</pre>"
 # TODO ПРОВЕРЬ ПРИНТЫ ЛОГИН И ПАРОЛЬ!!!!!!!!!!!!!!!!!!!!!!!!!
 
-# parser(512766466)
+# parser(157758328)
