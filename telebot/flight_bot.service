@@ -8,8 +8,8 @@ Type=simple
 User=root
 WorkingDirectory=/usr/local/bin/bot
 ExecStart=/usr/bin/python3 /usr/local/bin/bot/flight_bot.py
-RestartSec=5
 Restart=always
- 
+RestartSec=5
+
 [Install]
 WantedBy=multi-user.target
