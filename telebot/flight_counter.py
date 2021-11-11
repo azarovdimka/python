@@ -137,12 +137,12 @@ def parser(user_id):  # это надо было все обернуть в фу
     output_info = f'За прошлый месяц у вас всего {flight_counter_prev} рейс{get_end(flight_counter_prev)}:\n ' \
                   f'- {counter_sukhoj_prev} рейс{get_end(counter_sukhoj_prev)} на Сухом;\n ' \
                   f'- {other_types_prev} рейс{get_end(other_types_prev)} на других типах.\n' \
-                  f'C 1 по 18 плечо выполнено {sukhoj_till_18_prev} на Cухом (+440 р/плечо)\n' \
+                  f'C 1 по 18 плечо выполнено {sukhoj_till_18_prev} на Cухом (+440 р/час)\n' \
                   '\n' \
                   f'За этот месяц c 1 по {last_date} у вас всего {flight_counter} рейс{get_end(flight_counter)}:\n ' \
                   f'- {counter_sukhoj} рейс{get_end(counter_sukhoj)} на Сухом;\n ' \
                   f'- {other_types} рейс{get_end(other_types)} на других типах.\n' \
-                  f'C 1 по 18 плечо выполнено {sukhoj_till_18} на Cухом (+440 р/плечо)\n' \
+                  f'C 1 по 18 плечо выполнено {sukhoj_till_18} на Cухом (+440 р/час)\n' \
                   f'Если у Вас есть закрутки, переходящие на следующий месяц - пока такие случаи расчленять и считать не умею.'
 
     # print(output_info)
