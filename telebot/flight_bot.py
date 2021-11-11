@@ -21,6 +21,7 @@ import flight_counter
 import check_news
 
 bot = telebot.TeleBot(settings.TOKEN)
+bot.send_message(157758328, f"бот перезапущен")
 
 
 def general_menu():
@@ -365,7 +366,7 @@ def conversation(message):
     def open_link():
         """Предлагает открыть сайт"""
         download_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()  # что такое двоеточие и что оно дает???
-        btn = types.InlineKeyboardButton(text="ОТКРЫТЬ", url=baza.dictionary[id]['link'])
+        btn = types.InlineKeyboardButton(text="ОТКРЫТЬ", url=baza.dictionary[id]['link'])  # .get() здесь не позволяет
         download_btn.add(btn)
         bot.send_message(message.chat.id, baza.dictionary[id].get('answer'), parse_mode='Markdown',
                          reply_markup=download_btn)
@@ -399,12 +400,18 @@ def conversation(message):
                     return message
         return message
 
+    def find_punctuation(message):
+        """Ищет знаки пунктуации"""
+        for m in baza.punctuation:  # message.lower().split():  # для каждого слова в кортеже
+            if m in message:  # если это каждое слово есть в запросе
+                message = message.replace(m, '')
+        return message
+
     def find_garbage(message):
         """Ищет лишние слова-сорняки, которые вешают программу (как, кто, где) и меняет их на пустую строку"""
-        for word in baza.garbage:  # для каждого слова в кортеже
-            if word.lower() in message.lower():  # если это каждое слово есть в запросе
+        for word in message.lower().split():  # для каждого слова в кортеже
+            if word.lower() in baza.garbage:  # если это каждое слово есть в запросе
                 message = message.replace(word, '')
-
         return message
 
     def find_non_strict_accordance(message):
@@ -729,11 +736,14 @@ def conversation(message):
     #     bot.register_next_step_handler(mesg, send_question)
     #     return
 
+    message.text = find_punctuation(message.text)
     message.text = find_garbage(message.text)
     message.text = find_exception(message.text.lower())  # расшифровывает аббревиатуры
 
-    # TODO вызвать функцию болтовни
-    # if message.chat.type == 'private':  # TODO по-моему, эту строку вообще можно удалить
+    if len(message.text.lower()) < 4:
+        bot.send_message(message.chat.id, f'{name}, пожалуйста, уточните свой запрос.')
+        return
+
     if message.text.lower() in baza.greetings:
         bot.send_message(message.chat.id, 'Привет! Буду рад тебе помочь, задавай свой вопрос.',
                          reply_markup=general_menu())
@@ -913,7 +923,7 @@ def conversation(message):
         bot.send_message(157758328, "Попросили уточнить какой инструктор интересует")
         return
 
-    if 'телефон' == message.text.lower() or 'номер телефона' == message.text.lower() or 'телефоны' == message.text.lower():  # TODO наверное не очень семантично здесь размещать обработку этого запроса
+    if 'телефон' == message.text.lower() or 'номер телефона' == message.text.lower() or 'телефоны' in message.text.lower() or 'номера' in message.text.lower():  # TODO наверное не очень семантично здесь размещать обработку этого запроса
         bot.send_message(message.chat.id, 'Чей именно телефон Вас инетересует?', reply_markup=general_menu())
         bot.send_message(157758328, "Попросили уточнить чей телефон нужен")
         return  # TODO быть может га обработку подобных запросов, при выдаче ответов в строгом соответвии №1 добвлять ответы сначала в список, а потом считать, и если ответов много, то задавать уточняющий вопрос
