@@ -159,7 +159,7 @@ def check_permissions_for_everyone():
     btn = types.InlineKeyboardButton(text="Открыть подробнее в OpenSky",
                                      url='https://edu.rossiya-airlines.com/ready/userReady-1/')
     document_btn.add(btn)
-    bot.send_message(157758328, f'Бот начал проверку допусков проводников.')
+    bot.send_message(157758328, f'Бот начал проверку допусков всех проводников.')
     for user_id in dict_users.users.keys():
         if dict_users.users[user_id]['password'] == '':
             continue
@@ -172,15 +172,11 @@ def check_permissions_for_everyone():
                 bot.send_message(user_id, documents_info, reply_markup=document_btn)
                 bot.send_message(157758328, f'Пользователю {fio} отправлен сообщение об истекающих допусках.')
                 bot.send_message(157758328, documents_info, reply_markup=document_btn)  # TODO закомментировать
+                time.sleep(3)
             except Exception:
-                bot.send_message(157758328,
-                                 f'Пользователю {fio} не удалось отправить сообщение об истекающих допусках, произошла ошибка: {traceback.format_exc()}')
+                bot.send_message(157758328, f'{fio} не удалось уведомление о допусках: {traceback.format_exc()}')
                 continue
-    time.sleep(300)
-
-
-# permissions_thread = threading.Thread(target=check_permissions_for_everyone) #TODO закомментирвоать
-# permissions_thread.start()
+    bot.send_message(157758328, f"бот закончил проверку допусков всех проводников")
 
 
 def check_new_documents(user_id):
@@ -209,11 +205,7 @@ def messaging(message):
             surname = dict_users.users[user_id]['surname']
             fio = f'{user_id} {name} {surname}'
             try:
-                if len(name) == 0:
-                    bot.send_message(user_id, f'Уважаемый бортпроводник, {" ".join(mess[2:])}',
-                                     reply_markup=general_menu())
-                else:
-                    bot.send_message(user_id, f'{name}, {" ".join(mess[2:])}', reply_markup=general_menu())
+                bot.send_message(user_id, f'{name}, {" ".join(mess[2:])}', reply_markup=general_menu())
                 counter_users += 1
                 bot.send_message(157758328, f"Сообщение успешно отравлено {fio}")  # TODO временно
                 time.sleep(3)
@@ -276,6 +268,12 @@ def service_notification(message):
 
 def verification(message):
     """Верифицирует пользователя каждый раз: проверяет есть ли у него одобренный доступ к телеграм-боту."""
+    if message.chat.id in dict_users.blocked.keys():
+        bot.send_message(message.chat.id, 'Вам отказано в доступе.')
+        bot.send_message(157758328,
+                         f"Отказали в доступе {message.from_user.id} @{message.from_user.username} {message.from_user.first_name} "
+                         f"{message.from_user.last_name} Пользователь спрашивал {message.text}")
+        return False
     if message.chat.id in dict_users.users.keys():
         return True
     else:
@@ -554,6 +552,7 @@ def conversation(message):
                              f"с планом работ?", reply_markup=confirm_btns)
 
     def check_permissions(user_id):
+        """Проверяет сроки дейсвтвия допусков у одного конкретного проводника по индивидуальному запросу."""
         document_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()  # что такое двоеточие и что оно дает???
         btn = types.InlineKeyboardButton(text="Открыть подробнее в OpenSky",
                                          url='https://edu.rossiya-airlines.com/ready/userReady-1/')
@@ -579,6 +578,7 @@ def conversation(message):
         return
 
     found_result = False  # TODO сделать чтобы запрос превр в список слов, и обрабат-е вопрос в словаре тоже в список и проверялось количество совпадений, но как-то тогда надо отделать хорошие соотсевтвия от плохих и опредлять сколько выдавать значений в результат. Третья ступень поиска так и ищет по списку, может так и оставить как есть, но тогда первые способы находят не все что нужно - так ли это - проверить
+
     # global user_id
 
     # service_notification(message)
@@ -660,14 +660,7 @@ def conversation(message):
         return
 
     if 'проверить допуски у всех проводников' in message.text.lower():  # TODO еще не тестировал это
-        for user_id in dict_users.users.keys():
-            try:
-                permissions = get_permissions.parser(user_id, name, surname)
-                bot.send_message(user_id, permissions)
-            except Exception as exc:
-                bot.send_message(157758328,
-                                 f"при проверке допусков у всех проводников возникала ошибка {type(exc).__name__} {exc} ")
-
+        check_permissions_for_everyone()
         return
 
     if 'разослать сообщение' in message.text.lower():
@@ -800,6 +793,10 @@ def conversation(message):
                              '{} попытался включить автоматическое подтверждение плана автоматического подтверждения '
                              'плана работ но у нас нет его пароля'.format(message.chat.id))
 
+        return
+
+    if 'проверить допуски всех бортпроводников' in message.text.lower():
+        check_permissions_for_everyone()
         return
 
     if 'отказ от рассылки' in message.text.lower() or 'отказаться от рассылки' in message.text.lower():
