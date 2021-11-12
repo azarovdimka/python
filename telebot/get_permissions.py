@@ -8,8 +8,7 @@ from datetime import datetime, timedelta, timezone
 current_datetime = time.strftime('%d.%m.%y')  # %H:%M
 
 
-def parser(user_id, name,
-           surname):  # это надо было все обернуть в функцию чтобы потом при импорте вызвать модуль.функция()
+def parser(user_id, name, surname):
     url = 'https://edu.rossiya-airlines.com/ready/userReady-1/'
 
     s = requests.Session()
@@ -37,13 +36,8 @@ def parser(user_id, name,
     try:
         table = events[0]
     except Exception:
-        error = f"Проблема с проверкой допусков. Вероятно, в базе указан неверный логин {dict_users.users[user_id]['tab_number']} и пароль {dict_users.users[user_id]['password']}"
+        error = f"Не удалось проверить сроки действия ваших допусков и документов. Вероятно, в базе указан неверный логин {dict_users.users[user_id]['tab_number']} и пароль {dict_users.users[user_id]['password']}. Если пароль указан устаревший, Вы можете сообщить новый пароль в следующем формате (4 слова через пробел): логин ...... пароль ......."
         return error
-
-    off_directory = "/usr/local/bin/bot/permissions/perm" + str(user_id) + "_" + surname + "/off" + str(
-        user_id) + "_" + surname + ".txt"
-    exp_directory = "/usr/local/bin/bot/permissions/perm" + str(user_id) + "_" + surname + "/exp" + str(
-        user_id) + "_" + surname + ".txt"
 
     output_info = f'{name}, вот результат проверки сроков действия Ваших документов:\n'
     found_result = None
@@ -90,9 +84,6 @@ def parser(user_id, name,
         deadline = datetime(year, month, day)
         string = ''
 
-        # if now > deadline and document_name not in off_directory:
-        #     string += f"Документ {document_name} {aircraft_type} просрочен {day_str}.{month_str}.{year_str}.\n"
-        #     output_info += string
         if now.day == deadline.day and now.month == deadline.month and now.year == deadline.year:
             string += f"Сегодня истекает {document_name}\n"
             output_info += string
@@ -100,16 +91,13 @@ def parser(user_id, name,
         else:
             period = deadline - now
             days_left = str(period).split()[0]
-
-            if 30 < int(
-                    days_left) <= 60:  # and (document_name == 'Crew Member Certificate ID' or document_name == 'Заграничный паспорт')\
+            if int(days_left) < 0:  # ЕСЛИ ЧТО-ТО ПРОСРОЧЕНО
+                continue
+            if 0 < int(
+                    days_left) < 60:  # and (document_name == 'Crew Member Certificate ID' or document_name == 'Заграничный паспорт')\
                 # and document_name not in off_directory:
                 string += f"- заканчивается {document_name}{aircraft_type}. \n\t Действует до {day_str}.{month_str}.{year_str} \n\t Осталось {period.days} дн.\n"
                 output_info += string  # TODO сделать нормальные окончания склонения числительнеых
-                found_result = True
-            if 0 < int(days_left) <= 30:
-                string += f"- заканчивается {document_name}{aircraft_type}. \n\t Действует до {day_str}.{month_str}.{year_str} \n\t Осталось {period.days} дн.\n"
-                output_info += string
                 found_result = True
 
     if found_result is None:
