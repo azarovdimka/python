@@ -22,7 +22,7 @@ def parser(user_id):  # это надо было все обернуть в фу
     try:
         main_page = s.post(url, data=data, headers=dict(Referer=url))  # main_page = response 200
     except:
-        return
+        return "Чтобы узнать какие новые документы выложили в OpenSky для ознакомления, Вам необходимо сообщить свой логин и пароль через пробел 4 слова в следующем формате: логин .... пароль ....."
     soup = BeautifulSoup(main_page.content, 'html.parser')  # .find_all('div', {'class': ['dhx_cal_event_line_start']})
 
     events = soup.select('.table.table-striped.table-condensed.table-hover')
