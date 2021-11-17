@@ -38,27 +38,29 @@ def general_menu():
 
 
 def survey(user_id):
-    """Сообщение с кнопками для проведения опроса под индивидуальные пожелания. Вызов функции прикрепляется в качестве параметра к reply_markup в bot.send_message"""
-    survey_btns = types.InlineKeyboardMarkup(row_width=1)
+    """Вопрос про часовые пояса. Все три вопроса грузятся сразу. Вызов функции прикрепляется в качестве параметра к reply_markup в bot.send_message"""
+    hours_btns = types.InlineKeyboardMarkup(row_width=1)
     one = types.InlineKeyboardButton(text="1 - Вылет UTC, Прилёт МСК", callback_data="one")
     two = types.InlineKeyboardButton(text="2 - Вылет МСК, Прилёт МСК", callback_data="two")
-    # three = types.InlineKeyboardButton(text="3 - Вылет МСК, Прилёт UTC", callback_data="three")
-    # four = types.InlineKeyboardButton(text="4 - Вылет UTC, Прилёт UTC", callback_data="four")
-    survey_btns.add(one, two)  # , three, four
-    bot.send_message(user_id, f"`\t\t {dict_users.users[user_id]['name']}, Ваш логин пароль успешно отправлен. \n"
-                              f"`\t\t Укажите часовые пояса, в которых Вам было бы удобно получать план работ: UTC или MSK",
-                     reply_markup=survey_btns)
-    next_survey_btns = types.InlineKeyboardMarkup(row_width=1)
+    hours_btns.add(one, two)
+
+    confirm_plan_btns = types.InlineKeyboardMarkup(row_width=1)
     confirm = types.InlineKeyboardButton(text="Подтверждать план автоматически", callback_data="confirm")
     not_confirm = types.InlineKeyboardButton(text="Не подтверждать план автоматически", callback_data="not_confirm")
-    next_survey_btns.add(confirm, not_confirm)
-    bot.send_message(user_id, f"`\t\t {dict_users.users[user_id]['name']} для завершения персональной настройки, "
-                              f"сообщите, подтверждать ли план работ в OpenSky автоматически при отправке его Вам в Telegram?",
-                     reply_markup=next_survey_btns)
+    confirm_plan_btns.add(confirm, not_confirm)
+
     yes_no_btns = types.InlineKeyboardMarkup(row_width=1)
     yes = types.InlineKeyboardButton(text="да", callback_data="yes")
     no = types.InlineKeyboardButton(text="нет", callback_data="no")
     yes_no_btns.add(yes, no)
+
+    bot.send_message(user_id,
+                     f"`\t\t {dict_users.users[user_id]['name']}, укажите часовые пояса, в которых Вам было бы удобно получать план работ: UTC или MSK",
+                     reply_markup=hours_btns)
+
+    bot.send_message(user_id,
+                     f"`\t\t {dict_users.users[user_id]['name']} подтверждать ли план работ в OpenSky автоматически при отправке его Вам в Telegram?",
+                     reply_markup=confirm_plan_btns)
 
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -587,11 +589,13 @@ def conversation(message):
         bot.send_message(157758328, f"{fio} прислал логин и пароль (если в конце пароля точка, то она входит в состав "
                                     f"пароля): \n{message.text}")
         bot.send_message(message.chat.id,
-                         "\r \t Ожидайте, логин и пароль отправлен успешно. Через некоторое время новые настройки будут активированы.\n \t"
+                         "\r \t Логин и пароль отправлен успешно, ожидайте.\n \t"
                          "В дальнейшем, можно установить тот же самый пароль, и не придумывать каждый раз новый, "
                          "если делать это по ссылке pwd.rossiya-airlines.com (на странице авторизации OpenSky под формой "
-                         "ввода логина и пароля).\n"
-                         , reply_markup=survey(message.chat.id))
+                         "ввода логина и пароля).\n")
+        bot.send_message(message.chat.id,
+                         "\r \t Настройки будут активированы позже, ожидание может составить до суток.\n",
+                         reply_markup=survey(message.chat.id))
         return
 
     for i in message.text.split():
@@ -599,11 +603,10 @@ def conversation(message):
             bot.send_message(157758328,
                              f"Пользователь {message.from_user.first_name} @{message.from_user.username} id {message.from_user.id} прислал логин и пароль: {message.text}")
             bot.send_message(message.chat.id,
-                             "\r \t Логин и пароль отправлен успешно. Новые настройки будут скоро активированы, максимум - через сутки. Пожалуйста, ожидайте.\n \t"
+                             "\r \t Логин и пароль отправлен успешно, ожидайте.\n \t"
                              "В дальнейшем, можно установить тот же самый пароль, и не придумывать каждый раз новый, "
                              "если делать это по ссылке pwd.rossiya-airlines.com (на странице авторизации OpenSky под формой "
-                             "ввода логина и пароля).\n"
-                             , reply_markup=survey(message.chat.id))
+                             "ввода логина и пароля).\n", reply_markup=survey(message.chat.id))
             return
 
     if "сколько бортпроводников" in message.text.lower():
@@ -851,7 +854,7 @@ def conversation(message):
                                               'плане работ.')
         return
 
-    if "мой налет" in message.text.lower():
+    if "мой налет" in message.text.lower() or "сейчас налёт" in message.text.lower():
         if password == '':
             nalet_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()  # что такое двоеточие и что оно дает???
             btn = types.InlineKeyboardButton(text="Просмотреть налёт в OpenSky",
