@@ -657,7 +657,7 @@ def conversation(message):
         bot.send_message(157758328, f"{fio} Рассказали про донаты")
         return
 
-    if message.text.lower() in ['/document', 'проверить допуски', "сроки"]:
+    if message.text.lower() in ['/document', 'проверить допуски', "сроки", "мои допуски", "проверить мои допуски"]:
         bot.send_message(message.chat.id, f"{name}, запрос отправлен, ожидайте несколько секунд...")
         check_permissions(message.chat.id)
         return
@@ -700,20 +700,8 @@ def conversation(message):
                          'Буду искренне благодарен, если предоставите актуальные данные и корректную информацию. @DeveloperAzarov')
         return
 
-    if "обратная связь" in message.text.lower():
-        def send_feedback(message):
-            bot.send_message(157758328, f'{fio} оставил обратную связь: \n {message.text}')
-            if message.text.lower() == 'отмена':
-                bot.send_message(message.chat.id, 'Надумаете - пишите! Успехов!)')
-            else:
-                bot.send_message(message.chat.id, 'Вы успешно отправили сообщение. Спасибо за обратную связь.')
 
-        mesg = bot.send_message(message.chat.id, f'{name}, я буду рад узнать Ваше мнение о работе Telegram-бота: '
-                                                 f'жалобы, предложения, просьбы и пожелания. \n'
-                                                 f'Если Вы обнаружили факты некорректной работы - обязательно сообщите.\n'
-                                                 f'Бот ждет Вашего сообщения. Если Вы передумаете оставлять обратную связь - отправьте слово Отмена.')
 
-        bot.register_next_step_handler(mesg, send_feedback)
         return
 
     # TODO не могу доделать "спросить пользователя"
@@ -736,7 +724,7 @@ def conversation(message):
     message.text = find_garbage(message.text)
     message.text = find_exception(message.text.lower())  # расшифровывает аббревиатуры
 
-    if len(message.text.lower()) < 4:
+    if len(message.text.lower()) < 3:
         bot.send_message(message.chat.id, f'{name}, пожалуйста, уточните свой запрос.')
         return
 
