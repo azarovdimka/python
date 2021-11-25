@@ -297,7 +297,8 @@ def handle_docs_photo(message):
                              "фото.".format(message.from_user, message.from_user, message.from_user,
                                             message.from_user)
     bot.send_message(157758328, new_photo_notification)
-    bot.send_message(message.chat.id, "Фото отправлено успешно. Пожалуйста, ожидайте.")
+    bot.send_message(message.chat.id,
+                     "Фото отправлено успешно. Пожалуйста, ожидайте, о результате мы Вам сообщим. Ожидание может составить до суток.")
 
 
 @bot.message_handler(commands=['start'])
