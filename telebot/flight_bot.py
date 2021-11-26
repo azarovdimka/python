@@ -585,6 +585,15 @@ def conversation(message):
     # global user_id
     # service_notification(message)
 
+    if "написать пользователю по id" in message.text.lower():
+        mess = message.text.split()
+        try:
+            bot.send_message(int(mess[4]), ' '.join(mess[5:]).capitalize(), reply_markup=general_menu())
+            bot.send_message(157758328, "Сообщение пользователю отправлено успешно.")
+        except Exception:
+            bot.send_message(157758328, f"Пользователь не подключен к телеграм-боту.\n {traceback.format_exc()}")
+        return
+
     if message.text.lower() in 'это не нормально это ужасно это очень плохо очень жаль кошмар':
         bot.send_message(message.chat.id, f"Я тебя прекрасно понимаю, сочувствую.")
         bot.send_message(157758328, f"{fio} отправили сочувствие в ответ на {message.text}.")
@@ -633,15 +642,6 @@ def conversation(message):
 
     if "сколько бортпроводников" in message.text.lower():
         bot.send_message(message.chat.id, f"К Telegram-боту подключено сейчас {len(dict_users.users)} бортпроводников.")
-        return
-
-    if "написать пользователю по id" in message.text.lower():
-        mess = message.text.split()
-        try:
-            bot.send_message(int(mess[4]), ' '.join(mess[5:]).capitalize(), reply_markup=general_menu())
-            bot.send_message(157758328, "Сообщение пользователю отправлено успешно.")
-        except Exception:
-            bot.send_message(157758328, f"Пользователь не подключен к телеграм-боту.\n {traceback.format_exc()}")
         return
 
     if '/news' in message.text.lower():
