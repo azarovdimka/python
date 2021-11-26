@@ -116,6 +116,8 @@ cities_code = {'Внуково-A': 'VKO',  # 'Внуково    ',
                'Платов[Пас]': 'ROVп',
                'Хургада-2': 'HRG',
                'Нурсулта-1': 'NQZ',
+               'Красндар-1': 'KRR',
+               'Архангск': 'ARH'
                }
 
 
@@ -298,6 +300,7 @@ def parser(user_id):  # это надо было все обернуть в фу
         if 'Тест' in cells[4].text:
             string = f'{start_dt} Тест\n'
             event_detected = True
+
         if cells[6].text.count('/') == 2:
             day_mont_arr, msk_time = extract_arrive(cells[6].text)
             city = extract_city(route_arrive_time)
