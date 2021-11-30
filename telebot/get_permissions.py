@@ -91,12 +91,15 @@ def parser(user_id, name, surname):
         else:
             period = deadline - now
             days_left = str(period).split()[0]
-            if int(days_left) < 0:  # ЕСЛИ ЧТО-ТО ПРОСРОЧЕНО
-                continue
-            if 0 < int(
-                    days_left) < 60:  # and (document_name == 'Crew Member Certificate ID' or document_name == 'Заграничный паспорт')\
-                # and document_name not in off_directory:
-                string += f"- заканчивается {document_name}{aircraft_type}. \n\t Действует до {day_str}.{month_str}.{year_str} \n\t Осталось {period.days} дн.\n"
+            try:
+                if int(days_left) < 0:  # ЕСЛИ ЧТО-ТО ПРОСРОЧЕНО
+                    continue
+                if 0 < int(days_left) < 60:
+                    string += f"- заканчивается {document_name}{aircraft_type}. \n\t Действует до {day_str}.{month_str}.{year_str} \n\t Осталось {period.days} дн.\n"
+                    output_info += string  # TODO сделать нормальные окончания склонения числительнеых
+                    found_result = True
+            except Exception as exc:
+                string += f"- заканчивается {document_name}{aircraft_type}. \n\t Действует до {day_str}.{month_str}.{year_str} \n\t Остался 1 день\n"
                 output_info += string  # TODO сделать нормальные окончания склонения числительнеых
                 found_result = True
 
