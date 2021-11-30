@@ -48,7 +48,7 @@ def parser(user_id):  # это надо было все обернуть в фу
     try:
         table = tables[0]  # bp дебага смотрим вложенную таблицу
     except Exception:
-        return f"\t *Не удалось посчитать налёт.* \n\t {dict_users.users[user_id]['name']}, либо Вы еще никуда не летали в этом месяце, либо у Вас неверно указан логин {dict_users.users[user_id]['tab_number']} и пароль {dict_users.users[user_id]['password']}. Если Вы считаете, что проблема в другом - сообщите об этом разработчику @DeveloperAzarov"
+        return f"\t *Не удалось посчитать налёт.* \n\t {dict_users.users[user_id]['name']}, либо Вы еще никуда не летали в этом месяце, либо у Вас неверно указан логин {dict_users.users[user_id]['tab_number']} и пароль {dict_users.users[user_id]['password']}."
     thead = table.contents[2]
     rows = thead.contents
     tr = rows[0]
