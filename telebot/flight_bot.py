@@ -199,7 +199,7 @@ def check_nalet_for_everyone():
             fio = f'{user_id} {surname} {name}'
             try:
                 nalet_info = getnalet.parser(user_id)
-                bot.send_message(user_id, nalet_info, reply_markup=nalet_btn)
+                bot.send_message(user_id, f'{name}, у Вас в этом месяце\n{nalet_info}', reply_markup=nalet_btn)
                 bot.send_message(157758328, f'Пользователю {fio} отправлен налёт.')
                 bot.send_message(157758328, nalet_info)  # TODO закомментировать
                 counter += 1
