@@ -116,6 +116,11 @@ def cycle_plan_notify():
                     surname = dict_users.users[user_id]['surname']
                     fio = f'{user_id} {surname} {name} '
                     notification = notificator.notify(user_id)  # TODO НЕ ЗАБУДЬ ПОМЕНЯТЬ АДРЕС ФАЙЛА в НОТИФИКАТОРЕ!!!
+                    if notification is None:
+                        continue
+                    if notification.split()[0] == 'Проблема':
+                        time.sleep(300)
+                        continue
                     if notification != None:  # не равно none - получили план. будет ошибка, если ему не удалось отправить ему его план - по
                         plan_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()  # что такое двоеточие и что оно дает???
                         btn = types.InlineKeyboardButton(text="Открыть план работ в OpenSky",
@@ -124,8 +129,6 @@ def cycle_plan_notify():
                         bot.send_message(user_id, notification, reply_markup=plan_btn, parse_mode='html')
                         sent_plan_counter += 1
                         sent_plan_list.append(fio)
-                    if notification == None:  # равно None - не записан пароль пользователя, парсить не стали
-                        continue  # в самом парсере тоже написано return если отсутсвует пароль в словаре
                 except Exception as exc:  # если случилась ошибка при отправке сообщений пользователю
                     users_off_list.append(fio)
                     exc_event = exception_logger.writer(exc=exc,
@@ -750,7 +753,6 @@ def conversation(message):
         return found_result
 
     if "хорошо" in message.text.lower():
-
         with open('static/AnimatedSticker.tgs', 'rb') as sti:
             bot.send_sticker(message.chat.id, sti)
         return
