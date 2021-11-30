@@ -2820,7 +2820,7 @@ users = {
                  'link': '@diora_G',
                  'exp_date': '01.09.24',  # штабной
                  'tab_number': '125539',
-                 'password': 'lublumamu1K',
+                 'password': 'Lublumamu1K',
                  'access': True,
                  'plan_notify': True,
                  'messaging': True,
