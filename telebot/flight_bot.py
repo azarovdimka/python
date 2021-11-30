@@ -8,6 +8,7 @@ from telebot import types
 from random import choice
 import exception_logger
 import get_weather
+import mail
 import settings
 import dict_users
 import getplan
@@ -34,7 +35,6 @@ def general_menu():
     btn6 = types.KeyboardButton('Обратная связь')  # InlineKeyBoard (callback_data='Внести информацию')
     general_menu.add(btn1, btn2, btn3, btn4, btn5, btn6)
     return general_menu
-
 
 
 def survey(user_id):
@@ -122,9 +122,6 @@ def cycle_plan_notify():
                                                          url='https://edu.rossiya-airlines.com/workplan/')
                         plan_btn.add(btn)
                         bot.send_message(user_id, notification, reply_markup=plan_btn, parse_mode='html')
-                        # bot.send_message(157758328, f'отправили план {fio}')
-                        # bot.send_message(157758328, notification, reply_markup=plan_btn,
-                        #                  parse_mode='html')
                         sent_plan_counter += 1
                         sent_plan_list.append(fio)
                     if notification == None:  # равно None - не записан пароль пользователя, парсить не стали
@@ -146,7 +143,6 @@ def cycle_plan_notify():
             exception_logger.writer(exc=e, request="извлечение ключа словаря user_id при автоматической отправке плана",
                                     user_id=user_id, fio=fio, answer='поймали ошибку во внешнем try except')
             bot.send_message(157758328, f'поймали ошибку во внешнем try except: {fio}: {traceback.format_exc()}')
-        # bot.send_message(157758328, "бот закончил проверку планов проводников в атоматическом режиме, уснул на 5 мин.")
         time.sleep(300)
 
 
@@ -166,6 +162,7 @@ def check_permissions_for_everyone():
                                      url='https://edu.rossiya-airlines.com/ready/userReady-1/')
     document_btn.add(btn)
     bot.send_message(157758328, f'Бот начал проверку допусков всех проводников.')
+    counter = 0
     for user_id in dict_users.users.keys():
         if dict_users.users[user_id]['password'] == '':
             continue
@@ -178,11 +175,39 @@ def check_permissions_for_everyone():
                 bot.send_message(user_id, documents_info, reply_markup=document_btn)
                 bot.send_message(157758328, f'Пользователю {fio} отправлен сообщение об истекающих допусках.')
                 bot.send_message(157758328, documents_info, reply_markup=document_btn)  # TODO закомментировать
+                counter += 1
                 time.sleep(3)
             except Exception:
                 bot.send_message(157758328, f'{fio} не удалось уведомление о допусках: {traceback.format_exc()}')
                 continue
-    bot.send_message(157758328, f"бот закончил проверку допусков всех проводников")
+    bot.send_message(157758328, f"бот закончил проверку допусков всех проводников. Отправлено {counter} уведомлений.")
+
+
+def check_nalet_for_everyone():
+    nalet_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()  # что такое двоеточие и что оно дает???
+    btn = types.InlineKeyboardButton(text="Просмотреть налёт в OpenSky",
+                                     url='https://edu.rossiya-airlines.com/nalet/')
+    nalet_btn.add(btn)
+    bot.send_message(157758328, f'Бот начал проверку налёта всех проводников.')
+    counter = 0
+    for user_id in dict_users.users.keys():
+        if dict_users.users[user_id]['password'] == '':
+            continue
+        else:
+            name = dict_users.users[user_id]['name']
+            surname = dict_users.users[user_id]['surname']
+            fio = f'{user_id} {surname} {name}'
+            try:
+                nalet_info = getnalet.parser(user_id)
+                bot.send_message(user_id, nalet_info, reply_markup=nalet_btn)
+                bot.send_message(157758328, f'Пользователю {fio} отправлен налёт.')
+                bot.send_message(157758328, nalet_info)  # TODO закомментировать
+                counter += 1
+                time.sleep(3)
+            except Exception:
+                bot.send_message(157758328, f'{fio} не удалось отправить налёт: {traceback.format_exc()}')
+                continue
+    bot.send_message(157758328, f"бот закончил проверку налёта всех проводников. Отправлено {counter} уведомлений.")
 
 
 def check_new_documents(user_id):
@@ -565,7 +590,7 @@ def conversation(message):
     def check_permissions(user_id):
         """Проверяет сроки дейсвтвия допусков у одного конкретного проводника по индивидуальному запросу."""
         document_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()  # что такое двоеточие и что оно дает???
-        btn = types.InlineKeyboardButton(text="Открыть подробнее в OpenSky",
+        btn = types.InlineKeyboardButton(text="Открыть допуски в OpenSky",
                                          url='https://edu.rossiya-airlines.com/ready/userReady-1/')
         document_btn.add(btn)
         if password == '':
@@ -607,7 +632,7 @@ def conversation(message):
         bot.send_message(157758328, f"{fio} отправили сочувствие в ответ на {message.text}.")
         return
 
-    if "обратная связь" in message.text.lower():
+    if "обратная связь" in message.text.lower() or "/feedback" in message.text.lower():
         def feedback(message):
             if "отмена" in message.text.lower():
                 bot.send_message(message.chat.id,
@@ -687,13 +712,18 @@ def conversation(message):
         bot.send_message(157758328, f"{fio} Рассказали про донаты")
         return
 
-    if message.text.lower() in ['/document', 'проверить допуски', "сроки", "мои допуски", "проверить мои допуски"]:
+    if message.text.lower() in ['/document', 'проверить допуски', "сроки", "мои допуски", "мои документы",
+                                "проверить мои документы", "проверить мои допуски"]:
         bot.send_message(message.chat.id, f"{name}, запрос отправлен, ожидайте несколько секунд...")
         check_permissions(message.chat.id)
         return
 
-    if 'проверить допуски у всех проводников' in message.text.lower():  # TODO еще не тестировал это
+    if 'проверить допуски у всех бортпроводников' in message.text.lower():  # TODO еще не тестировал это
         check_permissions_for_everyone()
+        return
+
+    if 'проверить налет у всех бортпроводников' in message.text.lower():  # TODO еще не тестировал это
+        check_nalet_for_everyone()
         return
 
     if 'разослать сообщение' in message.text.lower():
@@ -730,26 +760,6 @@ def conversation(message):
                          'Буду искренне благодарен, если предоставите актуальные данные и корректную информацию. @DeveloperAzarov')
         return
 
-
-
-        return
-
-    # TODO не могу доделать "спросить пользователя"
-    # if "спросить пользователя" in message.text.lower():
-    #     to_whom = int(message.text.split()[2])
-    #     question = message.text.split()
-    #
-    #     def send_question(message, to_whom):
-    #         bot.send_message(157758328, f'{fio} ответил на вопрос: \n {message.text}')
-    #         if message.text.lower() == 'отмена':
-    #             bot.send_message(message.chat.id, 'Надумаете - пишите! Успехов!)')
-    #         else:
-    #             bot.send_message(message.chat.id, 'Вы успешно ответили. Спасибо.')
-    #
-    #     mesg = bot.send_message(to_whom, question)
-    #     bot.register_next_step_handler(mesg, send_question)
-    #     return
-
     message.text = find_punctuation(message.text)
     message.text = find_garbage(message.text)
     message.text = find_exception(message.text.lower())  # расшифровывает аббревиатуры
@@ -768,12 +778,6 @@ def conversation(message):
         bot.send_message(157758328,
                          f"{fio} поблагодарил.", reply_markup=general_menu())
         return
-
-    # TODO стал выдавать ошибку Unknown location; please try ~46.37093535,6.23116849372243
-    # if message.text in get_weather.cities or 'погода' in message.text.lower():
-    #     weather = get_weather.what_weather(message.text.lower())
-    #     bot.send_message(message.chat.id, weather, reply_markup=general_menu())
-    #     bot.send_message(157758328, f'{message.chat.id} отправили погоду {message.text}')
 
     if 'не подтверждать план работ' in message.text.lower() or "/confirm" in message.text.lower():
         if password == '':
@@ -828,7 +832,35 @@ def conversation(message):
             bot.send_message(message.chat.id, "Рассылка сообщений у Вас уже отключена.")
         return
 
-    if "план работ" in message.text.lower() or "план на завтра" in message.text.lower():
+    if message.text.lower() in ["заказать выходные", "заказ выходных", "заказать выходной"]:
+        bot.send_message(message.chat.id,
+                         f'{name}, в настоящее время разрабатывается функция заказа выходных через телеграм-бот. ')
+        # def day_off_handler(message):
+        #     if "отмена" in message.text.lower():
+        #        bot.send_message(157758328, f'{name}, как надумаете - пишите, закажем выходной!')
+        #     else:
+        #         if message.text.is_digit():
+        #             day_off_checker.checker(message)
+        #         else:
+        #             bot.send_message(157758328, f'{name}, Dfv необходимо ввести число месяца цифрами без лишнихлов, например: 25. Чтобы заново начать процедуру заказа выходных дней - отправьте заказать выходной.')
+
+        # заменить верхний текст:
+        # msg = bot.send_message(message.chat.id, f'{name}, в настоящее время заказ выходных дней возможен на январь месяц.
+        # Если вы хотите заказать выходные на *Январь*, то отправьте в ответном сообщении дату, на которую вы бы хотели заказать
+        # выходной и основание через пробел, например: 25.01 день рождения\n Если вы не согласны или передумали сейчас заказывать выходной, отправьте в ответ слово отмена.'
+        # bot.register_next_step_handler(msg, day_off_handler)
+        return
+
+    #
+    # if "отправить письмо" in message.text.lower() and message.chat.id == 157758328:
+    #     try:
+    #         mail.send_email(host="mail.yandex.ru", subject="проба", to_addr="dmi-azarov@ya.ru", from_addr="dmi-azarov@ya.ru", body_text="привет", username="dmi-azarov", password="2DH64rf2")
+    #         bot.send_message(157758328, f'письмо успешно отправлено')
+    #     except Exception as exc:
+    #         bot.send_message(157758328, f'{type(exc).__name__} {exc}')
+    #     return
+
+    if message.text.lower() in ["план на завтра", "план работ", "/getplan", 'мой наряд']:
         if password == '':
             plan_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()  # что такое двоеточие и что оно дает???
             btn = types.InlineKeyboardButton(text="Открыть план работ в OpenSky",
@@ -872,7 +904,7 @@ def conversation(message):
                                               'плане работ.')
         return
 
-    if "мой налет" in message.text.lower() or "сейчас налёт" in message.text.lower():
+    if "мой налет" in message.text.lower() or "сейчас налёт" in message.text.lower() or "налёт" in message.text.lower() or "/nalet" in message.text.lower():
         if password == '':
             nalet_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()  # что такое двоеточие и что оно дает???
             btn = types.InlineKeyboardButton(text="Просмотреть налёт в OpenSky",
@@ -965,8 +997,6 @@ def conversation(message):
         bot.send_message(message.chat.id, 'Слишком короткий запрос. Пожалуйста, чуть подробнее, или измените запрос.',
                          reply_markup=general_menu())
         return
-
-    # if any(baza.punctuation):
 
     # TODO сделать так чтобы вычленял из слов запятые и вопросительные знаки и удалял их
     """1 - ищет в строгом соответсвии"""
