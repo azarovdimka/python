@@ -49,18 +49,22 @@ def survey(user_id):
     not_confirm = types.InlineKeyboardButton(text="Не подтверждать план автоматически", callback_data="not_confirm")
     confirm_plan_btns.add(confirm, not_confirm)
 
-    yes_no_btns = types.InlineKeyboardMarkup(row_width=1)
-    yes = types.InlineKeyboardButton(text="да", callback_data="yes")
-    no = types.InlineKeyboardButton(text="нет", callback_data="no")
-    yes_no_btns.add(yes, no)
+    day_nights_btns = types.InlineKeyboardMarkup(row_width=1)
+    yes = types.InlineKeyboardButton(text="Да, ночью разрешить", callback_data="yes")
+    no = types.InlineKeyboardButton(text="Нет, только днём", callback_data="no")
+    day_nights_btns.add(yes, no)
 
     bot.send_message(user_id,
                      f"`\t\t {dict_users.users[user_id]['name']}, укажите часовые пояса, в которых Вам было бы удобно получать план работ: UTC или MSK",
                      reply_markup=hours_btns)
 
     bot.send_message(user_id,
-                     f"`\t\t {dict_users.users[user_id]['name']} подтверждать ли план работ в OpenSky автоматически при отправке его Вам в Telegram?",
+                     f"`\t\t {dict_users.users[user_id]['name']} подтверждать ли план работ в OpenSky автоматически при отправке уведомления Вам в Telegram?",
                      reply_markup=confirm_plan_btns)
+
+    bot.send_message(user_id,
+                     f"`\t\t Хотите ли Вы получать уведомления с планом работ в ночное время с 00:00 до 7:00?",
+                     reply_markup=day_nights_btns)
 
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -69,12 +73,12 @@ def callback_inline(call):
     if call.message:
         if call.data == "one":
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                                  text="Хорошо, план работ Вам будет высылаться в указанных часовых поясах: вылет по UTC, прилёт по МСК.")
+                                  text="План работ Вам будет высылаться в указанных часовых поясах: вылет по UTC, прилёт по МСК.")
             bot.send_message(157758328, f"{call.message.chat.id} {dict_users.users[call.message.chat.id]['surname']} "
                                         f"Ответил, номер один: UTC МСК")
         if call.data == "two":
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                                  text="Хорошо, план работ Вам будет высылаться в указанных часовых поясах: вылет и прилёт по МСК.")
+                                  text="План работ Вам будет высылаться в указанных часовых поясах: вылет и прилёт по МСК.")
             bot.send_message(157758328, f"{call.message.chat.id} {dict_users.users[call.message.chat.id]['surname']} "
                                         f"Попросил номер два: МСК МСК")
         if call.data == "confirm":
@@ -89,14 +93,14 @@ def callback_inline(call):
                                         f"Попросил не подтверждать план работ")
         if call.data == "yes":
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                                  text="Хорошо, я понял.")
+                                  text="Отправка уведомлений по ночам разрешена.")
             bot.send_message(157758328, f"{call.message.chat.id} {dict_users.users[call.message.chat.id]['surname']} "
-                                        f"пользователь ответил да")
+                                        f"ночью присылать уведомления можно")
         if call.data == "no":
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                                  text="Хорошо, я понял.")
+                                  text="Отправка уведомлений по ночам запрещена.")
             bot.send_message(157758328, f"{call.message.chat.id} {dict_users.users[call.message.chat.id]['surname']} "
-                                        f"пользователь ответил нет")
+                                        f"пользователь не хочет ночью получать уведомления ночью")
 
 
 def cycle_plan_notify():
@@ -105,39 +109,42 @@ def cycle_plan_notify():
         users_off_list = []
         sent_plan_counter = 0
         sent_plan_list = []
+        current_time = time.strftime('%H:%M')
         # bot.send_message(157758328, "бот начал проверку планов пользователей в атоматическом режиме")
-        if time.strftime('%H:%M') == '00:00':
+        if current_time == '00:00':
             time.sleep(60)
         try:
             for user_id in dict_users.users.keys():
                 counter_users += 1
-                try:
-                    name = dict_users.users[user_id]['name']
-                    surname = dict_users.users[user_id]['surname']
-                    fio = f'{user_id} {surname} {name} '
-                    notification = notificator.notify(user_id)  # TODO НЕ ЗАБУДЬ ПОМЕНЯТЬ АДРЕС ФАЙЛА в НОТИФИКАТОРЕ!!!
-                    if notification is None:
-                        continue
-                    if notification.split()[0] == 'Проблема':
-                        time.sleep(300)
-                        continue
-                    if notification != None:  # не равно none - получили план. будет ошибка, если ему не удалось отправить ему его план - по
-                        plan_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()  # что такое двоеточие и что оно дает???
-                        btn = types.InlineKeyboardButton(text="Открыть план работ в OpenSky",
-                                                         url='https://edu.rossiya-airlines.com/workplan/')
-                        plan_btn.add(btn)
-                        bot.send_message(user_id, notification, reply_markup=plan_btn, parse_mode='html')
-                        sent_plan_counter += 1
-                        sent_plan_list.append(fio)
-                except Exception as exc:  # если случилась ошибка при отправке сообщений пользователю
-                    users_off_list.append(fio)
-                    exc_event = exception_logger.writer(exc=exc,
-                                                        request="отправка плана пользователю в атоматическом режиме",
-                                                        user_id=user_id, fio=fio, answer='не удалось отправить план')
-                    bot.send_message(157758328, exc_event)
-                    bot.send_message(157758328,
-                                     f'не удалось отправить план: {users_off_list}: {traceback.format_exc()}')
+                if '07:00' > current_time > '00:00' and not dict_users.users[user_id]['night_notify']:
                     continue
+                else:
+                    try:
+                        name = dict_users.users[user_id]['name']
+                        surname = dict_users.users[user_id]['surname']
+                        fio = f'{user_id} {surname} {name} '
+                        notification = notificator.notify(
+                            user_id)  # TODO НЕ ЗАБУДЬ ПОМЕНЯТЬ АДРЕС ФАЙЛА в НОТИФИКАТОРЕ!!!
+                        if notification is None:
+                            continue
+                        if notification.split()[0] == 'Проблема':
+                            time.sleep(300)
+                            continue
+                        if notification != None:  # не равно none - получили план. будет ошибка, если ему не удалось отправить ему его план - по
+                            plan_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()  # что такое двоеточие и что оно дает???
+                            btn = types.InlineKeyboardButton(text="Открыть план работ в OpenSky",
+                                                             url='https://edu.rossiya-airlines.com/workplan/')
+                            plan_btn.add(btn)
+                            bot.send_message(user_id, notification, reply_markup=plan_btn, parse_mode='html')
+                            sent_plan_counter += 1
+                            sent_plan_list.append(fio)
+                    except Exception as exc:  # если случилась ошибка при отправке сообщений пользователю
+                        exc_event = exception_logger.writer(exc=exc,
+                                                            request="отправка плана пользователю в атоматическом режиме",
+                                                            user_id=user_id, fio=fio,
+                                                            answer='не удалось отправить план')
+                        bot.send_message(157758328, f'не удалось отправить план: \n{exc_event}')
+                        continue
 
             if sent_plan_counter > 0:
                 bot.send_message(157758328,
