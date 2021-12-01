@@ -616,7 +616,7 @@ def conversation(message):
                                  reply_markup=document_btn)
         return
 
-    found_result = False  # TODO сделать чтобы запрос превр в список слов, и обрабат-е вопрос в словаре тоже в список и проверялось количество совпадений, но как-то тогда надо отделать хорошие соотсевтвия от плохих и опредлять сколько выдавать значений в результат. Третья ступень поиска так и ищет по списку, может так и оставить как есть, но тогда первые способы находят не все что нужно - так ли это - проверить
+    found_result = False
 
     # global user_id
     # service_notification(message)
@@ -630,12 +630,12 @@ def conversation(message):
             bot.send_message(157758328, f"Пользователь не подключен к телеграм-боту.\n {traceback.format_exc()}")
         return
 
-    if message.text.lower() in 'это не нормально это ужасно это очень плохо очень жаль кошмар':
-        bot.send_message(message.chat.id, f"Я тебя прекрасно понимаю, сочувствую.")
+    if message.text.lower() in 'это не нормально это ужасно это очень плохо очень жаль кошмар охренеть':
+        bot.send_message(message.chat.id, f"Ну, что поделать... Я тебя прекрасно понимаю.")
         bot.send_message(157758328, f"{fio} отправили сочувствие в ответ на {message.text}.")
         return
 
-    if "обратная связь" in message.text.lower() or "/feedback" in message.text.lower():
+    if message.text.lower() in "обратная связь /feedback":
         def feedback(message):
             if "отмена" in message.text.lower():
                 bot.send_message(message.chat.id,
@@ -887,7 +887,7 @@ def conversation(message):
                                              url='https://edu.rossiya-airlines.com/workplan/')
             plan_btn.add(btn)
             bot.send_message(message.chat.id, plan, reply_markup=plan_btn, parse_mode='html')
-            bot.send_message(157758328, plan, reply_markup=plan_btn, parse_mode='html')
+            bot.send_message(157758328, plan, parse_mode='html')
             bot.send_message(157758328, f"{fio} получил план работ по индивидуальному запросу")
             return
 
