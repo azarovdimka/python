@@ -106,23 +106,24 @@ def callback_inline(call):
 def cycle_plan_notify():
     while True:
         counter_users = 0
-        users_off_list = []
         sent_plan_counter = 0
         sent_plan_list = []
         current_time = time.strftime('%H:%M')
-        # bot.send_message(157758328, "бот начал проверку планов пользователей в атоматическом режиме")
         if current_time == '00:00':
             time.sleep(60)
         try:
             for user_id in dict_users.users.keys():
+                name = dict_users.users[user_id]['name']
+                surname = dict_users.users[user_id]['surname']
+                fio = f'{user_id} {surname} {name} '
                 counter_users += 1
-                if '07:00' > current_time > '00:00' and not dict_users.users[user_id]['night_notify']:
+                if dict_users.users[user_id]['password'] == '':
+                    continue
+                if '07:00' > current_time > '00:00' and not dict_users.users[user_id].get(
+                        'night_notify'):  # обычно ['key'] выдает ошибку в некоторых местах нет ключа keyerror хотя ключ есть, а с методом get ключ видит
                     continue
                 else:
                     try:
-                        name = dict_users.users[user_id]['name']
-                        surname = dict_users.users[user_id]['surname']
-                        fio = f'{user_id} {surname} {name} '
                         notification = notificator.notify(
                             user_id)  # TODO НЕ ЗАБУДЬ ПОМЕНЯТЬ АДРЕС ФАЙЛА в НОТИФИКАТОРЕ!!!
                         if notification is None:
@@ -783,9 +784,10 @@ def conversation(message):
         return
 
     if "спасибо" in message.text.lower() or message.text.lower() in baza.good_bye:
-        bot.send_message(message.chat.id, choice(baza.best_wishes))
+        answer = choice(baza.best_wishes)
+        bot.send_message(message.chat.id, answer)
         bot.send_message(157758328,
-                         f"{fio} поблагодарил.", reply_markup=general_menu())
+                         f"{fio} поблагодарил: {message.text} \n А бот ответил: {answer}", reply_markup=general_menu())
         return
 
     if 'не подтверждать план работ' in message.text.lower() or "/confirm" in message.text.lower():
