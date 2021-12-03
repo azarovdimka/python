@@ -588,9 +588,42 @@ def conversation(message):
                 if link:
                     bot.send_message(message.chat.id, link, reply_markup=general_menu(), parse_mode='Markdown')
                 found_result = True
-                bot.send_message(157758328,
-                                 f"3.2 - Пользователю {fio} выдан ответ в случайном порядке c отсчением окончаний по запросу:\n{message.text}")
+                bot.send_message(157758328, f"3.2 - Пользователю {fio} выдан ответ в случайном порядке c отсчением "
+                                            f"окончаний по запросу:\n{message.text}")
                 return found_result
+
+    def find_in_answers(message):
+        """Ищет в случайном порядке с отсеченными окончаниями."""
+        global question
+        changed_user_request = changed(message.text).split()
+        max_of_found_words = 0  # в max <- записывается matches <- записывается find(вычисляется количество совпадений слов)
+        results = []
+        for id in baza.dictionary:
+            answer = baza.dictionary[id]['answer'].lower()
+            matches = find(answer, changed_user_request)
+            # в matches сохраняется число соответсвий слов запроса вопросу в базе для каждого id мы проверяем кол-во соотв-х слов
+            if matches == max_of_found_words and matches != 0:  # если количество соответсвий равно максимум
+                results.append(baza.dictionary[id].get('answer'))
+            if matches > max_of_found_words:  # если соответсвий нашли еще больше итогового счетчика максимума
+                results.clear()  # очищаем список результатов
+                max_of_found_words = matches  # в максимум записываем новую цифру соответсвия
+                results.append(baza.dictionary[id].get('answer'))
+                link = baza.dictionary[id].get('link')  # в результаты добавляем answer
+
+        if len(results) < 8:  # выдает ответы при оптимальном количстве результатов
+            for each_answer in results:  # TODO не прикрепляет кнопки к ответу, если выдается ответ в случайном порядке
+
+                bot.send_message(message.chat.id, each_answer, reply_markup=general_menu(), parse_mode='Markdown')
+                if link:
+                    bot.send_message(message.chat.id, link, reply_markup=general_menu(), parse_mode='Markdown')
+                found_result = True
+                bot.send_message(157758328, f"4 -{fio} При поиске по ответам, пользователю выдан ответ в случайном "
+                                            f"порядке c отсчением окончаний по запросу:\n{message.text}")
+                return found_result
+        if len(results) >= 8:
+            bot.send_message(message.chat.id, f"{name}, Найдено слишком много ответов. Уточните свой вопрос.")
+            bot.send_message(157758328, f"4 - Пользователю {fio} выдан ответ, что найдено слишком много ответов при "
+                                        f"запросе:\n{message.text}")
 
     def confirm_question(message):
         """Сообщение с кнопками для отмены подтверждения плана работ, либо оставить всё как есть."""
@@ -1097,8 +1130,7 @@ def conversation(message):
     """3.2 - ищет в любом порядке с отсечением окончаний"""
     if not found_result:  # ИЩЕТ В ЛЮБОМ ПОРЯДКЕ В РАМКАХ ВОПРОСА с отсеченеием окончаний
         try:
-            found_result = find_in_random_order(
-                message)  # TODO при запросе: "тех учеба бизнес" и "напитков в ассортимент бизнесе" выдает ответ, но потом сообщение об ошибке ниже из exception
+            found_result = find_in_random_order(message)
         except Exception as exc:
             bot.send_message(message.chat.id,
                              'Если Вам не удалось найти то, что Вы искали - попробуйте упростить свой запрос.',
@@ -1107,6 +1139,17 @@ def conversation(message):
             bot.send_message(157758328,
                              f"при поиске '{message.text}' в случайном порядке с отсечением кончаний возникала ошибка "
                              f"{type(exc).__name__} {exc} ")
+            found_result = True
+
+    """4 - ищет по ответам"""
+    if not found_result:  # ИЩЕТ В ЛЮБОМ ПОРЯДКЕ В РАМКАХ ВОПРОСА с отсеченеием окончаний
+        try:
+            found_result = find_in_answers(message)
+        except Exception as exc:
+            bot.send_message(message.chat.id, 'Если Вам не удалось найти то, что Вы искали - попробуйте упростить '
+                                              'свой запрос.', reply_markup=general_menu(), parse_mode='Markdown')
+            bot.send_message(157758328, f"4 - при поиске по ответам '{message.text}' возникала ошибка "
+                                        f"{type(exc).__name__} {exc} ")
             found_result = True
 
     if not found_result:  # если ничего не найдено
