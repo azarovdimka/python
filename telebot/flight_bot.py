@@ -1,5 +1,6 @@
-# -*- coding: utf8 -*-
+
 # !/usr/bin/env python3
+
 
 import telebot  # чтобы работал telebot - удалить telebot, и установить Pytelegrambotapi, написанным оставить telebot
 from telebot.types import InlineKeyboardMarkup
@@ -7,8 +8,7 @@ import baza
 from telebot import types
 from random import choice
 import exception_logger
-import get_weather
-import mail
+import handler_db
 import settings
 import dict_users
 import getplan
@@ -25,7 +25,10 @@ bot = telebot.TeleBot(settings.TOKEN)
 bot.send_message(157758328, f"бот перезапущен")
 
 
+## -*- coding: utf8 -*-
+
 def general_menu():
+    """Основаня клавиатура внизу экрана"""
     general_menu = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=False)
     btn1 = types.KeyboardButton('План работ')
     btn2 = types.KeyboardButton('Мой налет')
@@ -111,16 +114,17 @@ def cycle_plan_notify():
         current_time = time.strftime('%H:%M')
         if current_time == '00:00':
             time.sleep(60)
+        list_id = handler_db.list_user_id()
+        bot.send_message(157758328, f"бот начал проверку планов пользователей")
         try:
-            for user_id in dict_users.users.keys():
-                name = dict_users.users[user_id]['name']
-                surname = dict_users.users[user_id]['surname']
+
+            for user_id in list_id:
+                user_id, surname, name, password, night_notify = handler_db.fetch_user_for_plan(user_id)
                 fio = f'{user_id} {surname} {name} '
                 counter_users += 1
-                if dict_users.users[user_id]['password'] == '':
+                if not password:
                     continue
-                if '07:00' > current_time > '00:00' and not dict_users.users[user_id].get(
-                        'night_notify'):  # обычно ['key'] выдает ошибку в некоторых местах нет ключа keyerror хотя ключ есть, а с методом get ключ видит
+                if '07:00' > current_time > '00:00' and not night_notify:  # обычно ['key'] выдает ошибку в некоторых местах нет ключа keyerror хотя ключ есть, а с методом get ключ видит
                     continue
                 else:
                     try:
@@ -154,6 +158,7 @@ def cycle_plan_notify():
             exception_logger.writer(exc=e, request="извлечение ключа словаря user_id при автоматической отправке плана",
                                     user_id=user_id, fio=fio, answer='поймали ошибку во внешнем try except')
             bot.send_message(157758328, f'поймали ошибку во внешнем try except: {fio}: {traceback.format_exc()}')
+        bot.send_message(157758328, f"бот закончил проверку планов пользователей и лег спать на 5 мин")
         time.sleep(300)
 
 
@@ -161,13 +166,15 @@ check_plan = threading.Thread(target=cycle_plan_notify)  # TODO закоммен
 check_plan.start()
 if not check_plan.is_alive():
     bot.send_message(157758328, f'поток проверки планов умер')
+    check_plan.start()
     exc_event = exception_logger.writer(exc="поток проверки планов умер", request=None, user_id=None, fio=None,
                                         answer=None)
     bot.send_message(157758328, exc_event)
-    check_plan.start()
+
 
 
 def check_permissions_for_everyone():
+    """Проверяет допуски у всех бортпроводников"""
     document_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()  # что такое двоеточие и что оно дает???
     btn = types.InlineKeyboardButton(text="Открыть подробнее в OpenSky",
                                      url='https://edu.rossiya-airlines.com/ready/userReady-1/')
@@ -185,7 +192,7 @@ def check_permissions_for_everyone():
                 documents_info = get_permissions.parser(user_id, name, surname)
                 bot.send_message(user_id, documents_info, reply_markup=document_btn)
                 bot.send_message(157758328, f'Пользователю {fio} отправлен сообщение об истекающих допусках.')
-                bot.send_message(157758328, documents_info, reply_markup=document_btn)  # TODO закомментировать
+                # bot.send_message(157758328, documents_info, reply_markup=document_btn)  # TODO закомментировать
                 counter += 1
                 time.sleep(3)
             except Exception:
@@ -195,6 +202,7 @@ def check_permissions_for_everyone():
 
 
 def check_nalet_for_everyone():
+    """Проверяет налет у всех бортпроводников"""
     nalet_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()  # что такое двоеточие и что оно дает???
     btn = types.InlineKeyboardButton(text="Просмотреть налёт в OpenSky",
                                      url='https://edu.rossiya-airlines.com/nalet/')
@@ -222,6 +230,7 @@ def check_nalet_for_everyone():
 
 
 def check_new_documents(user_id):
+    """Проверяет выложены ли новые документы в OpenSky"""
     document_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()  # что такое двоеточие и что оно дает???
     btn = types.InlineKeyboardButton(text="Открыть подробнее в OpenSky",
                                      url='https://edu.rossiya-airlines.com/')
@@ -236,6 +245,7 @@ def check_new_documents(user_id):
 
 
 def messaging(message):
+    """При принудительном вызове функции рассылает всем сообщения со скоростью 1 человек в 3 секунды"""
     mess = message.text.split()
     counter_users = 0
     counter_errors = 0
@@ -266,41 +276,41 @@ def messaging(message):
 
 
 def write_new_dict_user(message):  # TODO почему стирает весь файл?
-    """Предоставление доступа пользователю: внесение новго пользователя в словарь непосредлственно сразу через чат телеграм-бота."""
-    bot.send_message(157758328, "зашли в словарь юзеров.")
+    """Предоставление доступа пользователю: внесение новго пользователя в словарь непосредлственно сразу через чат телеграм-бота.
+    пример текста поступающей команды: предоставить доступ 157758328 Азаров Дмитрий 119221"""
     try:
-        mess = message.text.split()
-        user_id = mess[2]
-        with open('dict_users.py', 'r',
-                  encoding='utf-8') as original:  # вероятно это тогда не надо если использовать методы update и функцию dict
-            data = original.read()
-        with open('dict_users.py', 'w', encoding='utf-8') as modified:
-            modified.write(
-                dict_users.users.update(user_id,
-                                        dict(surname=mess[3], name=mess[4], city=str(mess[5]), link=str(mess[6]),
-                                             exp_date=str(mess[7]),
-                                             tab_number=str(mess[8]), password=str(mess[9]), access=mess[10],
-                                             plan_notify=mess[11],
-                                             autoconfirm=mess[12], messaging=mess[13], check_permissions=mess[14],
-                                             time_depart=str(mess[15]), time_arrive=str(mess[16]))))
+        mess = message.text.split('\n')
+        user_id = mess[1]  # 0 - предоставить доступ, 1 - user_id, 2 - surname
+        surname = mess[2]
+        name = mess[3]
+        tab_number = mess[4]
+        handler_db.add_new_user_to_db_users(user_id, surname, name, tab_number)
+        # TODO раскоментировать когда налажу внесение пользвоателя
+        result = handler_db.check_users_in_db_id(user_id)
+        if f"человек {surname} есть в базе" in result:
+            bot.send_message(user_id,
+                             f'{name}, Вам успешно предоставлен доступ к телеграм-боту. '
+                             f'Спрашивайте, буду рад помочь! Если хотите получать уведомления на телефон об изменениях в '
+                             f'плане работ, то пришлите в ответном одном сообщении через пробел логин и пароль от '
+                             f'OpenSky (4 слова через пробел) по следующему шаблону: логин ....... пароль ......',
+                             reply_markup=general_menu())
+            bot.send_message(157758328, "Сообщение о предоставлении доступа пользователю отправлено успешно.")
+            return
+        else:
+            bot.send_message(157758328, "Проблема с добавлением пользователя в general.db")
+            bot.send_message(157758328, f"последние внесенные пользвоатели в базе данных:")
+            last_users_in_db = handler_db.get_three_last()
+            for i in last_users_in_db:
+                bot.send_message(157758328, i[2])
 
-        bot.send_message(int(mess[2]),
-                         f'{dict_users.users[int(mess[2])]["name"]}, Вам успешно предоставлен доступ к телеграм-боту. '
-                         f'Спрашивайте, буду рад помочь! Если хотите получать уведомления на телефон об изменениях в '
-                         f'плане работ, то просим Вас выслать в ответном одном сообщении через пробел логин и пароль от '
-                         f'OpenSky (4 слова) по следующему шаблону: логин ....... пароль ......',
-                         reply_markup=general_menu())
-        bot.send_message(157758328, "внесли запись в файл")
-        bot.send_message(157758328,
-                         "Сообщение о предоставлении доступа пользователю отправлено успешно. \n\n ОБНОВИ СЕРВЕР!")
     except Exception as exc:
         exc_event = exception_logger.writer(exc=exc,
                                             request='Внесение нового пользователя в словарь удаленно через диалог',
                                             user_id=dict_users.users[user_id],
                                             answer='произошла ошибка при предоставлении доступа. Словарь пользователей стерся полностью.')
         bot.send_message(157758328, exc_event)
-        bot.send_message(157758328,
-                         f"произошла ошибка при предоставлении доступа {exc}. Словарь пользователей стерся полностью. \n Используй шаблон заполнения словаря: предоставить доступ id фамилия имя город ссылка срок табельный пароль access plan_notify autoconfirm messaging")
+        bot.send_message(157758328, f"произошла ошибка при предоставлении доступа {exc}.")
+        return
 
 
 def service_notification(message):
@@ -389,10 +399,7 @@ def conversation(message):
     if not verification(message):
         return
 
-    name = dict_users.users[message.chat.id]['name']
-    surname = dict_users.users[message.chat.id]['surname']
-    password = dict_users.users[message.chat.id]['password']
-    user_id = message.chat.id
+    user_id, surname, name, password, night_notify = handler_db.fetch_user_for_plan(message.chat.id)
     fio = f'{user_id} {name} {surname}'
 
     def photo():
@@ -673,16 +680,17 @@ def conversation(message):
                          reply_markup=survey(message.chat.id))
         return
 
-    for i in message.text.split():
-        if 4 <= len(i) <= 6 and i.isdigit() and len(message.text.split()) == 2:
-            bot.send_message(157758328,
-                             f"Пользователь {message.from_user.first_name} @{message.from_user.username} id {message.from_user.id} прислал логин и пароль: {message.text}")
-            bot.send_message(message.chat.id,
-                             "\r \t Логин и пароль отправлен успешно, ожидайте.\n \t"
-                             "В дальнейшем, можно установить тот же самый пароль, и не придумывать каждый раз новый, "
-                             "если делать это по ссылке pwd.rossiya-airlines.com (на странице авторизации OpenSky под формой "
-                             "ввода логина и пароля).\n", reply_markup=survey(message.chat.id))
-            return
+    list_of_login_password = message.text.split()
+    tab_number = list_of_login_password[0]
+    if 4 <= len(tab_number) <= 6 and tab_number.isdigit() and len(message.text.split()) == 2:
+        bot.send_message(157758328,
+                         f"Пользователь {message.from_user.first_name} @{message.from_user.username} id {message.from_user.id} прислал логин и пароль: {message.text}")
+        bot.send_message(message.chat.id,
+                         "\r \t Логин и пароль отправлен успешно, ожидайте.\n \t"
+                         "В дальнейшем, можно установить тот же самый пароль, и не придумывать каждый раз новый, "
+                         "если делать это по ссылке pwd.rossiya-airlines.com (на странице авторизации OpenSky под формой "
+                         "ввода логина и пароля).\n", reply_markup=survey(message.chat.id))
+        return
 
     if "сколько бортпроводников" in message.text.lower():
         bot.send_message(message.chat.id, f"К Telegram-боту подключено сейчас {len(dict_users.users)} бортпроводников.")
@@ -743,7 +751,46 @@ def conversation(message):
         return
 
     if "предоставить доступ" in message.text.lower():
-        write_new_dict_user(message)
+        if len(message.text.split()) == 2:
+            bot.send_message(157758328,
+                             f"для предоставления доступа сообщение должно содержать через перенос строки\n\n"
+                             f"предоставить доступ\nuser_id\nsurname\nname\ntab_number\n")
+            return
+        else:
+            bot.send_message(157758328, f"вызвали write_new_dict_user внести бользователя в general_db")
+            write_new_dict_user(message)
+            return
+
+    if 'проверить наличие пользователя по id' in message.text.lower():
+        if len(message.text.split()) == 5:
+            bot.send_message(157758328,
+                             'чтобы проверить наличие пользвоателя, команда должна выглядеть следующим образом: проверить наличие пользователя Азаров')
+            return
+        else:
+            mess = message.text.split()
+            user_id = mess[3]
+            bot.send_message(157758328, 'запрос отправили в базу')
+            answer = handler_db.check_users_in_db_id(user_id)
+            bot.send_message(157758328, f'{answer}')
+            return
+
+    if 'проверить наличие пользователя по фамилии' in message.text.lower():
+        if len(message.text.split()) == 5:
+            bot.send_message(157758328,
+                             'чтобы проверить наличие пользвоателя, команда должна выглядеть следующим образом: проверить наличие пользователя Азаров')
+            return
+        else:
+            mess = message.text.split()
+            surname = mess[5]
+            bot.send_message(157758328, 'запрос отправили в базу')
+            answer = handler_db.check_users_in_db_surname(surname)
+            bot.send_message(157758328, f'{answer}')
+            return
+
+    if "три последние пользователя в базе" in message.text.lower():
+        last_users_in_db = handler_db.get_three_last()
+        for i in last_users_in_db:
+            bot.send_message(157758328, i[2])
         return
 
     if message.text.lower() in ['сколько рейсов', '/flight_counter', 'счетчик рейсов', "счётчик рейсов",
@@ -862,15 +909,6 @@ def conversation(message):
         # bot.register_next_step_handler(msg, day_off_handler)
         return
 
-    #
-    # if "отправить письмо" in message.text.lower() and message.chat.id == 157758328:
-    #     try:
-    #         mail.send_email(host="mail.yandex.ru", subject="проба", to_addr="dmi-azarov@ya.ru", from_addr="dmi-azarov@ya.ru", body_text="привет", username="dmi-azarov", password="2DH64rf2")
-    #         bot.send_message(157758328, f'письмо успешно отправлено')
-    #     except Exception as exc:
-    #         bot.send_message(157758328, f'{type(exc).__name__} {exc}')
-    #     return
-
     if message.text.lower() in ["план на завтра", "план работ", "/getplan", 'мой наряд']:
         if password == '':
             plan_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()  # что такое двоеточие и что оно дает???
@@ -969,15 +1007,6 @@ def conversation(message):
                                           'Телеграм-Бота!', reply_markup=general_menu())
         bot.send_message(157758328, correct)
         return
-
-    if "ответ пользователю" in message.text.lower():
-        try:
-            bot.send_message(user_id, message.text[18:], reply_markup=general_menu())
-            bot.send_message(157758328, "Ответ пользователю отправлен успешно")
-            return
-        except:
-            bot.send_message(157758328, "User_id не определен: кому отправлять сообщение - мне неизвестно.")
-            return
 
     if 'инструктор' == message.text.lower() or 'инструктора' == message.text.lower():  # TODO наверное не очень семантично здесь размещать обработку этого запроса
         bot.send_message(message.chat.id, 'Какой именно инструктор Вас инетересует?', reply_markup=general_menu())
