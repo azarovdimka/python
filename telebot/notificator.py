@@ -11,7 +11,7 @@ import os
 
 def write_check_relevance(plan, chat_id):  # TODO НЕ ЗАБУДЬ ПОМЕНЯТЬ АДРЕС!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     file_path = "/usr/local/bin/bot/plans/plans" + str(
-        chat_id) + ".txt"  # "C:\\PycharmProjects\\Probe\\мои примеры\\GitHub\\telebot\\plans\\plans" + str(chat_id) + ".txt"  #  "/usr/local/bin/bot/plans/plans" + str(chat_id) + ".txt" #
+        chat_id) + ".txt"  # "C:\\PycharmProjects\\Probe\\мои примеры\\GitHub\\telebot\\plans\\plans" + str(chat_id) + ".txt"  #    "/usr/local/bin/bot/plans/plans" + str(chat_id) + ".txt" #
 
     if dict_users.users[chat_id]['password'] == '' or not dict_users.users[chat_id]['plan_notify']:
         return None
