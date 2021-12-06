@@ -8,7 +8,7 @@ from datetime import datetime, timedelta, timezone
 current_datetime = time.strftime('%d.%m.%y')  # %H:%M
 
 
-def parser(user_id, name, surname):
+def parser(user_id, tab_number, password, name):
     url = 'https://edu.rossiya-airlines.com/ready/userReady-1/'
 
     s = requests.Session()
@@ -18,13 +18,13 @@ def parser(user_id, name, surname):
         'login': '1',
         'user_id': '',
         'backend_url': 'https://sup.rossiya-airlines.com:8080',
-        'username': dict_users.users[user_id]['tab_number'],
-        'userpass': dict_users.users[user_id]['password'],
+        'username': tab_number,
+        'userpass': password,
         'domain': 'stc.local',
         'submit': 'войти'
     }
 
-    if dict_users.users[user_id]['password'] == '':
+    if password == '' or not password or password == '0':  # TODO сделать в базе всем одинаково
         return
 
     permissions = s.post(url, data=data, headers=dict(Referer=url))  # work_plan = response 200
