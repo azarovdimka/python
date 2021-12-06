@@ -9,11 +9,12 @@ import os
 #     time.sleep()
 
 
-def write_check_relevance(plan, chat_id):  # TODO НЕ ЗАБУДЬ ПОМЕНЯТЬ АДРЕС!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+def write_check_relevance(plan, chat_id, password,
+                          plan_notify):  # TODO НЕ ЗАБУДЬ ПОМЕНЯТЬ АДРЕС!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     file_path = "/usr/local/bin/bot/plans/plans" + str(
-        chat_id) + ".txt"  # "C:\\PycharmProjects\\Probe\\мои примеры\\GitHub\\telebot\\plans\\plans" + str(chat_id) + ".txt"  #    "/usr/local/bin/bot/plans/plans" + str(chat_id) + ".txt" #
+        chat_id) + ".txt"  # "C:\\PycharmProjects\\Probe\\мои примеры\\GitHub\\telebot\\plans\\plans" + str(chat_id) + ".txt"  #      "/usr/local/bin/bot/plans/plans" + str(chat_id) + ".txt" #
 
-    if dict_users.users[chat_id]['password'] == '' or not dict_users.users[chat_id]['plan_notify']:
+    if (password == '' or not password or password == '0') or not plan_notify:
         return None
 
     if not os.path.exists(file_path):
@@ -56,13 +57,13 @@ def write_check_relevance(plan, chat_id):  # TODO НЕ ЗАБУДЬ ПОМЕНЯ
 
 # TODO НЕ ЗАБУДЬ ПОМЕНЯТЬ АДРЕС!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-def notify(user_id):
-    plan = getplan.parser(user_id)
+def notify(user_id, tab_number, password, autoconfirm, night_notify):
+    plan = getplan.parser(user_id, tab_number, password, autoconfirm)
     # plan не может сожержать None в результате работы функции getplan.parser
     # TODO если функция getplan.parser() будет прервана внутренним return ... может л
     if plan is not None:
-        result = write_check_relevance(plan,
-                                       user_id)  # TODO если эта функция возвращает None, то функция просто должна завершиться, но plan=None может послужить причиной исключения
+        result = write_check_relevance(plan, user_id, password,
+                                       night_notify)  # TODO если эта функция возвращает None, то функция просто должна завершиться, но plan=None может послужить причиной исключения
         if result:
             return result
         else:
