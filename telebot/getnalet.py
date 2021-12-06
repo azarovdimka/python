@@ -6,7 +6,8 @@ from bs4 import BeautifulSoup
 import exception_logger
 
 
-def parser(user_id):  # это надо было все обернуть в функцию чтобы потом при импорте вызвать модуль.функция()
+def parser(user_id, tab_number,
+           password):  # это надо было все обернуть в функцию чтобы потом при импорте вызвать модуль.функция()
     url = 'https://edu.rossiya-airlines.com/nalet/'
 
     s = requests.Session()
@@ -16,8 +17,8 @@ def parser(user_id):  # это надо было все обернуть в фу
         'login': '1',
         'user_id': '',
         'backend_url': 'https://sup.rossiya-airlines.com:8080',
-        'username': dict_users.users[user_id]['tab_number'],
-        'userpass': dict_users.users[user_id]['password'],
+        'username': tab_number,
+        'userpass': password,
         'domain': 'stc.local',
         'submit': 'войти'
     }
