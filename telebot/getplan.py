@@ -6,6 +6,7 @@ import pytz
 from datetime import datetime, timedelta
 import exception_logger
 
+
 current_datetime = time.strftime('%d.%m.%Y %H:%M')
 dt_utc_arrive = datetime.strptime(current_datetime, '%d.%m.%Y %H:%M').replace(tzinfo=pytz.utc)
 dt_minus_4h = dt_utc_arrive.astimezone(pytz.utc) - timedelta(hours=4)
@@ -55,7 +56,9 @@ cities = {
     'Дубай-2': 'Дубай',
     'Вена-3': 'Вена',
     'Бранденб-1': 'Бранденбург',
-    'Владсток': 'Владивосток'
+    'Владсток': 'Владивосток',
+    'Астрахан': 'Астрахань',
+    'Тельавив-3': 'Тель-Авив'
 
 }
 
@@ -162,7 +165,8 @@ def extract_destination(s):
     destination = s[-21:-5]
 
 
-def parser(user_id):  # это надо было все обернуть в функцию чтобы потом при импорте вызвать модуль.функция()
+def parser(user_id, tab_number, password,
+           autoconfirm):  # это надо было все обернуть в функцию чтобы потом при импорте вызвать модуль.функция()
     url = 'https://edu.rossiya-airlines.com/workplan/'
 
     s = requests.Session()
@@ -172,15 +176,15 @@ def parser(user_id):  # это надо было все обернуть в фу
         'login': '1',
         'user_id': '',
         'backend_url': 'https://sup.rossiya-airlines.com:8080',
-        'username': dict_users.users[user_id]['tab_number'],
-        'userpass': dict_users.users[user_id]['password'],
+        'username': tab_number,
+        'userpass': password,
         'domain': 'stc.local',
         'submit': 'войти'
     }  # TODO ПРОВЕРЬ ПРИНТЫ ЛОГИН И ПАРОЛЬ!!!!!!!!!!!!!!!!!!!!!!!!!
 
-    if dict_users.users[user_id]['password'] == '':
+    if password == '' or not password or password == '0':  # TODO сделать в базе всем одинаково
         return
-    if dict_users.users[user_id]['autoconfirm']:
+    if autoconfirm:
         work_plan = s.post(url, data=data, headers=dict(Referer=url))  # work_plan = response 200
         month_year = time.strftime('%m.%Y')
         url = 'https://edu.rossiya-airlines.com/workplan/'
@@ -206,11 +210,11 @@ def parser(user_id):  # это надо было все обернуть в фу
     except Exception as exc:
         error = f"Проблема с получением плана работ. Причин может быть две: \n" \
                 f"- либо сервер перегружен количеством обращений, и нужно немного подождать,\n" \
-                f"- либо в базе указан неверный логин {dict_users.users[user_id]['tab_number']} " \
-                f"и пароль {dict_users.users[user_id]['password']} \n Если это действиетльно так, то Вы можете сообщить " \
+                f"- либо в базе указан неверный логин {tab_number} " \
+                f"и пароль {password} \n Если это действиетльно так, то Вы можете сообщить " \
                 f"новый логин и пароль, отправив в ответном сообщении 4 слова через пробел в следующем формате в одну " \
                 f"строку: логин ....... пароль .......\n "
-        exception_logger.writer(exc=exc, request='парсинг плана', user_id=dict_users.users[user_id],
+        exception_logger.writer(exc=exc, request='парсинг плана', user_id=user_id,
                                 answer='неверный логин и пароль')
         return error
 
@@ -303,6 +307,9 @@ def parser(user_id):  # это надо было все обернуть в фу
         if 'Тест' in cells[4].text:
             string = f'{start_dt} Тест\n'
             event_detected = True
+        if 'Бизнес' in cells[4].text:
+            string = f'{start_dt} Учеба на бизнес\n'
+            event_detected = True
 
         if cells[6].text.count('/') == 2:
             day_mont_arr, msk_time = extract_arrive(cells[6].text)
@@ -366,4 +373,4 @@ def parser(user_id):  # это надо было все обернуть в фу
 # # TODO РАСКОМЕНТИЛ ЛИ ТЫ RETURN!!!!!!!!!!!!!!!!!!!!!!!!!
 
 # TODO ПРОВЕРЬ ПРИНТЫ ЛОГИН И ПАРОЛЬ!!!!!!!!!!!!!!!!!!!!!!!!!
-# parser(157758328)
+# parser(305665787, '125512', 'Ghjnjnbg1', False)
