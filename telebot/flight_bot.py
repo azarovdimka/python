@@ -168,8 +168,8 @@ def check_nalet_for_everyone():
                 bot.send_message(157758328, f'Пользователю {fio} отправлен налёт.')
                 counter += 1
                 time.sleep(3)
-            except Exception:
-                bot.send_message(157758328, f'{fio} не удалось отправить налёт: {traceback.format_exc()}')
+            except Exception as exc:
+                bot.send_message(157758328, f'{fio} не удалось отправить налёт: {exc}')
                 continue
     bot.send_message(157758328, f"бот закончил проверку налёта всех проводников. Отправлено {counter} уведомлений.")
 
