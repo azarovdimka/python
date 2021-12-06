@@ -10,7 +10,8 @@ current_date = time.strftime('%d.%m')  # %H:%M
 current_month = int(time.strftime('%m'))
 
 
-def parser(user_id):  # это надо было все обернуть в функцию чтобы потом при импорте вызвать модуль.функция()
+def parser(user_id, tab_number,
+           password):  # это надо было все обернуть в функцию чтобы потом при импорте вызвать модуль.функция()
     url = 'https://edu.rossiya-airlines.com/workplan/'
     s = requests.Session()
 
@@ -22,9 +23,8 @@ def parser(user_id):  # это надо было все обернуть в фу
         'login': '1',
         'user_id': '',
         'backend_url': 'https://sup.rossiya-airlines.com:8080',
-        'username': dict_users.users[user_id]['tab_number'],  # '119229', #  '119221', # '119182', #'122411',  #
-        'userpass': dict_users.users[user_id]['password'],
-        # 'Parshina15', #  '2DH64rf2', # 'Airbus338!', #'Rabota5!',  #
+        'username': tab_number,
+        'userpass': password,
         'domain': 'stc.local',
         'submit': 'войти',
     }  # TODO ПРОВЕРЬ ПРИНТЫ ЛОГИН И ПАРОЛЬ!!!!!!!!!!!!!!!!!!!!!!!!!
