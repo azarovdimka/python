@@ -201,8 +201,6 @@ def messaging_process(message):
     """При принудительном вызове функции рассылает всем сообщения со скоростью 1 человек в 3 секунды"""
     mess = message.text.split()
     counter_users = 0
-    counter_errors = 0
-    users_off_list = []
     for user_id in list_id:
         user_id, surname, name, tab_number, password, messaging, check_permissions, night_notify, plan_notify, autoconfirm = handler_db.fetch_user_for_plan(
             user_id)
@@ -218,8 +216,6 @@ def messaging_process(message):
                                                     user_id=user_id, fio=fio,
                                                     answer='сообщение не удалось отправить ')
                 bot.send_message(157758328, exc_event)
-                users_off_list.append(fio)
-                counter_errors += 1
                 bot.send_message(157758328,
                                  f"сообщение не удалось отправить {fio} ошибка {exc}.")  # TODO временно
     bot.send_message(157758328,
@@ -244,9 +240,7 @@ def write_new_dict_user(message):  # TODO почему стирает весь �
         check_permissions = mess[10]
         autoconfirm = mess[11]
         handler_db.add_new_user_to_db_users(user_id, surname, name, city, link, exp_date, tab_number, password,
-                                            messaging,
-                                            check_permissions, autoconfirm)
-        # TODO раскоментировать когда налажу внесение пользвоателя
+                                            messaging, check_permissions, autoconfirm)
         result = handler_db.select(user_id)
         user_id_from_db = result.split()[0]
         name_from_db = result.split()[2]
