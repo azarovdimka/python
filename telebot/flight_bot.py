@@ -78,33 +78,80 @@ def callback_inline(call):
         if call.data == "one":
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                   text="План работ Вам будет высылаться в указанных часовых поясах: вылет по UTC, прилёт по МСК.")
-            bot.send_message(157758328, f"{call.message.chat.id} {dict_users.users[call.message.chat.id]['surname']} "
-                                        f"Ответил, номер один: UTC МСК")
+            bot.send_message(157758328, f"{call.message.chat.id} Ответил, номер один: UTC МСК")
+            try:
+                mess = 'utc_start msk'
+                time_depart = handler_db.insert_utc_msk(mess, call.message.chat.id)
+                if time_depart:
+                    bot.send_message(157758328, f"часовые пояса установлены успешно: UTC МСК")
+                    return
+            except Exception as exc:
+                bot.send_message(157758328,
+                                 f"!!! проблема с установкой часовых поясов у пользователя {call.message.chat.id}: часовые пояса установлены успешно: UTC МСК")
+
         if call.data == "two":
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                   text="План работ Вам будет высылаться в указанных часовых поясах: вылет и прилёт по МСК.")
-            bot.send_message(157758328, f"{call.message.chat.id} {dict_users.users[call.message.chat.id]['surname']} "
-                                        f"Попросил номер два: МСК МСК")
+            bot.send_message(157758328, f"{call.message.chat.id} Попросил номер два: МСК МСК")
+            try:
+                mess = 'msk_start msk'
+                time_depart = handler_db.insert_utc_msk(mess, call.message.chat.id)
+                if time_depart:
+                    bot.send_message(157758328, f"часовые пояса установлены успешно: МСК МСК")
+            except Exception as exc:
+                bot.send_message(157758328,
+                                 f"!!! проблема с установкой часовых поясов у пользователя {call.message.chat.id}: UTC МСК")
+
         if call.data == "confirm":
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                   text="Ваш план работ будет подтверждаться автоматически при отправке его Вам в Telegram.")
-            bot.send_message(157758328, f"{call.message.chat.id} {dict_users.users[call.message.chat.id]['surname']} "
-                                        f"Попросил подтверждать план работ")
+            bot.send_message(157758328, f"{call.message.chat.id} Попросил подтверждать план работ")
+            try:
+                confirm = True
+                confirm = handler_db.insert_confirm(confirm, call.message.chat.id)
+                if confirm is not None or confirm != '':
+                    bot.send_message(157758328, f"confirm true установлено успешно")
+            except Exception as exc:
+                bot.send_message(157758328, f"!!! проблема с установкой confirm true {call.message.chat.id}\n\n{exc}")
+
         if call.data == "not_confirm":
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                   text="Ваш план работ не будет подтверждаться автоматически при отправке его Вам в Telegram.")
-            bot.send_message(157758328, f"{call.message.chat.id} {dict_users.users[call.message.chat.id]['surname']} "
-                                        f"Попросил не подтверждать план работ")
+            bot.send_message(157758328, f"{call.message.chat.id} Попросил не подтверждать план работ")
+            try:
+                confirm = False
+                confirm = handler_db.insert_confirm(confirm, call.message.chat.id)
+                if confirm is not None or confirm != '':
+                    bot.send_message(157758328, f"confirm False установлено успешно")
+            except Exception as exc:
+                bot.send_message(157758328, f"!!! проблема с установкой confirm False {call.message.chat.id}\n\n{exc}")
+
         if call.data == "yes":
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                   text="Отправка уведомлений по ночам разрешена.")
-            bot.send_message(157758328, f"{call.message.chat.id} {dict_users.users[call.message.chat.id]['surname']} "
-                                        f"ночью присылать уведомления можно")
+            bot.send_message(157758328, f"{call.message.chat.id} ночью присылать уведомления можно")
+            try:
+                night_notify = True
+                night_notify = handler_db.update_night_notify(night_notify, call.message.chat.id)
+                if night_notify is not None or night_notify != '':
+                    bot.send_message(157758328, "параметр night_notify установлен успешно")
+            except Exception as exc:
+                bot.send_message(157758328,
+                                 f"!!! проблема с установкой night_notify True {call.message.chat.id}\n\n{exc}")
+
         if call.data == "no":
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                   text="Отправка уведомлений по ночам запрещена.")
-            bot.send_message(157758328, f"{call.message.chat.id} {dict_users.users[call.message.chat.id]['surname']} "
-                                        f"пользователь не хочет ночью получать уведомления ночью")
+            bot.send_message(157758328,
+                             f"{call.message.chat.id} пользователь не хочет ночью получать уведомления ночью")
+            try:
+                night_notify = False
+                night_notify = handler_db.update_night_notify(night_notify, call.message.chat.id)
+                if night_notify is not None or night_notify != '':
+                    bot.send_message(157758328, "параметр night_notify установлен успешно")
+            except Exception as exc:
+                bot.send_message(157758328,
+                                 f"!!! проблема с установкой night_notify False {call.message.chat.id}\n\n{exc}")
 
 
 check_plan = threading.Thread(target=check_plan.cycle_plan_notify)  # TODO закомментирвоать
@@ -112,7 +159,7 @@ check_plan.start()
 if not check_plan.is_alive():
     bot.send_message(157758328, f'поток проверки планов умер')
     check_plan.start()
-    exc_event = exception_logger.writer(exc="поток проверки планов умер", request=None, user_id=None, fio=None,
+    exc_event = exception_logger.writer(exc="поток проверки планов умер", request=None, fio=None,
                                         answer=None)
     bot.send_message(157758328, exc_event)
 
@@ -127,8 +174,8 @@ def check_permissions_for_everyone():
     counter = 0
 
     for user_id in list_id:
-        user_id, surname, name, tab_number, password, messaging, check_permissions, night_notify, plan_notify, autoconfirm = handler_db.fetch_user_for_plan(
-            user_id)
+        user_id, surname, name, tab_number, password, messaging, check_permissions, night_notify, plan_notify, \
+        autoconfirm, time_depart = handler_db.fetch_user_for_plan(user_id)
         fio = f'{user_id} {surname} {name} '
         if password == '' or not password or password == '0':  # TODO сделать в базе всем одинаково
             continue
@@ -156,7 +203,7 @@ def check_nalet_for_everyone():
     counter = 0
 
     for user_id in list_id:
-        user_id, surname, name, tab_number, password, messaging, check_permissions, night_notify, plan_notify, autoconfirm = handler_db.fetch_user_for_plan(
+        user_id, surname, name, tab_number, password, messaging, check_permissions, night_notify, plan_notify, autoconfirm, time_depart = handler_db.fetch_user_for_plan(
             user_id)
         fio = f'{user_id} {surname} {name} '
         if password == '' or not password or password == '0':  # TODO сделать в базе всем одинаково
@@ -182,8 +229,8 @@ def check_new_documents(user_id):
     document_btn.add(btn)
 
     for user_id in list_id:
-        user_id, surname, name, tab_number, password, messaging, check_permissions, night_notify, plan_notify, autoconfirm = handler_db.fetch_user_for_plan(
-            user_id)
+        user_id, surname, name, tab_number, password, messaging, check_permissions, night_notify, plan_notify, \
+        autoconfirm, time_depart = handler_db.fetch_user_for_plan(user_id)
         fio = f'{user_id} {surname} {name} '
 
         if password == '' or not password or password == '0':  # TODO сделать в базе всем одинаково
@@ -202,8 +249,8 @@ def messaging_process(message):
     mess = message.text.split()
     counter_users = 0
     for user_id in list_id:
-        user_id, surname, name, tab_number, password, messaging, check_permissions, night_notify, plan_notify, autoconfirm = handler_db.fetch_user_for_plan(
-            user_id)
+        user_id, surname, name, tab_number, password, messaging, check_permissions, night_notify, plan_notify, \
+        autoconfirm, time_depart = handler_db.fetch_user_for_plan(user_id)
         fio = f'{user_id} {name} {surname}'
         if messaging:
             try:
@@ -213,8 +260,7 @@ def messaging_process(message):
                 time.sleep(3)
             except Exception as exc:  # если случилась ошибка при отправке сообщений пользователю
                 exc_event = exception_logger.writer(exc=exc, request='рассылка сообщений пользователям',
-                                                    user_id=user_id, fio=fio,
-                                                    answer='сообщение не удалось отправить ')
+                                                    fio=fio, answer='сообщение не удалось отправить ')
                 bot.send_message(157758328, exc_event)
                 bot.send_message(157758328,
                                  f"сообщение не удалось отправить {fio} ошибка {exc}.")  # TODO временно
@@ -223,12 +269,13 @@ def messaging_process(message):
     return
 
 
-def write_new_dict_user(message):  # TODO почему стирает весь файл?
-    """Предоставление доступа пользователю: внесение новго пользователя в словарь непосредлственно сразу через чат телеграм-бота.
-    пример текста поступающей команды: предоставить доступ 157758328 Азаров Дмитрий 119221"""
+def write_new_dict_user(message):  # TODO ВЫНЕСТИ В ОТДЕЛЬНЫЙ ФАЙЛ
+    """Предоставление доступа пользователю: внесение новго пользователя в базу данных general.db, таблицу users
+    непосредственно сразу через чат телеграм-бота. поступающую строку типа: 157758328 Азаров Дмитрий... делит на список,
+    вносит в базу, затем делает запрос в базу, на основании которого выдает ответ, успешно внесен человек в базу или нет"""
     try:
         mess = message.text.split('\n')
-        user_id = mess[1]  # 0 - предоставить доступ, 1 - user_id, 2 - surname
+        user_id = int(mess[1])  # 0 - предоставить доступ, 1 - user_id, 2 - surname
         surname = mess[2]
         name = mess[3]
         city = mess[4]
@@ -236,37 +283,53 @@ def write_new_dict_user(message):  # TODO почему стирает весь �
         exp_date = mess[6]
         tab_number = mess[7]
         password = mess[8]
-        messaging = mess[9]
-        check_permissions = mess[10]
-        autoconfirm = mess[11]
-        handler_db.add_new_user_to_db_users(user_id, surname, name, city, link, exp_date, tab_number, password,
-                                            messaging, check_permissions, autoconfirm)
-        result = handler_db.select(user_id)
-        user_id_from_db = result.split()[0]
-        name_from_db = result.split()[2]
-        if user_id == user_id_from_db and name == name_from_db:
-            bot.send_message(user_id,
-                             f'{name_from_db}, Вам успешно предоставлен доступ к телеграм-боту. '
-                             f'Спрашивайте, буду рад помочь! Если хотите получать уведомления на телефон об изменениях в '
-                             f'плане работ, то пришлите в ответном одном сообщении через пробел логин и пароль от '
-                             f'OpenSky (4 слова через пробел) по следующему шаблону: логин ....... пароль ......',
-                             reply_markup=general_menu())
-            bot.send_message(157758328, "Сообщение о предоставлении доступа пользователю отправлено успешно.")
-            return
-        else:
-            bot.send_message(157758328, "Проблема с добавлением пользователя в general.db")
-            bot.send_message(157758328, f"последние внесенные пользвоатели в базе данных:")
-            last_three_users_in_db = handler_db.get_three_last()
-            for i in last_three_users_in_db:
-                bot.send_message(157758328, i[2])
-
+        access = mess[9]
+        messaging = mess[10]
+        check_permissions = mess[11]
+        night_notify = mess[12]
+        plan_notify = mess[13]
+        autoconfirm = mess[14]
+        time_depart = mess[15]
+        time_arrive = mess[16]
     except Exception as exc:
+        bot.send_message(157758328,
+                         f"Проблема с извлечением слов из полученной строки на вход: {mess} в general.db:\n\n {exc}\n\n Новый пользователь не был добавлен в БД.")
+        return
+    try:
+        handler_db.add_new_user_to_db_users(user_id, surname, name, city, link, exp_date, tab_number, password, access,
+                                            messaging, check_permissions, night_notify, plan_notify, autoconfirm,
+                                            time_depart, time_arrive)
+    except Exception as exc:
+        bot.send_message(157758328, f"Проблема с добавлением пользователя {surname} в general.db:\n {exc}")
+        bot.send_message(157758328, f"последние внесенные пользвоатели в базе данных:")
+        last_three_users_in_db = handler_db.get_three_last()
+        for i in last_three_users_in_db:
+            bot.send_message(157758328, i[2])
         exc_event = exception_logger.writer(exc=exc,
-                                            request='Внесение нового пользователя в словарь удаленно через диалог',
-                                            user_id=user_id,
-                                            answer='произошла ошибка при предоставлении доступа. Словарь пользователей стерся полностью.')
+                                            request='Добавление нового пользователя в словарь удаленно',
+                                            fio=f'{user_id} {surname}',
+                                            answer='произошла ошибка при предоставлении доступа.')
         bot.send_message(157758328, exc_event)
         bot.send_message(157758328, f"произошла ошибка при предоставлении доступа {exc}.")
+        return
+    try:
+        user_id_from_db = handler_db.check_user_id_in_db(user_id)
+    except Exception as exc:
+        bot.send_message(157758328,
+                         f"не удалось проверить успешность добавления пользователю в базу. Возникла ошибка:\n\n {exc}.")
+        return
+    if user_id == user_id_from_db:
+        bot.send_message(user_id,
+                         f'\t    {name}, Вам успешно предоставлен доступ к телеграм-боту. \n'
+                         f'    Спрашивайте, буду рад помочь! \n'
+                         f'    Если хотите получать уведомления на телефон об изменениях в '
+                         f'плане работ, то пришлите в ответном одном сообщении через пробел логин и пароль от '
+                         f'OpenSky (4 слова через пробел) по следующему шаблону: логин ....... пароль ......',
+                         reply_markup=general_menu())
+        bot.send_message(157758328, "Сообщение о предоставлении доступа пользователю отправлено успешно.")
+        return
+    else:
+        bot.send_message(157758328, f"Пользователь {user_id} {surname} {name} отсутсвует в базе general.db")
         return
 
 
@@ -352,12 +415,29 @@ def find(question, user_request):
 @bot.message_handler(content_types=["text"])  #
 def conversation(message):
     """Модуль для общения и взаимодействия с пользователем. Декоратор будет вызываться когда боту напишут текст."""
+    if message.text.lower() in "обратная связь /feedback":
+        def feedback(message):
+            if "отмена" in message.text.lower():
+                bot.send_message(user_id,
+                                 f"Если надумаете в следующий раз что-то мне сообщить - буду рад узнать.")
+                bot.send_message(157758328, f"{fio} передумал оставлять обратную связь.")
+            else:
+                bot.send_message(157758328, f"{fio} оставил обратную связь: \n {message.text}")
+
+        text = f" Если у Вас есть какие-то замечания или предложения, либо у " \
+               f"Вас есть какой-то вопрос или просто хотите что-то сообщить - пожалуйста, отправьте мне обратную связь в " \
+               f"ответном сообщении. Телеграм-бот ждет вашего сообщения. Если Вы передумали оставлять обратную связь, " \
+               f"отправьте слово отмена."
+        msg = bot.send_message(message.chat.id, text)
+        bot.register_next_step_handler(msg, feedback)
+        return
+
     if not verification(message):
         return
 
     try:
-        user_id, surname, name, tab_number, password, messaging, check_permissions, night_notify, plan_notify, autoconfirm = \
-            handler_db.fetch_user_for_plan(message.chat.id)
+        user_id, surname, name, tab_number, password, messaging, check_permissions, night_notify, plan_notify, \
+        autoconfirm, time_depart = handler_db.fetch_user_for_plan(message.chat.id)
         fio = f'{user_id} {name} {surname}'
     except Exception as exc:
         bot.send_message(157758328, f"Поймали ошибку при извлечении данных пользователя из базы: {message.chat.id} \n"
@@ -367,9 +447,9 @@ def conversation(message):
         """Отправляет пользовтелю информацию с фото"""
         try:  # TODO временный try except посмотреть почему падает в этом месте
             pic = baza.dictionary[id].get('photo')
-            bot.send_message(user_id, baza.dictionary[id].get('answer'), parse_mode='Markdown')
             with open(pic, 'rb') as f:
                 bot.send_photo(user_id, f)
+            bot.send_message(user_id, baza.dictionary[id].get('answer'), parse_mode='Markdown')
         except Exception as exc:
             bot.send_message(157758328,
                              f"Ошибка при отправке изображения из функции photo() при запросе {message.text}: {exc}")
@@ -579,9 +659,11 @@ def conversation(message):
                                             f"порядке c отсчением окончаний по запросу:\n{message.text}")
                 return found_result
         if len(results) >= 8:
-            bot.send_message(message.chat.id, f"{name}, Найдено слишком много ответов. Уточните свой вопрос.")
+            bot.send_message(message.chat.id,
+                             f"{name}, вероятно, на Ваш вопрос нет однозначного ответа. Пожалуйста, уточните свой вопрос.")
             bot.send_message(157758328, f"4 - Пользователю {fio} выдан ответ, что найдено слишком много ответов при "
                                         f"запросе:\n{message.text}")
+            return
 
     def confirm_question(message):
         """Сообщение с кнопками для отмены подтверждения плана работ, либо оставить всё как есть."""
@@ -608,8 +690,8 @@ def conversation(message):
                              "в моей базе нет Вашего логина и пароля от OpenSky. Если Вы не хотите пропустить "
                              "сроки дейтсивя документов и вовремя получить уведомление на телефон, пришлите в "
                              "ответном одном сообщении 4 слова через пробел по шаблону: логин ...... пароль "
-                             "........ А пока рекомендую вам самостоятельно перейти в раздел документов и "
-                             "проверить сроки там.", reply_markup=document_btn)
+                             "........  Менять старый пароль каждый раз не нужно, достаточно ввести старый пароль в "
+                             "графу нового пароля по ссылке pwd.rossiya-airlines.com'.", reply_markup=document_btn)
         else:
             try:
                 documents_info = get_permissions.parser(user_id, tab_number, name, surname)
@@ -630,7 +712,7 @@ def conversation(message):
     if "написать по id" in message.text.lower():
         mess = message.text.split()
         try:
-            bot.send_message(int(mess[3]), ' '.join(mess[5:]).capitalize(), reply_markup=general_menu())
+            bot.send_message(int(mess[3]), ' '.join(mess[4:]).capitalize(), reply_markup=general_menu())
             bot.send_message(157758328, "Сообщение пользователю отправлено успешно.")
         except Exception:
             bot.send_message(157758328, f"Пользователь не подключен к телеграм-боту.\n {traceback.format_exc()}")
@@ -640,7 +722,11 @@ def conversation(message):
                                 "сколько рейсов на сухом", "посчитать рейсы"]:
         if password == '' or not password or password == '0':
             bot.send_message(user_id,
-                             "К сожалению, я не могу посчитать сколько рейсов вы отлетали, т.к. в моей базе нет Вашего логина и пароля. Если Вы хотите чтобы я за вас легко и просто посчитал количество рейсов, пришлите мне в ответном одном сообщении 4 слова через пробел по шаблону: логин ...... пароль ........")
+                             "К сожалению, я не могу посчитать сколько рейсов вы отлетали, т.к. в моей базе нет "
+                             "Вашего логина и пароля. Если Вы хотите чтобы я за вас легко и просто посчитал "
+                             "количество рейсов, пришлите мне в ответном одном сообщении 4 слова через пробел по "
+                             "шаблону: логин ...... пароль ........  Менять старый пароль каждый раз не нужно, достаточно "
+                             "ввести старый пароль в графу нового пароля по ссылке pwd.rossiya-airlines.com")
         else:
             bot.send_message(user_id, "Уже считаю Ваши рейсы. Пожалуйста, подождите...")
             result = flight_counter.parser(user_id, tab_number, password)
@@ -655,24 +741,7 @@ def conversation(message):
         bot.send_message(157758328, f"{fio} отправили сочувствие в ответ на {message.text}.")
         return
 
-    if message.text.lower() in "обратная связь /feedback":
-        def feedback(message):
-            if "отмена" in message.text.lower():
-                bot.send_message(user_id,
-                                 f"Если надумаете в следующий раз что-то мне сообщить - буду рад узнать.")
-                bot.send_message(157758328, f"{fio} передумал оставлять обратную связь.")
-            else:
-                bot.send_message(157758328, f"{fio} оставил обратную связь: \n {message.text}")
-
-        text = f"{name}, если у Вас есть какие-то замечания, предложения, выявили факты некорректной работы бота, либо у " \
-               f"Вас есть какой-то вопрос или просто что-то сообщить - пожалуйста, отправьте мне обратную связь в " \
-               f"ответном сообщении. Телеграм-бот ждет вашего сообщения. Если Вы передумали оставлять обратную связь, " \
-               f"отправьте слово отмена."
-        msg = bot.send_message(user_id, text)
-        bot.register_next_step_handler(msg, feedback)
-        return
-
-    if message.text.lower() in "план на завтра план работ /getplan мой наряд":
+    if message.text.lower() in "план на завтра мой план работ /getplan мой наряд":
         if password == '' or not password or password == '0':
             plan_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()  # что такое двоеточие и что оно дает???
             btn = types.InlineKeyboardButton(text="Открыть план работ в OpenSky",
@@ -681,15 +750,16 @@ def conversation(message):
             bot.send_message(user_id,
                              f'{name}, Ваш логин и пароль от OpenSky отсутсвует в моей базе данных, поэтому я '
                              'не могу запросить ваш план работ и выдать его напрямую сюда. Если Вы '
-                             'хотите легко и быстро узнавать свой план работ, а в будущем получать '
-                             'уведомления на телефон о новых рейсах - сообщите мне свой логин и пароль '
+                             'хотите быстро узнавать свой план работ, получать '
+                             'уведомления о новых рейсах - сообщите свой логин и пароль '
                              'через пробел в следующем формате: \n логин ...... пароль ...... \n '
-                             '(4 слова через пробел, вместо многоточия ваш логин и пароль).',
+                             '(4 слова через пробел, вместо многоточия ваш логин и пароль). \n Менять старый пароль каждый раз не '
+                             'нужно, достаточно ввести старый пароль в графу нового пароля по ссылке pwd.rossiya-airlines.com)',
                              reply_markup=plan_btn)
             return
         else:
             bot.send_message(user_id, f"{name}, запрос отправлен. Ожидайте несколько секунд...")
-            plan = getplan.parser(user_id, tab_number, password, autoconfirm)
+            plan = getplan.parser(user_id, tab_number, password, autoconfirm, time_depart)
             plan_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()  # что такое двоеточие и что оно дает???
             btn = types.InlineKeyboardButton(text="Открыть подробнее в OpenSky",
                                              url='https://edu.rossiya-airlines.com/workplan/')
@@ -705,7 +775,8 @@ def conversation(message):
                                       'так как Вы ранее не сообщили свой логин и пароль от OpenSky. Чтобы получать '
                                       'уведомления о предстоящем плане работ, Вам неообходимо сообщить свой логин и '
                                       'пароль в сообщении по следующему шаблону: логин ...... пароль ........ '
-                                      '(4 слова через пробел в одну строку)')
+                                      '(4 слова через пробел в одну строку). Менять старый пароль каждый раз не нужно, '
+                                      'достаточно ввести старый пароль в графу нового пароля по ссылке pwd.rossiya-airlines.com')
         if len(password) > 0 and plan_notify:
             bot.send_message(message.chat.id,
                              'Хорошо, будет сделано. Чуть позже уведомления о предстоящем плане работ у '
@@ -728,8 +799,8 @@ def conversation(message):
                              'ваш налёт и выдать его напрямую сюда в чат. Если вы хотите легко и быстро узнавать свой '
                              'налёт - в ответном сообщении отправьте свой логин и пароль через пробел в следующем '
                              'формате: \n логин ...... пароль ...... \n (вместо многоточия ваш логин и пароль - 4 слова через пробел). \n '
-                             'Поэтому пока предлагаю нажать на кнопку, перейти и самостоятельно просмотреть Ваш налёт, '
-                             'ввести логин и пароль туда вручную.', reply_markup=nalet_btn)
+                             ' Менять старый пароль каждый раз не нужно, достаточно ввести старый пароль в графу нового '
+                             'пароля по ссылке pwd.rossiya-airlines.com', reply_markup=nalet_btn)
             return
         else:
             bot.send_message(user_id, f"{name}, уже считаю Ваш налёт. Пожалуйста, подождите...")
@@ -758,16 +829,19 @@ def conversation(message):
             bot.send_message(157758328, f"{fio} прислал логин и пароль: \n {message.text}")
             return
 
-    if "просмотреть данные пользователя" in message.text.lower():
+    if "просмотреть данные пользователя" in message.text.lower():  # ! РАБОТАЕТ!
         user = message.text.split()
-        result = handler_db.select(user[-1])
+        result = handler_db.select_all_data_of_person(user[-1])
         bot.send_message(157758328, result)
         return
 
     if "удалить пользователя" in message.text.lower():
         user = message.text.split()
-        result = handler_db.delete_user_from_db(user[-1])
+        handler_db.delete_user_from_db(user[
+                                           -1])  # ! РАБОТАЕТ! путем выхода и повторного соединения с базой: иначе говорил что пользователь все равно есть
+        result = handler_db.select_all_data_of_person(user[-1])
         bot.send_message(157758328, result)
+        return
 
     if "сколько бортпроводников" in message.text.lower():
         bot.send_message(user_id, f"К Telegram-боту подключено сейчас {handler_db.count_users()} бортпроводников.")
@@ -802,7 +876,19 @@ def conversation(message):
                          f'бортпроводников, подобных аналогов которому нет в других авиакомпаниях. '
                          f'Этот Telegram-бот это очень крутое, нужное многофункциональное '
                          'приложение, интегрированное в Telegram. Telegram-бот развивается каждый день '
-                         'и требует времени и дополнительных расходов. Есть еще много идей, которые хочется реализовать. '
+                         'и требует времени и дополнительных расходов. Есть еще много идей, которые хочется '
+                         'реализовать. \n\n'
+                         '*Содержание и обслуживание телеграм бота:*\n'
+                         '1. *Доменное имя* = 1000 руб./год;\n'
+                         '2. *Хостинг* - аренда сервера = 3600 руб./год;\n'
+                         '3. *SSL-секртификат* безопасности для защищенной передачи данных = 2900 руб./мес;\n'
+                         '*Вознаграждения:*\n'
+                         '4. *За найденные ошибки, новую информацию, приведенного друга* по 100 руб пользователю за каждый факт = 400 руб./мес'
+                         '5. *Аутсорсинг* - переодическое привлечение более опытных программистов 1-2 раза в месяц, час работы их стоит = 1000 руб./час.\n'
+                         'Да, я и так практически всё свободное время занят программированием, исправлением ошибок, '
+                         'занесением информации, но бывает, что не все сам могу разрешить и приходится '
+                         'привлекать других программистов.\n\n'
+                         '*Итого обслуживание телеграм-бота обходится примерно в 2500 руб/мес.*\n\n'
                          'Предлагайте свои идеи и свою информацию. Поддержите развитие телеграм-бота, '
                          'осуществив перевод на любую сумму без комиссии.',
                          parse_mode='Markdown', reply_markup=donate_btn)
@@ -830,8 +916,23 @@ def conversation(message):
 
     if "предоставить доступ" in message.text.lower():
         if len(message.text.split()) == 2:
-            bot.send_message(157758328, f"предоставить доступ\nuser_id\nsurname\nname\ncity\nlink\nexp_date\n"
-                                        f"tab_number\npassword\nmessaging\ncheck_permissions\nautoconfirm")
+            bot.send_message(157758328, f"предоставить доступ\n"
+                                        f"user_id\n"
+                                        f"surname\n"
+                                        f"name\n"
+                                        f"city\n"
+                                        f"@username\n"
+                                        f"exp_date\n"
+                                        f"tab_number\n"
+                                        f"password\n"
+                                        f"1\n"
+                                        f"1\n"
+                                        f"1\n"
+                                        f"1\n"
+                                        f"1\n"
+                                        f"0\n"
+                                        f"msk_start\n"
+                                        f"msk")
             return
         else:
             bot.send_message(157758328, f"вызвали write_new_dict_user внести бользователя в general_db")
@@ -1034,6 +1135,11 @@ def conversation(message):
         bot.send_message(157758328, "Попросили уточнить какие именно особенности интересуют")
         return
 
+    if 'особенности рейса' == message.text:  # TODO наверное не очень семантично здесь размещать обработку этого запроса
+        bot.send_message(user_id, 'Какой город Вас инетересует?', reply_markup=general_menu())
+        bot.send_message(157758328, "При запросе особенности рейса, попросили уточнить какой город интересует")
+        return
+
     if 'супервайзер' == message.text:  # TODO наверное не очень семантично здесь размещать обработку этого запроса
         bot.send_message(user_id, 'Какой именно супервайзер Вас инетересует?', reply_markup=general_menu())
         bot.send_message(157758328, "Попросили уточнить какой именно супервайзер интересуют")
@@ -1052,7 +1158,7 @@ def conversation(message):
                          "4.  три последние пользователя в базе - возвращает три посление фамилии из базы\n\n"
                          "5.  проверить наличие пользователя по id <user_id> - возвращает строку с указанием user_id фамилии имени табельного номера\n\n"
                          "6.  предоставить доступ - для предоставления доступа пользователю сообщение должно содержать через перенос строки:\n"
-                         "предоставить доступ\nuser_id\nsurname\nname\ncity\nlink\nexp_date\ntab_number\npassword\nmessaging\ncheck_permissions\nautoconfirm\n\n"
+                         "предоставить доступ\nuser_id\nsurname\nname\ncity\nlink\nexp_date\ntab_number\npassword\naccess\nmessaging\ncheck_permissions\nnight_notify\nplan_notify\nautoconfirm\ntime_depart\ntime_arrive\n\n"
                          "7.  разослать сообщение <сразу текст...> - рассылает сообщение всем пользователям из базы\n\n"
                          "8.  проверить налет у всех бортпроводников - вызывает функцию check_nalet_for_everyone()\n\n"
                          "9.  проверить допуски у всех бортпроводников - вызывает функцию check_permissions_for_everyone()\n\n"
