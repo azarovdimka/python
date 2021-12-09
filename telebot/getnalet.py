@@ -26,7 +26,7 @@ def parser(user_id, tab_number,
     try:
         nalet = s.post(url, data=data, headers=dict(Referer=url))  # work_plan = response 200
     except Exception as exc:
-        exception_logger.writer(exc=exc, request=url, user_id=dict_users.users[user_id])
+        exception_logger.writer(exc=exc, request=url, fio=user_id, answer=None)
         return
 
     month_year = time.strftime('%m.%Y')
@@ -36,7 +36,7 @@ def parser(user_id, tab_number,
     try:
         nalet = s.post(url, headers=dict(Referer=url))  # work_plan = response 200
     except Exception as exc:
-        exception_logger.writer(exc=exc, request=url, user_id=dict_users.users[user_id])
+        exception_logger.writer(exc=exc, request=url, fio=user_id, answer=None)
         return
 
     soup = BeautifulSoup(nalet.content, 'html.parser')  # .find_all('div', {'class': ['dhx_cal_data']})
@@ -49,7 +49,8 @@ def parser(user_id, tab_number,
     try:
         table = tables[0]  # bp дебага смотрим вложенную таблицу
     except Exception:
-        return f"\t *Не удалось посчитать налёт.* \n\t {dict_users.users[user_id]['name']}, либо Вы еще никуда не летали в этом месяце, либо у Вас неверно указан логин {dict_users.users[user_id]['tab_number']} и пароль {dict_users.users[user_id]['password']}."
+        return f"\t *Не удалось посчитать налёт.* \n\t либо Вы еще никуда не летали в этом месяце, либо у Вас неверно " \
+               f"указан логин {tab_number} и пароль {password}."
     thead = table.contents[2]
     rows = thead.contents
     tr = rows[0]
