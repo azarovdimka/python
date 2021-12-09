@@ -166,7 +166,8 @@ def extract_destination(s):
 
 
 def parser(user_id, tab_number, password,
-           autoconfirm):  # это надо было все обернуть в функцию чтобы потом при импорте вызвать модуль.функция()
+           autoconfirm,
+           time_depart):  # это надо было все обернуть в функцию чтобы потом при импорте вызвать модуль.функция()
     url = 'https://edu.rossiya-airlines.com/workplan/'
 
     s = requests.Session()
@@ -197,7 +198,7 @@ def parser(user_id, tab_number, password,
     try:
         work_plan = s.post(url, data=data, headers=dict(Referer=url))
     except Exception as exc:  # ConnectionResetError(10054, 'Удаленный хост принудительно разорвал существующее подключение'
-        exception_logger.writer(exc=exc, request=url, user_id=dict_users.users[user_id])
+        exception_logger.writer(exc=exc, request=url, fio=user_id)
         return
 
     soup = BeautifulSoup(work_plan.content, 'html.parser')
@@ -208,13 +209,15 @@ def parser(user_id, tab_number, password,
     try:
         table = events[0]
     except Exception as exc:
-        error = f"Проблема с получением плана работ. Причин может быть две: \n" \
+        error = f"\t    Проблема с получением плана работ. Причин может быть две: \n" \
                 f"- либо сервер перегружен количеством обращений, и нужно немного подождать,\n" \
-                f"- либо в базе указан неверный логин {tab_number} " \
-                f"и пароль {password} \n Если это действиетльно так, то Вы можете сообщить " \
-                f"новый логин и пароль, отправив в ответном сообщении 4 слова через пробел в следующем формате в одну " \
-                f"строку: логин ....... пароль .......\n "
-        exception_logger.writer(exc=exc, request='парсинг плана', user_id=user_id,
+                f"- либо в базе указан неверный логин {tab_number} и пароль {password} \n" \
+                f"    Если это действиетльно так, то Вы можете сообщить " \
+                f"новый логин и пароль в ответном сообщении в следующем формате: логин ....... пароль ....... \n " \
+                f"(4 слова через пробел) \n" \
+                f"    Менять старый пароль каждый раз не нужно, достаточно ввести старый пароль в графу нового " \
+                f"пароля по ссылке pwd.rossiya-airlines.com"
+        exception_logger.writer(exc=exc, request='парсинг плана', fio=user_id,
                                 answer='неверный логин и пароль')
         return error
 
@@ -239,11 +242,11 @@ def parser(user_id, tab_number, password,
             time_start = '00:00'
         else:
             time_start = utc_start  # eval(dict_users.users[user_id]['time_depart'])
-        time_zona = dict_users.users[user_id]['time_depart'][:3]
+        time_zona = time_depart[:3]
 
         depart_utc_dt = f"{day_month_start} {time_start}"
 
-        if dict_users.users[user_id]['time_depart'] == 'msk_start':
+        if time_depart == 'msk_start':
             dt_object = datetime.strptime(depart_utc_dt, '%d.%m %H:%M').replace(tzinfo=pytz.utc)
             start_dt = dt_object.astimezone(pytz.utc) + timedelta(hours=3)
             day = start_dt.strftime('%d')
