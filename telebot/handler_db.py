@@ -128,6 +128,18 @@ def insert_confirm(confirm, user_id):
         return result
 
 
+def update_plan_notify(plan_notify, user_id):
+    """РАБОТАЕТ!!!! Добавляет подтверждение плана работ в базу данных для самостоятельного добавления пользователем"""
+    with sqlite3.connect('general.db') as con:
+        cur = con.cursor()
+        sql_update_query = "UPDATE users SET plan_notify = ? WHERE user_id = ?"
+        data = (plan_notify, user_id)
+        cur.execute(sql_update_query, data)
+
+        result = cur.execute("SELECT EXISTS(select u.plan_notify from users u where u.user_id = ?)", (user_id,))
+        return result
+
+
 def update_night_notify(night_notify, user_id):
     """РАБОТАЕТ!!!! Добавляет подтверждение плана работ в базу данных для самостоятельного добавления пользователем"""
     with sqlite3.connect('general.db') as con:
