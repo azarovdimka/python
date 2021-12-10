@@ -1,12 +1,6 @@
 import exception_logger
 import getplan
-import dict_users
 import os
-
-
-#
-# def timer():
-#     time.sleep()
 
 
 def write_check_relevance(plan, chat_id, password,
@@ -51,14 +45,14 @@ def write_check_relevance(plan, chat_id, password,
 
             except Exception as exc:  # todo попробовать перенести except в 42 строку чтобы witn open два раза не вызывать
                 exception_logger.writer(exc=exc, request='сравнение старого и нового плана на предмет прошедшего рейса',
-                                        user_id=dict_users.users[chat_id])
+                                        fio=chat_id)
                 return
 
 
 # TODO НЕ ЗАБУДЬ ПОМЕНЯТЬ АДРЕС!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-def notify(user_id, tab_number, password, autoconfirm, night_notify):
-    plan = getplan.parser(user_id, tab_number, password, autoconfirm)
+def notify(user_id, tab_number, password, autoconfirm, night_notify, time_depart):
+    plan = getplan.parser(user_id, tab_number, password, autoconfirm, time_depart)
     # plan не может сожержать None в результате работы функции getplan.parser
     # TODO если функция getplan.parser() будет прервана внутренним return ... может л
     if plan is not None:
