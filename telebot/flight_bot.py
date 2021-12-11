@@ -78,12 +78,11 @@ def callback_inline(call):
         if call.data == "one":
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                   text="План работ Вам будет высылаться в указанных часовых поясах: вылет по UTC, прилёт по МСК.")
-            bot.send_message(157758328, f"{call.message.chat.id} Ответил, номер один: UTC МСК")
             try:
                 mess = 'utc_start msk'
                 time_depart = handler_db.insert_utc_msk(mess, call.message.chat.id)
                 if time_depart:
-                    bot.send_message(157758328, f"часовые пояса установлены успешно: UTC МСК")
+                    bot.send_message(157758328, f"{call.message.chat.id} часовые пояса установлены успешно: UTC МСК")
                     return
             except Exception as exc:
                 bot.send_message(157758328,
@@ -92,12 +91,11 @@ def callback_inline(call):
         if call.data == "two":
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                   text="План работ Вам будет высылаться в указанных часовых поясах: вылет и прилёт по МСК.")
-            bot.send_message(157758328, f"{call.message.chat.id} Попросил номер два: МСК МСК")
             try:
                 mess = 'msk_start msk'
                 time_depart = handler_db.insert_utc_msk(mess, call.message.chat.id)
                 if time_depart:
-                    bot.send_message(157758328, f"часовые пояса установлены успешно: МСК МСК")
+                    bot.send_message(157758328, f"{call.message.chat.id} часовые пояса установлены успешно: МСК МСК")
             except Exception as exc:
                 bot.send_message(157758328,
                                  f"!!! проблема с установкой часовых поясов у пользователя {call.message.chat.id}: UTC МСК")
@@ -105,36 +103,33 @@ def callback_inline(call):
         if call.data == "confirm":
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                   text="Ваш план работ будет подтверждаться автоматически при отправке его Вам в Telegram.")
-            bot.send_message(157758328, f"{call.message.chat.id} Попросил подтверждать план работ")
             try:
                 confirm = True
                 confirm = handler_db.insert_confirm(confirm, call.message.chat.id)
                 if confirm is not None or confirm != '':
-                    bot.send_message(157758328, f"confirm true установлено успешно")
+                    bot.send_message(157758328, f"{call.message.chat.id} confirm true установлено успешно")
             except Exception as exc:
                 bot.send_message(157758328, f"!!! проблема с установкой confirm true {call.message.chat.id}\n\n{exc}")
 
         if call.data == "not_confirm":
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                   text="Ваш план работ не будет подтверждаться автоматически при отправке его Вам в Telegram.")
-            bot.send_message(157758328, f"{call.message.chat.id} Попросил не подтверждать план работ")
             try:
                 confirm = False
                 confirm = handler_db.insert_confirm(confirm, call.message.chat.id)
                 if confirm is not None or confirm != '':
-                    bot.send_message(157758328, f"confirm False установлено успешно")
+                    bot.send_message(157758328, f"{call.message.chat.id} confirm False установлено успешно")
             except Exception as exc:
                 bot.send_message(157758328, f"!!! проблема с установкой confirm False {call.message.chat.id}\n\n{exc}")
 
         if call.data == "yes":
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                   text="Отправка уведомлений по ночам разрешена.")
-            bot.send_message(157758328, f"{call.message.chat.id} ночью присылать уведомления можно")
             try:
                 night_notify = True
                 night_notify = handler_db.update_night_notify(night_notify, call.message.chat.id)
                 if night_notify is not None or night_notify != '':
-                    bot.send_message(157758328, "параметр night_notify установлен успешно")
+                    bot.send_message(157758328, f"{call.message.chat.id} параметр night_notify True установлен успешно")
             except Exception as exc:
                 bot.send_message(157758328,
                                  f"!!! проблема с установкой night_notify True {call.message.chat.id}\n\n{exc}")
@@ -142,13 +137,12 @@ def callback_inline(call):
         if call.data == "no":
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                   text="Отправка уведомлений по ночам запрещена.")
-            bot.send_message(157758328,
-                             f"{call.message.chat.id} пользователь не хочет ночью получать уведомления ночью")
             try:
                 night_notify = False
                 night_notify = handler_db.update_night_notify(night_notify, call.message.chat.id)
                 if night_notify is not None or night_notify != '':
-                    bot.send_message(157758328, "параметр night_notify установлен успешно")
+                    bot.send_message(157758328,
+                                     f"{call.message.chat.id} параметр night_notify False установлен успешно")
             except Exception as exc:
                 bot.send_message(157758328,
                                  f"!!! проблема с установкой night_notify False {call.message.chat.id}\n\n{exc}")
@@ -177,14 +171,14 @@ def check_permissions_for_everyone():
         user_id, surname, name, tab_number, password, messaging, check_permissions, night_notify, plan_notify, \
         autoconfirm, time_depart = handler_db.fetch_user_for_plan(user_id)
         fio = f'{user_id} {surname} {name} '
-        if password == '' or not password or password == '0':  # TODO сделать в базе всем одинаково
+        if not password or not messaging or password == '0':  # TODO сделать в базе всем одинаково
             continue
         else:
             try:
                 documents_info = get_permissions.parser(user_id, tab_number, password, name)
                 bot.send_message(user_id, documents_info, reply_markup=document_btn)
                 bot.send_message(157758328, f'Пользователю {fio} отправлен сообщение об истекающих допусках.')
-                # bot.send_message(157758328, documents_info, reply_markup=document_btn)  # TODO закомментировать
+                bot.send_message(157758328, documents_info, reply_markup=document_btn)  # TODO закомментировать
                 counter += 1
                 time.sleep(3)
             except Exception:
@@ -206,7 +200,7 @@ def check_nalet_for_everyone():
         user_id, surname, name, tab_number, password, messaging, check_permissions, night_notify, plan_notify, autoconfirm, time_depart = handler_db.fetch_user_for_plan(
             user_id)
         fio = f'{user_id} {surname} {name} '
-        if password == '' or not password or password == '0':  # TODO сделать в базе всем одинаково
+        if not password or password == '0':  # TODO сделать в базе всем одинаково
             continue
         else:
             try:
@@ -770,7 +764,7 @@ def conversation(message):
             return
 
     if '/plan' in message.text.lower():  # TODO сделать потом чтобы автоматически менял статус в словаре
-        if password == '':
+        if not password:
             bot.send_message(user_id, 'Вам не приходят автоматические уведомление о предстоящем плане работ, '
                                       'так как Вы ранее не сообщили свой логин и пароль от OpenSky. Чтобы получать '
                                       'уведомления о предстоящем плане работ, Вам неообходимо сообщить свой логин и '
@@ -778,17 +772,24 @@ def conversation(message):
                                       '(4 слова через пробел в одну строку). Менять старый пароль каждый раз не нужно, '
                                       'достаточно ввести старый пароль в графу нового пароля по ссылке pwd.rossiya-airlines.com')
         if len(password) >= 1 and plan_notify:
-            plan_notify = False
-            handler_db.update_plan_notify(plan_notify, user_id)
-            bot.send_message(message.chat.id,
-                             'Хорошо, уведомления о предстоящем плане работ у вас будут отключены.')
-            bot.send_message(157758328, f'{fio} попросил отключить уведомления о плане работ')
-        if not plan_notify:
-            plan_notify = True
-            handler_db.update_plan_notify(plan_notify, user_id)
-            bot.send_message(message.chat.id, 'Хорошо, уведомления о предстоящем плане работ будут включены.')
-            bot.send_message(157758328, f'{fio} попросил включить уведомления о плане работ')
-        return
+            if plan_notify:
+                bot.send_message(user_id, "Хорошо, мы обязательно отключим уведомления о плане работ.")
+                bot.send_message(157758328, f'{user_id} {name} {surname} попросил отключить уведомления о плане работ')
+                prohibited = False
+                result = handler_db.update_plan_notify(prohibited, user_id)
+                if result is not None:
+                    bot.send_message(user_id, "Рассылка уведомлений о плане работ отключена.")
+                    bot.send_message(157758328, f'{fio} рассылка сообщений отключена автоматически.')
+                    return
+    if not plan_notify:
+        bot.send_message(user_id, "Хорошо, мы обязательно включим уведомления о плане работ.")
+        bot.send_message(157758328, f'{user_id} {name} {surname} попросил включить уведомления о плане работ')
+        allowed = True
+        result = handler_db.update_plan_notify(allowed, user_id)
+        if result is not None:
+            bot.send_message(user_id, "Рассылка уведомлений о плане работ включена.")
+            bot.send_message(157758328, f'{fio} рассылка уведомлений о плане работ включена автоматически.')
+            return
 
     if message.text.lower() in "мой налет сейчас налёт /nalet":
         if password == '':
@@ -815,23 +816,6 @@ def conversation(message):
             bot.send_message(157758328, f"Пользователю {fio} выдан налёт")
             return
 
-    if "логин" in message.text.lower() and "пароль" in message.text.lower():
-        mess_list = message.text.split()
-        if len(mess_list) == 4:
-            tab_number = mess_list[1]
-            password = mess_list[3]
-            request = (tab_number, password)
-            result = handler_db.insert_login_password(request, user_id)
-            if result:
-                bot.send_message(user_id, "\r \t Логин и пароль отправлен успешно, ожидайте.\n",
-                                 reply_markup=survey(message.chat.id))
-                bot.send_message(157758328,
-                                 f"{fio} Самостоятельно успешно добавил логин {tab_number} и пароль {password} в базу.")
-                return
-        else:
-            bot.send_message(157758328, f"{fio} прислал логин и пароль: \n {message.text}")
-            return
-
     if "просмотреть данные пользователя" in message.text.lower():  # ! РАБОТАЕТ!
         user = message.text.split()
         result = handler_db.select_all_data_of_person(user[-1])
@@ -848,25 +832,6 @@ def conversation(message):
 
     if "сколько бортпроводников" in message.text.lower():
         bot.send_message(user_id, f"К Telegram-боту подключено сейчас {handler_db.count_users()} бортпроводников.")
-        return
-
-    if '/news' in message.text.lower():
-        if messaging:
-            bot.send_message(user_id,
-                             'Автоматическое информирование о важных изменениях и новостях у вас включено по умолчанию. '
-                             'Как только будет важная информация - Вам будет прислано уведомление.',
-                             reply_markup=general_menu())
-            bot.send_message(157758328,
-                             f"{fio} Сообщение об автоматически подключенном информировании о важных новстях отправлено "
-                             f"пользователю.")
-        else:
-            bot.send_message(user_id,
-                             'Автоматическое информирование о важных изменениях у вас ранее было отключено. Чуть позже '
-                             'мы его включим Вам обратно, и будем прысылать сообщения при наличии важной информации.',
-                             reply_markup=general_menu())
-            bot.send_message(157758328,
-                             f"{fio} Информирование о важной информации было отключено, попросили включить..")
-
         return
 
     if message.text.lower() in '/donate пожертвовать на развитие поддержать перечислить деньги перевести задонатить':
@@ -919,26 +884,26 @@ def conversation(message):
 
     if "предоставить доступ" in message.text.lower():
         if len(message.text.split()) == 2:
-            bot.send_message(157758328, f"предоставить доступ\n"
-                                        f"user_id\n"
-                                        f"surname\n"
-                                        f"name\n"
-                                        f"city\n"
-                                        f"@username\n"
-                                        f"exp_date\n"
-                                        f"tab_number\n"
-                                        f"password\n"
-                                        f"1\n"
-                                        f"1\n"
-                                        f"1\n"
-                                        f"1\n"
-                                        f"1\n"
-                                        f"0\n"
-                                        f"msk_start\n"
-                                        f"msk")
+            bot.send_message(157758328, "предоставить доступ\n"
+                                        "user_id\n"
+                                        "surname\n"
+                                        "name\n"
+                                        "Санкт-Петербург\n"
+                                        "@username\n"
+                                        "exp_date\n"
+                                        "tab_number\n"
+                                        "password_стереть\n"
+                                        "1\n"
+                                        "1\n"
+                                        "1\n"
+                                        "1\n"
+                                        "1\n"
+                                        "0\n"
+                                        "msk_start\n"
+                                        "msk")
             return
         else:
-            bot.send_message(157758328, f"вызвали write_new_dict_user внести бользователя в general_db")
+            bot.send_message(157758328, "вызвали write_new_dict_user внести бользователя в general_db")
             write_new_dict_user(message)
             return
 
@@ -971,6 +936,40 @@ def conversation(message):
         bot.send_message(user_id,
                          'Буду благодарен, если предоставите актуальные данные и корректную информацию. @DeveloperAzarov')
         return
+
+    if len(message.text.split()) >= 2:
+        mess_list = message.text.split()
+        tab_number = mess_list[0]
+        password = mess_list[1]
+    if 4 <= len(tab_number) <= 6 and tab_number.isdigit() and len(message.text.split()) == 2:
+        request = (tab_number, password)
+        result = handler_db.insert_login_password(request, user_id)
+        if result:
+            bot.send_message(user_id, "\r \t Логин и пароль отправлен успешно, ожидайте.\n",
+                             reply_markup=survey(user_id))
+            bot.send_message(157758328,
+                             f"{fio} Самостоятельно успешно добавил логин {tab_number} и пароль {password} в базу.")
+            return
+        else:
+            bot.send_message(157758328, f"{fio} прислал логин и пароль: \n {message.text}")
+            return
+
+    if "логин" in message.text.lower() and "пароль" in message.text.lower():
+        mess_list = message.text.split()
+        if len(mess_list) == 4:
+            tab_number = mess_list[1]
+            password = mess_list[3]
+            request = (tab_number, password)
+            result = handler_db.insert_login_password(request, user_id)
+            if result:
+                bot.send_message(user_id, "\r \t Логин и пароль отправлен успешно, ожидайте.\n",
+                                 reply_markup=survey(message.chat.id))
+                bot.send_message(157758328,
+                                 f"{fio} Самостоятельно успешно добавил логин {tab_number} и пароль {password} в базу.")
+                return
+        else:
+            bot.send_message(157758328, f"{fio} прислал логин и пароль: \n {message.text}")
+            return
 
     message.text = message.text.replace('ё', 'е')
     message.text = find_punctuation(message.text)
@@ -1031,7 +1030,7 @@ def conversation(message):
             bot.send_message(message.chat.id, "Будет так, как Вы решили.", reply_markup=confirm_question(message))
             # TODO без этой строки никак, к ней привязываются кнопки, но выводятся сверху - пока это проблема
 
-        if not autoconfirm and password == '':
+        if not autoconfirm and not password:
             bot.send_message(user_id,
                              "Вам не приходят уведомления и не подтверждается план работ, так как Вы ранее не сообщали "
                              "свой логин и пароль. Если Вы хотите подтверждать план работ автоматически и получать план работ в качестве "
@@ -1047,12 +1046,23 @@ def conversation(message):
         check_permissions_for_everyone()
         return
 
-    if 'отказ от рассылки' in message.text or 'отказаться от рассылки' in message.text:
+    if 'отказ от рассылки' in message.text or 'отказаться от рассылки' in message.text or '/newsnote' in message.text:
         if messaging:
             bot.send_message(user_id, "Хорошо, мы обязательно отключим рассылку сообщений.")
             bot.send_message(157758328, f'{user_id} {name} {surname} попросил отказаться от рассылки')
+            prohibited = False
+            result = handler_db.update_messaging(prohibited, user_id)
+            if result is not None:
+                bot.send_message(user_id, "Рассылка сообщений отключена.")
+                bot.send_message(157758328, f'{fio} рассылка сообщений отключена автоматически.')
         if not messaging:
-            bot.send_message(user_id, "Рассылка сообщений у Вас уже отключена.")
+            bot.send_message(user_id, "Хорошо, мы обязательно включим рассылку сообщений.")
+            bot.send_message(157758328, f'{user_id} {name} {surname} попросил включить рассылки')
+            allowed = True
+            result = handler_db.update_messaging(allowed, user_id)
+            if result is not None:
+                bot.send_message(user_id, "Рассылка сообщений включена.")
+                bot.send_message(157758328, f'{fio} рассылка сообщений включена автоматически.')
         return
 
     if message.text in "заказать выходные заказ выходных заказать выходной":
@@ -1085,23 +1095,6 @@ def conversation(message):
                                   'Телеграм-Бота!', reply_markup=general_menu())
         bot.send_message(157758328, correct)
         return
-
-    if len(message.text.split()) >= 2:
-        mess_list = message.text.split()
-        tab_number = mess_list[0]
-        password = mess_list[1]
-    if 4 <= len(tab_number) <= 6 and tab_number.isdigit() and len(message.text.split()) == 2:
-        request = (tab_number, password)
-        result = handler_db.insert_login_password(request, user_id)
-        if result:
-            bot.send_message(user_id, "\r \t Логин и пароль отправлен успешно, ожидайте.\n",
-                             reply_markup=survey(user_id))
-            bot.send_message(157758328,
-                             f"{fio} Самостоятельно успешно добавил логин {tab_number} и пароль {password} в базу.")
-            return
-        else:
-            bot.send_message(157758328, f"{fio} прислал логин и пароль: \n {message.text}")
-            return
 
     if "добавить  информацию" in message.text:
         bot.send_message(user_id,
