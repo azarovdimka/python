@@ -140,6 +140,18 @@ def update_plan_notify(plan_notify, user_id):
         return result
 
 
+def update_messaging(messaging, user_id):
+    """Обновляет True/False в поле messaging: меняет разрешение присылать сообщения и рассылку """
+    with sqlite3.connect('general.db') as con:
+        cur = con.cursor()
+        sql_update_query = "UPDATE users SET messaging = ? WHERE user_id = ?"
+        data = (messaging, user_id)
+        cur.execute(sql_update_query, data)
+
+        result = cur.execute("SELECT EXISTS(select u.messaging from users u where u.user_id = ?)", (user_id,))
+        return result
+
+
 def update_night_notify(night_notify, user_id):
     """РАБОТАЕТ!!!! Добавляет подтверждение плана работ в базу данных для самостоятельного добавления пользователем"""
     with sqlite3.connect('general.db') as con:
