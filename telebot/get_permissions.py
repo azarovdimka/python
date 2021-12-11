@@ -24,7 +24,7 @@ def parser(user_id, tab_number, password, name):
         'submit': 'войти'
     }
 
-    if password == '' or not password or password == '0':  # TODO сделать в базе всем одинаково
+    if not password or password == '0':  # TODO сделать в базе всем одинаково
         return
 
     permissions = s.post(url, data=data, headers=dict(Referer=url))  # work_plan = response 200
@@ -36,7 +36,7 @@ def parser(user_id, tab_number, password, name):
     try:
         table = events[0]
     except Exception:
-        error = f"Не удалось проверить сроки действия ваших допусков и документов. Вероятно, в базе указан неверный логин {dict_users.users[user_id]['tab_number']} и пароль {dict_users.users[user_id]['password']}. Если пароль указан устаревший, Вы можете сообщить новый пароль в следующем формате (4 слова через пробел): логин ...... пароль ......."
+        error = f"Не удалось проверить сроки действия ваших допусков и документов. Вероятно, в базе указан неверный пароль {password}. Если пароль указан устаревший, Вы можете сообщить новый пароль в следующем формате (4 слова через пробел): логин ...... пароль ......."
         return error
 
     output_info = f'{name}, вот результат проверки сроков действия Ваших документов:\n'
@@ -85,7 +85,7 @@ def parser(user_id, tab_number, password, name):
         string = ''
 
         if now.day == deadline.day and now.month == deadline.month and now.year == deadline.year:
-            string += f"Сегодня истекает {document_name}\n"
+            string += f"- Сегодня истекает {document_name}\n"
             output_info += string
             found_result = True
         else:
