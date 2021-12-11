@@ -29,7 +29,7 @@ def cycle_plan_notify():
                     user_id)
                 fio = f'{user_id} {surname} {name} '  # TODO почему-то бывает периодчески по некоторым значениям возвращает None
                 counter_users += 1
-                if not password:
+                if not password or not plan_notify:
                     continue
                 if '07:00' > current_time > '00:00' and not night_notify:  # обычно ['key'] выдает ошибку в некоторых местах нет ключа keyerror хотя ключ есть, а с методом get ключ видит
                     continue
