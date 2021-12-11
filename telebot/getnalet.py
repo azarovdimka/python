@@ -23,6 +23,9 @@ def parser(user_id, tab_number,
         'submit': 'войти'
     }
 
+    if password == '' or not password or password == '0':  # TODO сделать в базе всем одинаково
+        return "Не удалось просмотреть Ваш налёт, так неизвестен Ваш пароль от OpenSky."
+
     try:
         nalet = s.post(url, data=data, headers=dict(Referer=url))  # work_plan = response 200
     except Exception as exc:
