@@ -101,6 +101,16 @@ def insert_login_password(message, user_id):
         return result
 
 
+def update_password_for_user(password, user_id):
+    """При помощи этой функции администратор может заменить пароль вместо пользователя удаленно."""
+    with sqlite3.connect('general.db') as con:
+        cur = con.cursor()
+        sql_update_query = "UPDATE users SET password = ? WHERE user_id = ?"
+        data = (password, user_id)
+        cur.execute(sql_update_query, data)
+        return
+
+
 def insert_utc_msk(message, user_id):
     """РАБОТАЕТ!!!! Добавляет часовые пояса utc msk в базу данных для самостоятельного добавления пользователем"""
     with sqlite3.connect('general.db') as con:
