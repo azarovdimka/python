@@ -41,7 +41,7 @@ def general_menu():
     return general_menu
 
 
-def survey(user_id):
+def survey(user_id, name):
     """Вопрос про часовые пояса. Все три вопроса грузятся сразу. Вызов функции прикрепляется в качестве параметра к reply_markup в bot.send_message"""
     hours_btns = types.InlineKeyboardMarkup(row_width=1)
     one = types.InlineKeyboardButton(text="1 - Вылет UTC, Прилёт МСК", callback_data="one")
@@ -59,11 +59,11 @@ def survey(user_id):
     day_nights_btns.add(yes, no)
 
     bot.send_message(user_id,
-                     f"`\t\t {dict_users.users[user_id]['name']}, укажите часовые пояса, в которых Вам было бы удобно получать план работ: UTC или MSK",
+                     f"`\t\t {name}, укажите часовые пояса, в которых Вам было бы удобно получать план работ: UTC или MSK",
                      reply_markup=hours_btns)
 
     bot.send_message(user_id,
-                     f"`\t\t {dict_users.users[user_id]['name']} подтверждать ли план работ в OpenSky автоматически при отправке уведомления Вам в Telegram?",
+                     f"`\t\t {name} подтверждать ли план работ в OpenSky автоматически при отправке уведомления Вам в Telegram?",
                      reply_markup=confirm_plan_btns)
 
     bot.send_message(user_id,
@@ -85,8 +85,8 @@ def callback_inline(call):
                     bot.send_message(157758328, f"{call.message.chat.id} часовые пояса установлены успешно: UTC МСК")
                     return
             except Exception as exc:
-                bot.send_message(157758328,
-                                 f"!!! проблема с установкой часовых поясов у пользователя {call.message.chat.id}: часовые пояса установлены успешно: UTC МСК")
+                bot.send_message(157758328, f"!!! проблема с установкой часовых поясов у пользователя "
+                                            f"{call.message.chat.id}: часовые пояса установлены успешно: UTC МСК")
 
         if call.data == "two":
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
@@ -171,9 +171,7 @@ def check_permissions_for_everyone():
         user_id, surname, name, tab_number, password, messaging, check_permissions, night_notify, plan_notify, \
         autoconfirm, time_depart = handler_db.fetch_user_for_plan(user_id)
         fio = f'{user_id} {surname} {name} '
-        if not password or not messaging or password == '0':  # TODO сделать в базе всем одинаково
-            continue
-        else:
+        if password and messaging and password != '0':  # TODO сделать в базе всем одинаково
             try:
                 documents_info = get_permissions.parser(user_id, tab_number, password, name)
                 bot.send_message(user_id, documents_info, reply_markup=document_btn)
@@ -197,12 +195,10 @@ def check_nalet_for_everyone():
     counter = 0
 
     for user_id in list_id:
-        user_id, surname, name, tab_number, password, messaging, check_permissions, night_notify, plan_notify, autoconfirm, time_depart = handler_db.fetch_user_for_plan(
-            user_id)
+        user_id, surname, name, tab_number, password, messaging, check_permissions, night_notify, plan_notify, \
+        autoconfirm, time_depart = handler_db.fetch_user_for_plan(user_id)
         fio = f'{user_id} {surname} {name} '
-        if not password or password == '0':  # TODO сделать в базе всем одинаково
-            continue
-        else:
+        if password and password != '0':  # TODO сделать в базе всем одинаково
             try:
                 nalet_info = getnalet.parser(user_id, tab_number, password)
                 bot.send_message(user_id, f'{name}, у Вас в этом месяце\n{nalet_info}', reply_markup=nalet_btn)
@@ -227,15 +223,15 @@ def check_new_documents(user_id):
         autoconfirm, time_depart = handler_db.fetch_user_for_plan(user_id)
         fio = f'{user_id} {surname} {name} '
 
-        if password == '' or not password or password == '0':  # TODO сделать в базе всем одинаково
-            continue
-        try:
-            new_document = check_news.parser(tab_number, password)
-            if new_document is not None:
-                bot.send_message(user_id, new_document, reply_markup=document_btn)  # TODO закомментировать
-        except Exception:
-            bot.send_message(157758328,
-                             f'{fio} не удалось отправить сообщение о новых документах, произошла ошибка: {traceback.format_exc()}')
+        if password and password != '0':  # TODO сделать в базе всем одинаково
+            try:
+                new_document = check_news.parser(tab_number, password)
+                if new_document is not None:
+                    bot.send_message(user_id, new_document, reply_markup=document_btn)  # TODO закомментировать
+            except Exception:
+                bot.send_message(157758328,
+                                 f'{fio} не удалось отправить сообщение о новых документах, произошла ошибка: '
+                                 f'{traceback.format_exc()}')
 
 
 def messaging_process(message):
@@ -248,6 +244,9 @@ def messaging_process(message):
         fio = f'{user_id} {name} {surname}'
         if messaging:
             try:
+                # with open('static/book.png', 'rb') as f:
+                #     text = "подпись к фотографии"
+                #     bot.send_photo(user_id, f, caption=text)
                 bot.send_message(user_id, f'{name}, {" ".join(mess[2:])}', reply_markup=general_menu())
                 counter_users += 1
                 bot.send_message(157758328, f"Сообщение успешно отравлено {fio}")  # TODO временно
@@ -287,7 +286,8 @@ def write_new_dict_user(message):  # TODO ВЫНЕСТИ В ОТДЕЛЬНЫЙ �
         time_arrive = mess[16]
     except Exception as exc:
         bot.send_message(157758328,
-                         f"Проблема с извлечением слов из полученной строки на вход: {mess} в general.db:\n\n {exc}\n\n Новый пользователь не был добавлен в БД.")
+                         f"Проблема с извлечением слов из полученной строки на вход: {mess} в general.db:\n\n {exc}\n\n "
+                         f"Новый пользователь не был добавлен в БД.")
         return
     try:
         handler_db.add_new_user_to_db_users(user_id, surname, name, city, link, exp_date, tab_number, password, access,
@@ -441,9 +441,9 @@ def conversation(message):
         """Отправляет пользовтелю информацию с фото"""
         try:  # TODO временный try except посмотреть почему падает в этом месте
             pic = baza.dictionary[id].get('photo')
+            text = baza.dictionary[id].get('answer')
             with open(pic, 'rb') as f:
-                bot.send_photo(user_id, f)
-            bot.send_message(user_id, baza.dictionary[id].get('answer'), parse_mode='Markdown')
+                bot.send_photo(user_id, f, caption=text, parse_mode='Markdown')
         except Exception as exc:
             bot.send_message(157758328,
                              f"Ошибка при отправке изображения из функции photo() при запросе {message.text}: {exc}")
@@ -921,6 +921,24 @@ def conversation(message):
             bot.send_message(157758328, f'{answer}')
             return
 
+    if "поменять пользователю" in message.text.lower():
+        if len(message.text.split()) == 2:
+            bot.send_message(157758328,
+                             'поменять пользователю\n'
+                             'user_id\n'
+                             'пароль\n'
+                             '_______\n'
+                             '#######')
+            return
+        else:
+            mess = message.text.split('\n')
+            user_id = mess[1]
+            password = mess[3]
+            handler_db.update_password_for_user(password, user_id)
+            result = handler_db.select_all_data_of_person(user_id)
+            bot.send_message(157758328, result)
+            return
+
     if "три последние пользователя в базе" in message.text.lower():
         last_users_in_db = handler_db.get_three_last()
         for i in last_users_in_db:
@@ -946,7 +964,7 @@ def conversation(message):
         result = handler_db.insert_login_password(request, user_id)
         if result:
             bot.send_message(user_id, "\r \t Логин и пароль отправлен успешно, ожидайте.\n",
-                             reply_markup=survey(user_id))
+                             reply_markup=survey(user_id, name))
             bot.send_message(157758328,
                              f"{fio} Самостоятельно успешно добавил логин {tab_number} и пароль {password} в базу.")
             return
