@@ -409,7 +409,8 @@ def find(question, user_request):
 @bot.message_handler(content_types=["text"])  #
 def conversation(message):
     """Модуль для общения и взаимодействия с пользователем. Декоратор будет вызываться когда боту напишут текст."""
-    if message.text.lower() in "обратная связь /feedback":
+    if message.text.lower() in "обратная связь /feedback Написать разработчику автору азарову программисту справка как " \
+                               "сообщить о проблеме ошибке неточности устаревшей информации работает неправильно /write":
         def feedback(message):
             if "отмена" in message.text.lower():
                 bot.send_message(user_id,
@@ -437,7 +438,7 @@ def conversation(message):
         bot.send_message(157758328, f"Поймали ошибку при извлечении данных пользователя из базы: {message.chat.id} \n"
                                     f"при запросе: {message.text}: {exc}")
 
-    def photo():
+    def get_photo():
         """Отправляет пользовтелю информацию с фото"""
         try:  # TODO временный try except посмотреть почему падает в этом месте
             pic = baza.dictionary[id].get('photo')
@@ -446,7 +447,7 @@ def conversation(message):
                 bot.send_photo(user_id, f, caption=text, parse_mode='Markdown')
         except Exception as exc:
             bot.send_message(157758328,
-                             f"Ошибка при отправке изображения из функции photo() при запросе {message.text}: {exc}")
+                             f"Ошибка при отправке изображения из функции get_photo() при запросе {message.text}: {exc}")
         bot.send_message(157758328, "Выдали фото по запросу: " + message.text)
 
     def open_link():
@@ -517,7 +518,7 @@ def conversation(message):
                     elif 'просмотреть' in question:  # так надо 2 раза
                         open_link()
                     elif 'изображение' in question:  # так надо 2 раза
-                        photo()
+                        get_photo()
                     else:  # так надо 2 раза
                         bot.send_message(user_id, baza.dictionary[id]['answer'], reply_markup=general_menu(),
                                          parse_mode='Markdown')
@@ -536,7 +537,7 @@ def conversation(message):
                 elif 'просмотреть' in question:  # так надо 2 раза
                     open_link()
                 elif 'изображение' in question:  # так надо 2 раза
-                    photo()
+                    get_photo()
                 else:  # так надо 2 раза
                     bot.send_message(user_id, baza.dictionary[id]['answer'], reply_markup=general_menu(),
                                      parse_mode='Markdown')
@@ -584,7 +585,7 @@ def conversation(message):
                     found_result = True
                     photo = None
                 if photo:
-                    photo()
+                    get_photo()
                     found_result = True
                 if link is None:
                     bot.send_message(user_id, each_answer, reply_markup=general_menu(), parse_mode='Markdown')
@@ -816,6 +817,14 @@ def conversation(message):
             bot.send_message(157758328, f"Пользователю {fio} выдан налёт")
             return
 
+    if "изменить город пользователя" in message.text.lower():
+        user = message.text.split()[-2]
+        city = message.text.split()[-1]
+        handler_db.update_city(city, user)
+        result = handler_db.select_all_data_of_person(user)
+        bot.send_message(157758328, result)
+        return
+
     if "просмотреть данные пользователя" in message.text.lower():  # ! РАБОТАЕТ!
         user = message.text.split()
         result = handler_db.select_all_data_of_person(user[-1])
@@ -981,7 +990,7 @@ def conversation(message):
             result = handler_db.insert_login_password(request, user_id)
             if result:
                 bot.send_message(user_id, "\r \t Логин и пароль отправлен успешно, ожидайте.\n",
-                                 reply_markup=survey(message.chat.id))
+                                 reply_markup=survey(user_id, name))
                 bot.send_message(157758328,
                                  f"{fio} Самостоятельно успешно добавил логин {tab_number} и пароль {password} в базу.")
                 return
@@ -1135,7 +1144,7 @@ def conversation(message):
         bot.send_message(157758328, "Попросили уточнить какой инструктор интересует")
         return
 
-    if 'телефон' == message.text or 'номер телефона' == message.text or 'телефоны' in message.text or 'номера' in message.text:  # TODO наверное не очень семантично здесь размещать обработку этого запроса
+    if 'телефон' == message.text or 'номер телефона' == message.text or "добавочный номер" == message.text or 'телефоны' in message.text or 'номера' in message.text:  # TODO наверное не очень семантично здесь размещать обработку этого запроса
         bot.send_message(user_id, 'Чей именно телефон Вас инетересует?', reply_markup=general_menu())
         bot.send_message(157758328, "Попросили уточнить чей телефон нужен")
         return  # TODO быть может га обработку подобных запросов, при выдаче ответов в строгом соответвии №1 добвлять ответы сначала в список, а потом считать, и если ответов много, то задавать уточняющий вопрос
@@ -1153,6 +1162,16 @@ def conversation(message):
     if 'особенности рейса' == message.text:  # TODO наверное не очень семантично здесь размещать обработку этого запроса
         bot.send_message(user_id, 'Какой город Вас инетересует?', reply_markup=general_menu())
         bot.send_message(157758328, "При запросе особенности рейса, попросили уточнить какой город интересует")
+        return
+
+    if 'питание' == message.text:  # TODO наверное не очень семантично здесь размещать обработку этого запроса
+        bot.send_message(user_id, 'Какое питание Вас инетересует?', reply_markup=general_menu())
+        bot.send_message(157758328, "При запросе питание, попросили уточнить какое питание интересует")
+        return
+
+    if 'самолет' == message.text:  # TODO наверное не очень семантично здесь размещать обработку этого запроса
+        bot.send_message(user_id, 'Какой самолет Вас инетересует?', reply_markup=general_menu())
+        bot.send_message(157758328, "При запросе самолет, попросили уточнить какой самолет интересует")
         return
 
     if 'супервайзер' == message.text:  # TODO наверное не очень семантично здесь размещать обработку этого запроса
@@ -1179,7 +1198,8 @@ def conversation(message):
                          "9.  проверить допуски у всех бортпроводников - вызывает функцию check_permissions_for_everyone()\n\n"
                          "10. сколько бортпроводников - возвращает длину базы данных\n\n"
                          "11. удалить пользователя <user_id>- вызывает функцию delete_user_from_db и возвращает результат\n\n"
-                         "12. просмотреть данные пользователя <user_id> - вызывает select() возвращает сырой кортеж из базы\n\n")
+                         "12. просмотреть данные пользователя <user_id> - вызывает select() возвращает сырой кортеж из базы\n\n"
+                         "13. изменить город пользователя user_id city")
         return
 
     # TODO сделать так чтобы вычленял из слов запятые и вопросительные знаки и удалял их
@@ -1195,7 +1215,7 @@ def conversation(message):
                     open_link()
                     found_result = True
                 elif 'изображение' in question:  # так надо 2 раза
-                    photo()
+                    get_photo()
                     found_result = True
                 else:  # так надо 2 раза
                     try:
@@ -1230,8 +1250,6 @@ def conversation(message):
                              'Если Вам не удалось найти то, что Вы искали - попробуйте упростить свой запрос.',
                              reply_markup=general_menu(),
                              parse_mode='Markdown')
-            print(f"при поиске '{message.text}' в случайном порядке без отсечения окончаний возникала ошибка "
-                  f"{type(exc).__name__} {traceback.format_exc()} ")
             bot.send_message(157758328,
                              f"при поиске '{message.text}' в случайном порядке без отсечения окончаний возникала ошибка "
                              f"{type(exc).__name__} {traceback.format_exc()} ")
