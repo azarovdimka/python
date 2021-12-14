@@ -174,6 +174,18 @@ def update_night_notify(night_notify, user_id):
         return result
 
 
+def update_city(city, user_id):
+    """Меняет город у пользователя в базе данных"""
+    with sqlite3.connect('general.db') as con:
+        cur = con.cursor()
+        sql_update_query = "UPDATE users SET city = ? WHERE user_id = ?"
+        data = (city, user_id)
+        cur.execute(sql_update_query, data)
+
+        result = cur.execute("SELECT EXISTS(select u.city from users u where u.user_id = ?)", (user_id,))
+        return result
+
+
 def list_user_id():
     """РАБОТАЕТ!!!! Используется в цикле для извлечения списка user_id для дальнейшего переборка списка циклом по порядку для
     проверки планов работ в цикле."""
