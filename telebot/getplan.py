@@ -58,7 +58,8 @@ cities = {
     'Бранденб-1': 'Бранденбург',
     'Владсток': 'Владивосток',
     'Астрахан': 'Астрахань',
-    'Тельавив-3': 'Тель-Авив'
+    'Тельавив-3': 'Тель-Авив',
+    'Дубай-1': 'Дубай'
 
 }
 
@@ -121,7 +122,8 @@ cities_code = {'Внуково-A': 'VKO',  # 'Внуково    ',
                'Хургада-2': 'HRG',
                'Нурсулта-1': 'NQZ',
                'Красндар-1': 'KRR',
-               'Архангск': 'ARH'
+               'Архангск': 'ARH',
+               'Дубай-1': 'DXB',
                }
 
 
@@ -165,9 +167,7 @@ def extract_destination(s):
     destination = s[-21:-5]
 
 
-def parser(user_id, tab_number, password,
-           autoconfirm,
-           time_depart):  # это надо было все обернуть в функцию чтобы потом при импорте вызвать модуль.функция()
+def parser(user_id, tab_number, password, autoconfirm, time_depart):
     url = 'https://edu.rossiya-airlines.com/workplan/'
 
     s = requests.Session()
@@ -356,8 +356,6 @@ def parser(user_id, tab_number, password,
         string_copy = string
 
         if current_month <= plan_month:
-            # (главное, чтобы плановый месяц был не меньше текущего) сравниваем сначала месяц чтобы не получилось 31.07 больше чем 20.08 (чтобы не вылезала дата из из прошлого старого месяца)
-            # если текущий месяц меньше или такой же как в плане
             if current_dt_minus_4h <= string:  # сравниваем день
                 output_info += string
                 continue
@@ -376,4 +374,4 @@ def parser(user_id, tab_number, password,
 # # TODO РАСКОМЕНТИЛ ЛИ ТЫ RETURN!!!!!!!!!!!!!!!!!!!!!!!!!
 
 # TODO ПРОВЕРЬ ПРИНТЫ ЛОГИН И ПАРОЛЬ!!!!!!!!!!!!!!!!!!!!!!!!!
-# parser(305665787, '125512', 'Ghjnjnbg1', False)
+# parser(305665787, '125512', 'Ghjnjnbg1', False, 'msk_start')  # подкопаев
