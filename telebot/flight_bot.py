@@ -1139,7 +1139,7 @@ def conversation(message):
         bot.send_message(157758328, correct)
         return
 
-    if 'инструктор' == message.text or 'инструктора' == message.text:  # TODO наверное не очень семантично здесь размещать обработку этого запроса
+    if 'инструктор' == message.text or 'инструктора' == message.text:
         bot.send_message(user_id, 'Какой именно инструктор Вас инетересует?', reply_markup=general_menu())
         bot.send_message(157758328, "Попросили уточнить какой инструктор интересует")
         return
@@ -1147,34 +1147,34 @@ def conversation(message):
     if 'телефон' == message.text or 'номер телефона' == message.text or "добавочный номер" == message.text or 'телефоны' in message.text or 'номера' in message.text:  # TODO наверное не очень семантично здесь размещать обработку этого запроса
         bot.send_message(user_id, 'Чей именно телефон Вас инетересует?', reply_markup=general_menu())
         bot.send_message(157758328, "Попросили уточнить чей телефон нужен")
-        return  # TODO быть может га обработку подобных запросов, при выдаче ответов в строгом соответвии №1 добвлять ответы сначала в список, а потом считать, и если ответов много, то задавать уточняющий вопрос
+        return
 
-    if 'почта' == message.text:  # TODO наверное не очень семантично здесь размещать обработку этого запроса
+    if 'почта' == message.text:
         bot.send_message(user_id, 'Чья именно почта Вас инетересует?', reply_markup=general_menu())
         bot.send_message(157758328, "Попросили уточнить какая именно почта интересует")
         return
 
-    if 'особенности' == message.text:  # TODO наверное не очень семантично здесь размещать обработку этого запроса
+    if 'особенности' == message.text:
         bot.send_message(user_id, 'Какие именно особенности Вас инетересуют?', reply_markup=general_menu())
         bot.send_message(157758328, "Попросили уточнить какие именно особенности интересуют")
         return
 
-    if 'особенности рейса' == message.text:  # TODO наверное не очень семантично здесь размещать обработку этого запроса
+    if 'особенности рейса' == message.text:
         bot.send_message(user_id, 'Какой город Вас инетересует?', reply_markup=general_menu())
         bot.send_message(157758328, "При запросе особенности рейса, попросили уточнить какой город интересует")
         return
 
-    if 'питание' == message.text:  # TODO наверное не очень семантично здесь размещать обработку этого запроса
+    if 'питание' == message.text:
         bot.send_message(user_id, 'Какое питание Вас инетересует?', reply_markup=general_menu())
         bot.send_message(157758328, "При запросе питание, попросили уточнить какое питание интересует")
         return
 
-    if 'самолет' == message.text:  # TODO наверное не очень семантично здесь размещать обработку этого запроса
+    if 'самолет' == message.text:
         bot.send_message(user_id, 'Какой самолет Вас инетересует?', reply_markup=general_menu())
         bot.send_message(157758328, "При запросе самолет, попросили уточнить какой самолет интересует")
         return
 
-    if 'супервайзер' == message.text:  # TODO наверное не очень семантично здесь размещать обработку этого запроса
+    if 'супервайзер' == message.text:
         bot.send_message(user_id, 'Какой именно супервайзер Вас инетересует?', reply_markup=general_menu())
         bot.send_message(157758328, "Попросили уточнить какой именно супервайзер интересуют")
         return
@@ -1202,7 +1202,6 @@ def conversation(message):
                          "13. изменить город пользователя user_id city")
         return
 
-    # TODO сделать так чтобы вычленял из слов запятые и вопросительные знаки и удалял их
     """1 - ищет в строгом соответсвии"""
     if not found_result:  # СТРОГОЕ СООТВЕТСТВИЕ
         for id in baza.dictionary:
@@ -1237,7 +1236,7 @@ def conversation(message):
             found_result = find_non_strict_accordance(message)
             if not found_result:
                 found_result = find_non_strict_accordance_2(message)
-        except Exception as exc:  # TODO тго скачать ищет, скачать тго не ищет keyerror 'link' с ТГО проблема подогнана под ответ, но сама проблема не устранена
+        except Exception as exc:
             bot.send_message(157758328, f"при поиске '{message.text}' в нестрогом соответствии возникала ошибка "
                                         f"{type(exc).__name__} {exc}")
 
