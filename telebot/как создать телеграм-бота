@@ -12,7 +12,7 @@ pip3 install pyTelegramBotAPI
 
 копируем файлы в директорию /usr/local/bin
 
-Создайте файл на Вашем ПК с именем bot.service с таким содержанием:
+Создайте файл на Вашем ПК с именем flight_bot.service с таким содержанием:
 
 [Unit]
 Description=Telegram bot 'Town Wars'
@@ -23,16 +23,56 @@ After=network.target
 Type=simple
 User=root
 WorkingDirectory=/usr/local/bin/bot
-ExecStart=/usr/bin/python3 /usr/local/bin/bot/bot.py
+ExecStart=/usr/bin/python3 /usr/local/bin/bot/flight_bot.py
 RestartSec=10
 Restart=always
 
 [Install]
 WantedBy=multi-user.target
 
-копируем bot.service в каталог /etc/systemd/system
+копируем flight_bot.service в каталог /etc/systemd/system
+
+необходимо включить и запустить flight_bot.service:
+systemctl enable flight_bot.service
+systemctl start flight_bot.service
+
+
 
 systemctl daemon-reload
-systemctl enable bot
-systemctl start bot
-systemctl status bot
+systemctl enable flight_bot
+systemctl start flight_bot
+systemctl status flight_bot
+
+стикеры сохраняются прапвой клавиешей настикер и save image as
+
+
+получить номера процессов pidof httpd
+убить все процессы kill -9 <полученныеномера>
+
+полчуить статус системы systemctl status httpd
+
+формат создания расписания в crontab
+crontab -e  режим редактирвоания crontab
+insert
+0 0,8,16 * * * systemctl restart flight_bot
+esc
+:wq
+
+
+m h day_of_month month day_of_week comand_to_run
+30 17 * * 2 curl http://www.google.com - запустит во вторник в 17:30
+* * * * * systemctl restart flight_bot - каждую минуту будет запускать файл
+* * * * * - бцдет запускаться каждую минуту каждый час, каждый день месяца
+0,30 * * * * - перечисляет значения одного параметра - запускаться будет каждые 30 минут
+0 */3 * * * - запускать будет каждые три часа
+
+crontab -l посмотреть содержимое файла не изменяя его
+crontab - это простой текстовый файл
+
+: двоеточие для команды
+чтобы начать что-то писать insert
+
+:wq выйти из редактора vim с сохранением введенных данных
+
+journalctl -u flight_bot - посмотреть лог ошибок связанный с файлом
+
