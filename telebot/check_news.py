@@ -3,6 +3,20 @@ import dict_users
 from bs4 import BeautifulSoup
 
 
+def document_analyze(new_document):
+    """Анализирует название документа на наличие ненужных слов"""
+    new_document = new_document[:-23]
+    if "Объявление" in new_document:
+        new_document = new_document[29:]
+    if "Инструкция" in new_document:
+        new_document = new_document[13:]
+    if "(изм." in new_document:
+        new_document = new_document[:-10]
+    if "изд." in new_document:
+        new_document = new_document[:-10]
+    return new_document
+
+
 def parser(tab_number,
            password):  # это надо было все обернуть в функцию чтобы потом при импорте вызвать модуль.функция()
     url = 'https://edu.rossiya-airlines.com/'
@@ -45,11 +59,12 @@ def parser(tab_number,
         name_button = cells[3].text  # Скачать или Подтвердить
 
         if name_button == "Скачать":
+            name_document = document_analyze(name_document)
             doc_list.append(name_document)
     if len(doc_list) != 0:
         report += f"Появились новые документы в OpenSky: \n- "
         for doc in doc_list:
-            report += doc[:-23] + '\n- '
+            report += doc + '\n- '
         # print(report[:-2])
         return report[:-2]
     else:
