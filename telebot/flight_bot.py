@@ -201,10 +201,13 @@ def check_nalet_for_everyone():
         if password and password != '0':  # TODO сделать в базе всем одинаково
             try:
                 nalet_info = getnalet.parser(user_id, tab_number, password)
-                bot.send_message(user_id, f'{name}, у Вас в этом месяце\n{nalet_info}', reply_markup=nalet_btn)
-                bot.send_message(157758328, f'Пользователю {fio} отправлен налёт.')
-                counter += 1
-                time.sleep(3)
+                if "Не удалось" in nalet_info:
+                    continue
+                else:
+                    bot.send_message(user_id, f'{name}, у Вас в этом месяце\n{nalet_info}', reply_markup=nalet_btn)
+                    bot.send_message(157758328, f'Пользователю {fio} отправлен налёт.')
+                    counter += 1
+                    time.sleep(3)
             except Exception as exc:
                 bot.send_message(157758328, f'{fio} не удалось отправить налёт: {exc}')
                 continue
@@ -212,26 +215,24 @@ def check_nalet_for_everyone():
 
 
 def check_new_documents(user_id):
-    """Проверяет выложены ли новые документы в OpenSky"""
+    """Проверяет выложены ли новые документы в OpenSky для конкретного пользователя"""
     document_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()  # что такое двоеточие и что оно дает???
-    btn = types.InlineKeyboardButton(text="Открыть подробнее в OpenSky",
-                                     url='https://edu.rossiya-airlines.com/')
+    btn = types.InlineKeyboardButton(text="Открыть подробнее в OpenSky", url='https://edu.rossiya-airlines.com/')
     document_btn.add(btn)
 
-    for user_id in list_id:
-        user_id, surname, name, tab_number, password, messaging, check_permissions, night_notify, plan_notify, \
-        autoconfirm, time_depart = handler_db.fetch_user_for_plan(user_id)
-        fio = f'{user_id} {surname} {name} '
+    user_id, surname, name, tab_number, password, messaging, check_permissions, night_notify, plan_notify, \
+    autoconfirm, time_depart = handler_db.fetch_user_for_plan(user_id)
+    fio = f'{user_id} {surname} {name} '
 
-        if password and password != '0':  # TODO сделать в базе всем одинаково
-            try:
-                new_document = check_news.parser(tab_number, password)
-                if new_document is not None:
-                    bot.send_message(user_id, new_document, reply_markup=document_btn)  # TODO закомментировать
-            except Exception:
-                bot.send_message(157758328,
-                                 f'{fio} не удалось отправить сообщение о новых документах, произошла ошибка: '
-                                 f'{traceback.format_exc()}')
+    if password and password != '0':  # TODO сделать в базе всем одинаково
+        try:
+            new_document = check_news.parser(tab_number, password)
+            if new_document is not None:
+                bot.send_message(user_id, new_document, reply_markup=document_btn)  # TODO закомментировать
+        except Exception:
+            bot.send_message(157758328,
+                             f'{fio} не удалось отправить сообщение о новых документах, произошла ошибка: '
+                             f'{traceback.format_exc()}')
 
 
 def messaging_process(message):
@@ -347,7 +348,7 @@ def verification(message):
         return True
     else:
         bot.send_message(message.chat.id,
-                         'Прошу Вас пройти верификацию, для этого Вам необходимо отправить сюда фото своего штабного '
+                         'Вам необходимо пройти верификацию пользователя, для этого отправьте сюда фото своего штабного '
                          'пропуска. Нам необходимо убедиться, что Вы летающий '
                          'бортпроводник АК "Россия". На время ожидания доступ временно ограничен.')
         bot.send_message(157758328,
@@ -378,14 +379,7 @@ def welcome(message):
         bot.send_sticker(message.chat.id, sti)
 
     bot.send_message(message.chat.id,
-                     '\t Привет!\n'
-                     '\t Я робот, призванный отвечать на вопросы бортпроводников: '
-                     'вопросы к МКК и КПК, справки, часы работы, телефоны, представители разных служб и в разных городах, '
-                     'настройки почты, названия самолетов по бортовым номерам, особенности рейсов, какой сейчас рацион, '
-                     'расшифровки аббревиатур и сокращений, ответы на тесты, как закрыть больничный, инструктажи, команды, '
-                     'высылаю уведомления о предстоящем плане работ и т.д. И разработчик '
-                     'ждёт ваших предложений и идей, участвуйте в развитии приложения №1 для бортпроводников АК "Россия"!\n'
-                     '\t Вопросы задавать лучше коротко.'
+                     '\t Это служебный Telegram-бот для бортпроводников АК "Россия".'
                      .format(message.from_user, bot.get_me()), reply_markup=general_menu())
     new_user_notification = "Пользователь {0.first_name} {0.last_name} @{0.username} id {0.id} подключился к телеграм-боту." \
         .format(message.from_user, message.from_user, message.from_user,
@@ -409,34 +403,37 @@ def find(question, user_request):
 @bot.message_handler(content_types=["text"])  #
 def conversation(message):
     """Модуль для общения и взаимодействия с пользователем. Декоратор будет вызываться когда боту напишут текст."""
+    if not verification(message):
+        return
+    # try:
+    user_id, surname, name, tab_number, password, messaging, check_permissions, night_notify, plan_notify, \
+    autoconfirm, time_depart = handler_db.fetch_user_for_plan(message.chat.id)
+    fio = f'{user_id} {name} {surname}'
+    # except Exception as exc:
+    #     bot.send_message(157758328,
+    #                      f"Ошибка при извлечении данных пользователя \n "
+    #                      f"{fio}\n"
+    #                      f"message.text: {message.text}\n"
+    #                      f"ошибка: {exc}")
+    #     fio = '{0.first_name} {0.last_name} @{0.username} id {0.id}'.format(message.from_user, message.from_user, message.from_user,
+    #             message.from_user)
+
     if message.text.lower() in "обратная связь /feedback Написать разработчику автору азарову программисту справка как " \
                                "сообщить о проблеме ошибке неточности устаревшей информации работает неправильно /write":
         def feedback(message):
             if "отмена" in message.text.lower():
-                bot.send_message(user_id,
+                bot.send_message(message.chat.id,
                                  f"Если надумаете в следующий раз что-то мне сообщить - буду рад узнать.")
                 bot.send_message(157758328, f"{fio} передумал оставлять обратную связь.")
             else:
                 bot.send_message(157758328, f"{fio} оставил обратную связь: \n {message.text}")
 
-        text = f" Если у Вас есть какие-то замечания или предложения, либо у " \
-               f"Вас есть какой-то вопрос или просто хотите что-то сообщить - пожалуйста, отправьте мне обратную связь в " \
+        text = f" Если у Вас есть какие-то замечания, предложения или вопрос - отправьте мне обратную связь в " \
                f"ответном сообщении. Телеграм-бот ждет вашего сообщения. Если Вы передумали оставлять обратную связь, " \
                f"отправьте слово отмена."
         msg = bot.send_message(message.chat.id, text)
         bot.register_next_step_handler(msg, feedback)
         return
-
-    if not verification(message):
-        return
-
-    try:
-        user_id, surname, name, tab_number, password, messaging, check_permissions, night_notify, plan_notify, \
-        autoconfirm, time_depart = handler_db.fetch_user_for_plan(message.chat.id)
-        fio = f'{user_id} {name} {surname}'
-    except Exception as exc:
-        bot.send_message(157758328, f"Поймали ошибку при извлечении данных пользователя из базы: {message.chat.id} \n"
-                                    f"при запросе: {message.text}: {exc}")
 
     def get_photo():
         """Отправляет пользовтелю информацию с фото"""
@@ -504,8 +501,7 @@ def conversation(message):
     def find_non_strict_accordance(message):
         """2 - Ищет не в строгом соответсвии."""
         if 4 <= len(message.text) <= 5:
-            bot.send_message(user_id, "Пожалуйста, уточните свой вопрос", reply_markup=general_menu(),
-                             parse_mode='Markdown')
+            bot.send_message(user_id, "Пожалуйста, уточните свой вопрос", reply_markup=general_menu())
             bot.send_message(user_id, f'2.1 Пользователя {fio} попросили уточнить вопрос {message.text}')
             found_result = True
             return found_result
@@ -760,8 +756,8 @@ def conversation(message):
                                              url='https://edu.rossiya-airlines.com/workplan/')
             plan_btn.add(btn)
             bot.send_message(user_id, plan, reply_markup=plan_btn, parse_mode='html')
-            bot.send_message(157758328, plan, parse_mode='html')
-            bot.send_message(157758328, f"{fio} получил план работ по индивидуальному запросу")
+            # bot.send_message(157758328, plan, parse_mode='html')
+            # bot.send_message(157758328, f"{fio} получил план работ по индивидуальному запросу")
             return
 
     if '/plan' in message.text.lower():  # TODO сделать потом чтобы автоматически менял статус в словаре
@@ -833,8 +829,7 @@ def conversation(message):
 
     if "удалить пользователя" in message.text.lower():
         user = message.text.split()
-        handler_db.delete_user_from_db(user[
-                                           -1])  # ! РАБОТАЕТ! путем выхода и повторного соединения с базой: иначе говорил что пользователь все равно есть
+        handler_db.delete_user_from_db(user[-1])
         result = handler_db.select_all_data_of_person(user[-1])
         bot.send_message(157758328, result)
         return
@@ -858,7 +853,7 @@ def conversation(message):
                          '*Содержание и обслуживание телеграм бота:*\n'
                          '1. *Доменное имя* = 1000 руб./год;\n'
                          '2. *Хостинг* - аренда сервера = 3600 руб./год;\n'
-                         '3. *SSL-секртификат* безопасности для защищенной передачи данных = 2900 руб./мес;\n'
+                         '3. *SSL-секртификат* безопасности для защищенной передачи данных = 2900 руб./год;\n'
                          '*Вознаграждения:*\n'
                          '4. *За найденные ошибки, новую информацию, приведенного друга* по 100 руб пользователю за каждый факт = 400 руб./мес'
                          '5. *Аутсорсинг* - переодическое привлечение более опытных программистов 1-2 раза в месяц, час работы их стоит = 1000 руб./час.\n'
