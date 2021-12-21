@@ -52,7 +52,7 @@ def parser(user_id, tab_number,
     try:
         table = tables[0]  # bp дебага смотрим вложенную таблицу
     except Exception:
-        return f"\t *Не удалось посчитать налёт.* \n\t либо Вы еще никуда не летали в этом месяце, либо у Вас неверно " \
+        return f"\t Не удалось посчитать налёт.* \n\t либо Вы еще никуда не летали в этом месяце, либо у Вас неверно " \
                f"указан логин {tab_number} и пароль {password}."
     thead = table.contents[2]
     rows = thead.contents
