@@ -6,7 +6,7 @@ import os
 def write_check_relevance(plan, chat_id, password,
                           plan_notify):  # TODO НЕ ЗАБУДЬ ПОМЕНЯТЬ АДРЕС!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     file_path = "/usr/local/bin/bot/plans/plans" + str(
-        chat_id) + ".txt"  # "C:\\PycharmProjects\\Probe\\мои примеры\\GitHub\\telebot\\plans\\plans" + str(chat_id) + ".txt"  #      "/usr/local/bin/bot/plans/plans" + str(chat_id) + ".txt" #
+        chat_id) + ".txt"  # "C:\\PycharmProjects\\Probe\\мои примеры\\GitHub\\telebot\\plans\\plans" + str(chat_id) + ".txt"  #  "/usr/local/bin/bot/plans/plans" + str(chat_id) + ".txt" #
 
     if (password == '' or not password or password == '0') or not plan_notify:
         return None
@@ -34,14 +34,16 @@ def write_check_relevance(plan, chat_id, password,
         if len(plan_list) > 1:
             del plan_list[-1]
             try:
-                if file_lines[1] != plan_list[1] and (len(file_lines) - len(plan_list) == 1):
-                    with open(file_path, 'w', encoding='utf-8') as modified:
-                        modified.write(plan)  # изменения в файл запишет
-                        return  # но уведомлять не будет если ночью просто прошел день, а соовтетсенно рейс отлетал, а нового ничего не появилось
-                else:
-                    with open(file_path, 'w', encoding='utf-8') as modified:
-                        modified.write(plan)  # изменения в файл запишет
-                        return plan  # уведомит новым планом
+
+                if len(plan_list) > 1 and len(file_lines) > 1:  # если это не: "рейсов не найдено"
+                    if file_lines[1] != plan_list[1] and (len(file_lines) - len(plan_list) == 1):
+                        with open(file_path, 'w', encoding='utf-8') as modified:
+                            modified.write(plan)  # изменения в файл запишет
+                            return  # но уведомлять не будет если ночью просто прошел день, а соовтетсенно рейс отлетал, а нового ничего не появилось
+                    else:
+                        with open(file_path, 'w', encoding='utf-8') as modified:
+                            modified.write(plan)  # изменения в файл запишет
+                            return plan  # уведомит потом новым планом
 
             except Exception as exc:  # todo попробовать перенести except в 42 строку чтобы witn open два раза не вызывать
                 exception_logger.writer(exc=exc, request='сравнение старого и нового плана на предмет прошедшего рейса',
