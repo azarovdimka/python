@@ -8,12 +8,27 @@ def document_analyze(new_document):
     new_document = new_document[:-23]
     if "Объявление" in new_document:
         new_document = new_document[29:]
+    if "Т-" in new_document:
+        words_list = new_document.split()
+        new_document = ' '.join(words_list[1:-1])
     if "Инструкция" in new_document:
-        new_document = new_document[13:]
+        if '_' in new_document:
+            words_list = new_document.split('_')
+            new_document = ' '.join(words_list[1:-1])
+        else:
+            words_list = new_document.split()
+            new_document = ' '.join(words_list[1:-1])
     if "(изм." in new_document:
         new_document = new_document[:-10]
     if "изд." in new_document:
         new_document = new_document[:-10]
+    if "ГД" in new_document:
+        if '_' in new_document:
+            words_list_ = new_document.split('_')
+            new_document = ' '.join(words_list_[1:])
+        else:
+            words_list_space = new_document.split()
+            new_document = ' '.join(words_list_space[1:-1])
     return new_document
 
 
@@ -54,6 +69,9 @@ def parser(tab_number,
 
     for tr in rows:
         cells = tr.contents
+        if len(cells) == 0:
+            a = str(rows[1]).split('>')[5][:-3]
+            return f"Необходимо срочно ознакомиться с документом: \n- {a}"
         name_document = cells[1].text
         date_exp = cells[2].text
         name_button = cells[3].text  # Скачать или Подтвердить
