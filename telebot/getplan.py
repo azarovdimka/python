@@ -170,7 +170,6 @@ def extract_destination(s):
 
 def parser(user_id, tab_number, password, autoconfirm, time_depart):
     url = 'https://edu.rossiya-airlines.com/workplan/'
-
     s = requests.Session()
 
     data = {
@@ -182,10 +181,11 @@ def parser(user_id, tab_number, password, autoconfirm, time_depart):
         'userpass': password,
         'domain': 'stc.local',
         'submit': 'войти'
-    }  # TODO ПРОВЕРЬ ПРИНТЫ ЛОГИН И ПАРОЛЬ!!!!!!!!!!!!!!!!!!!!!!!!!
+    }
 
     if password == '' or not password or password == '0':  # TODO сделать в базе всем одинаково
         return
+
     if autoconfirm:
         work_plan = s.post(url, data=data, headers=dict(Referer=url))  # work_plan = response 200
         month_year = time.strftime('%m.%Y')
@@ -256,6 +256,14 @@ def parser(user_id, tab_number, password, autoconfirm, time_depart):
             hour = start_dt.strftime('%H')
             minute = start_dt.strftime('%M')
             start_dt = f'{day}.{month} {hour}:{minute}'
+        # if time_depart == 'ekb_start':
+        #     dt_object = datetime.strptime(depart_utc_dt, '%d.%m %H:%M').replace(tzinfo=pytz.utc)
+        #     start_dt = dt_object.astimezone(pytz.utc) + timedelta(hours=5)
+        #     day = start_dt.strftime('%d')
+        #     month = start_dt.strftime('%m')
+        #     hour = start_dt.strftime('%H')
+        #     minute = start_dt.strftime('%M')
+        #     start_dt = f'{day}.{month} {hour}:{minute}'
         else:
             start_dt = depart_utc_dt
 
@@ -357,6 +365,13 @@ def parser(user_id, tab_number, password, autoconfirm, time_depart):
         plan_day = string[:2]
         string_copy = string
 
+        if current_month == '01' and plan_month == '12':
+            continue
+
+        if current_month == '12' and plan_month == '01':
+            output_info += string
+            continue
+
         if current_month <= plan_month:
             if current_dt_minus_4h <= string:  # сравниваем день
                 output_info += string
@@ -376,4 +391,5 @@ def parser(user_id, tab_number, password, autoconfirm, time_depart):
 # # TODO РАСКОМЕНТИЛ ЛИ ТЫ RETURN!!!!!!!!!!!!!!!!!!!!!!!!!
 
 # TODO ПРОВЕРЬ ПРИНТЫ ЛОГИН И ПАРОЛЬ!!!!!!!!!!!!!!!!!!!!!!!!!
-# parser(305665787, '125512', 'Ghjnjnbg1', False, 'msk_start')  # подкопаев
+# parser(512766466, '122411', 'Rabota6!', False, 'msk_start')  # шемякин
+# parser(157758328, '119221', '2DH64rf2', False, 'msk_start')  # азаров
