@@ -8,6 +8,7 @@ from datetime import datetime, timedelta, timezone
 # time.perf_counter()
 current_date = time.strftime('%d.%m')  # %H:%M
 current_month = int(time.strftime('%m'))
+current_year = time.strftime('%Y')
 
 
 def parser(user_id, tab_number,
@@ -15,8 +16,12 @@ def parser(user_id, tab_number,
     url = 'https://edu.rossiya-airlines.com/workplan/'
     s = requests.Session()
 
-    month = str(int(time.strftime('%m')) - 1)  # отнимаем 1 от текущего месяца потому что нам надо посчитать два месяца
-    year = time.strftime('%Y')
+    month_site = str(time.strftime('%m'))
+    year_site = time.strftime('%Y')
+
+    if month_site == '01':
+        year_site = str(int(time.strftime('%Y')) - 1)
+        month_site = '12'
 
     data = {
         'refer': 'https://edu.rossiya-airlines.com//',
@@ -34,13 +39,11 @@ def parser(user_id, tab_number,
     if password == '' or password == '0' or password is False:
         return "Посчитать рейсы невозможно, так как неизвестен ваш пароль от OpenSky."
 
-    if month == '01':
-        year = str(int(time.strftime('%Y')) - 1)
 
     url = 'https://edu.rossiya-airlines.com/workplan/'
     data = {
         'domain': 'stc.local',
-        'dateFrom': f'01.{month}.{year}',
+        'dateFrom': f'01.{month_site}.{year_site}',
         'time_type': 'UTC',
         'accept': '1',
     }
@@ -58,13 +61,8 @@ def parser(user_id, tab_number,
     tbody = table.contents[1]
     rows = tbody.contents
 
-    general_types_counter_till_18_prev = 0
-    sukhoj_till_18_prev = 0
     counter_shoulders_sukhoj_prev = 0
     general_counter_prev = 0
-
-    general_types_counter_till_18 = 0
-    sukhoj_till_18 = 0
     counter_shoulders_sukhoj = 0
     general_counter = 0
 
@@ -77,14 +75,15 @@ def parser(user_id, tab_number,
         dt_msk = dt_utc_arrive.astimezone(pytz.utc) + timedelta(hours=3)
         month_site = int(dt_msk.month)
 
-        if current_month < month_site:
+        if current_month < month_site and year_site == current_year:
             break
 
         flight_number = cells[4].text
         aircraft = cells[5].text
         last_date = cells[6].text
 
-        if current_month > month_site:  # для парсинга предыдущего месяца
+        if (current_month > month_site and year_site == current_year) or (
+                current_month < month_site and year_site < current_year):  # для парсинга предыдущего месяца
 
             if '/' in flight_number:
                 flights_list = flight_number.split('/')
@@ -94,8 +93,6 @@ def parser(user_id, tab_number,
                 general_counter_prev += len(flights_list)
                 if 'СУ' in aircraft or 'С9Н' in aircraft:
                     counter_shoulders_sukhoj_prev += flight_number.count('/') + 1  # TODO уточнить систему расчетов
-                # if general_counter_prev <= 18 and '/' in flight_number:
-                # sukhoj_till_18_prev = general_counter_prev  # TODO эту строку удалить и счетчики тоже?
 
         if current_month == month_site:  # для парсинга текущего месяца
             last_date = cells[6].text[-21:-16]
@@ -107,8 +104,6 @@ def parser(user_id, tab_number,
                 general_counter += len(flights_list)
                 if 'СУ' in aircraft or 'С9Н' in aircraft:
                     counter_shoulders_sukhoj += flight_number.count('/') + 1  # TODO уточнить систему расчетов
-                # if general_counter <= 18:
-                # sukhoj_till_18 = general_counter
 
     shoulder_counter_prev = general_counter_prev
     shoulder_counter = general_counter
@@ -173,4 +168,4 @@ def parser(user_id, tab_number,
     return output_info
     # return "<pre>" + output_info + "</pre>"
 
-# parser(816830262, '119182', 'Airbus339!')
+# parser(157758328, '119221', '2DH64rf2')
