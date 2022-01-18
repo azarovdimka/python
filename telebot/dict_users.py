@@ -5,6 +5,18 @@ blocked = {
                 'link': '@Bas_tardo',
                 'tab_number': '',
                 'access': False},
+    1007522258: {'surname': 'Алиев',
+                 'name': 'Элнур',
+                 'city': '',
+                 'link': '@elnuralyev2020',
+                 'tab_number': '',
+                 'access': False},
+    1898256694: {'surname': '',
+                 'name': 'Шахобиддин',
+                 'city': '',
+                 'link': '',
+                 'tab_number': '',
+                 'access': False},
 }
 
 users = {
