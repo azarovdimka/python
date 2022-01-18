@@ -3,7 +3,8 @@ import time
 
 
 def writer(exc, request, fio=None, answer=None):  # TODO НЕ ЗАБУДЬ ПОМЕНЯТЬ АДРЕС!!!!!!!!!!!
-    file_path = "/usr/local/bin/bot/exception_log/exception_log.txt"  # "C:\\PycharmProjects\\Probe\\мои примеры\\GitHub\\telebot\\exception_log\\exception_log.txt"  #  "C:\\PycharmProjects\\Probe\\мои примеры\\GitHub\\telebot\\exception_log\\exception_log.txt"  #
+    file_path = "/usr/local/bin/bot/exception_log/exception_log.txt"  # "C:\\PycharmProjects\\Probe\\мои примеры\\GitHub\\telebot\\exception_log\\exception_log.txt"  #
+    #   "C:\\PycharmProjects\\Probe\\мои примеры\\GitHub\\telebot\\exception_log\\exception_log.txt"  #
     datetime = time.strftime('%d.%m.%Y %H:%M')
     text_error = f"Пользователь: {fio}\n" \
                  f"При запросе: {request}\n" \
