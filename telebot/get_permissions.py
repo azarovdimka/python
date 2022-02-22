@@ -40,7 +40,7 @@ def parser(user_id, tab_number, password, name):
         # error = f"Не удалось проверить сроки действия ваших допусков и документов. Вероятно, в базе указан неверный пароль {password} Если пароль указан устаревший, Вы можете сообщить новый пароль в следующем формате (4 слова через пробел): логин ...... пароль ......."
         # return error
 
-    output_info = f'{name}, вот результат проверки сроков действия Ваших документов:\n'
+    output_info = f'{name}, истекают сроки действия Ваших документов и допусков:\n'
     found_result = None
 
     tbody = table.contents[1]
@@ -110,4 +110,4 @@ def parser(user_id, tab_number, password, name):
         return output_info
         # print(output_info)
 
-# parser(157758328, "Дмитрий", "Азаров")
+# parser(157758328, "119221", "2DH64rf2", "Дмитрий")
