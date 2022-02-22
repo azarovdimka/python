@@ -40,13 +40,13 @@ def cycle_plan_notify():
                 user_id, surname, name, tab_number, password, messaging, check_permissions, night_notify, plan_notify, autoconfirm, time_depart = handler_db.fetch_user_for_plan(
                     user_id)
                 fio = f'{user_id} {surname} {name} '  # TODO почему-то бывает периодчески по некоторым значениям возвращает None
-                if not password or not plan_notify:
+                if password == '' or not password or password == '0' or not plan_notify:
                     continue
                 if '07:00' > current_time > '00:00' and not night_notify:  # обычно ['key'] выдает ошибку в некоторых местах нет ключа keyerror хотя ключ есть, а с методом get ключ видит
                     continue
 
-                notification = notificator.notify(user_id, tab_number, password, autoconfirm, night_notify,
-                                                  time_depart)  # TODO НЕ ЗАБУДЬ ПОМЕНЯТЬ АДРЕС ФАЙЛА в НОТИФИКАТОРЕ!!!
+                notification = notificator.notify(user_id, tab_number, password, autoconfirm, time_depart)
+                # TODO НЕ ЗАБУДЬ ПОМЕНЯТЬ АДРЕС ФАЙЛА в НОТИФИКАТОРЕ!!!
                 if notification is None:
                     continue
                 if notification.split()[0] == 'Проблема':
@@ -74,8 +74,8 @@ def cycle_plan_notify():
                     if strings_to_file is None:
                         continue
                     availability_for_planing = True
-                    path_plan = "/usr/local/bin/bot/plans/plans" + str(
-                        user_id) + ".txt"  # "C:\\PycharmProjects\\Probe\\мои примеры\\GitHub\\telebot\\plans\\plans" + str(user_id) + ".txt" #
+                    path_plan = "/usr/local/bin/bot/plans/plans" + str(user_id) + ".txt"
+                    # path_plan = "C:\\PycharmProjects\\Probe\\мои примеры\\GitHub\\telebot\\plans\\plans" + str(user_id) + ".txt" #
                     #  #  #
                     if os.path.exists(path_plan):
                         with open(path_plan, 'r',
