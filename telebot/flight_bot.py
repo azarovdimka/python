@@ -4,10 +4,10 @@
 import telebot  # чтобы работал telebot - удалить telebot, и установить Pytelegrambotapi, написанным оставить telebot
 from telebot.types import InlineKeyboardMarkup
 import baza
-from telebot import types
-from random import choice
 from datetime import datetime, timedelta
 import pytz
+from telebot import types
+from random import choice
 import exception_logger
 import handler_db
 import settings
@@ -242,7 +242,7 @@ def check_nalet_for_everyone():
         user_id, surname, name, tab_number, password, messaging, check_permissions, night_notify, plan_notify, \
         autoconfirm, time_depart = handler_db.fetch_user_for_plan(user_id)
         fio = f'{user_id} {surname} {name} '
-        if password and password != '0':  # TODO сделать в базе всем одинаково
+        if password and password != '0' and messaging:  # TODO сделать в базе всем одинаково
             try:
                 nalet_info = getnalet.parser(user_id, tab_number, password)
                 if "Не удалось" in nalet_info:
@@ -361,17 +361,19 @@ def write_new_dict_user(message):  # TODO ВЫНЕСТИ В ОТДЕЛЬНЫЙ �
     if user_id == user_id_from_db:
         try:
             bot.send_message(user_id,
-                             f'\t    {name}, Вам успешно предоставлен доступ к телеграм-боту. \n'
-                             f'    Спрашивайте, буду рад помочь! \n'
-                             f'    Если хотите получать уведомления о новых рейсах, смотреть налет и следить за допусками,'
-                             f' то пришлите в ответном одном сообщении через пробел логин и пароль от '
-                             f'OpenSky (4 слова через пробел) по следующему шаблону: логин ....... пароль ......',
+                             f'\t    {name}, Вам успешно предоставлен доступ к телеграм-боту. \n')
+            # bot.send_message(user_id,
+            #                  f'\t    Вам присылать напоминание отзвониться в наряд? Если да, то нажмите на ссылку '
+            #                  f'/remind (отключить эти напоминания можно будет также, нажав на эту же ссылку, или отправив ее в поле ввода сообщений, или выбрать в меню слева). ')
+            bot.send_message(user_id,
+                             f'\t    Если хотите получать уведомления об изменениях в плане работ (о новых рейсах), смотреть налет и следить за допусками,'
+                             f' то пришлите логин и пароль от OpenSky в ответном одном сообщении через пробел (4 слова через пробел) по следующему шаблону: логин ....... пароль ......',
                              reply_markup=general_menu())
             bot.send_message(157758328, "Сообщение о предоставлении доступа пользователю отправлено успешно.")
             return
         except Exception as exc:
             bot.send_message(157758328,
-                             f"пользователб добавлен в базу, но не подключен к телеграм-боту. Возникла ошибка:\n\n {exc}.")
+                             f"пользователь добавлен в базу, но не подключен к телеграм-боту. Возникла ошибка:\n\n {exc}.")
     else:
         bot.send_message(157758328, f"Пользователь {user_id} {surname} {name} отсутсвует в базе general.db")
         return
@@ -397,8 +399,8 @@ def verification(message):
         return True
     else:
         bot.send_message(message.chat.id,
-                         'Вам необходимо пройти верификацию пользователя, для этого отправьте сюда фото своего штабного '
-                         'пропуска. Нам необходимо убедиться, что Вы летающий '
+                         'Вам необходимо пройти верификацию пользователя, для этого отправьте сюда фото своего ШТАБНОГО '
+                         'пропуска (СИНЯЯ ЛЕТНАЯ АЙДИШКА НЕ ПОДХОДИТ): сторона на РУССКОМ языке, слова и цифры должны хорошо читаться на изображении. Нам необходимо убедиться, что Вы летающий '
                          'бортпроводник АК "Россия". На время ожидания доступ временно ограничен.')
         # bot.send_message(157758328,
         #                  f"Запросили фото айдишки для верификации от пользователя id {message.from_user.id} @{message.from_user.username} {message.from_user.first_name} "
@@ -450,7 +452,7 @@ def conversation(message):
     """Модуль для общения и взаимодействия с пользователем. Декоратор будет вызываться когда боту напишут текст."""
     if not verification(message):
         return
-
+    # service_notification(message)
     user_id, surname, name, tab_number, password, messaging, check_permissions, night_notify, plan_notify, \
     autoconfirm, time_depart = handler_db.fetch_user_for_plan(message.chat.id)
     fio = f'{user_id} {name} {surname}'
@@ -686,7 +688,7 @@ def conversation(message):
                     bot.send_message(user_id, link, reply_markup=general_menu(), parse_mode='Markdown')
                 found_result = True
                 bot.send_message(user_id,
-                                 'Если Вам не удалось найти то, что Вы искали - попробуйте упростить или изменить'
+                                 'Если Вам не удалось найти то, что Вы искали - попробуйте упростить или изменить '
                                  'свой запрос.', reply_markup=general_menu(), parse_mode='Markdown')
                 bot.send_message(157758328, f"4 -{fio} При поиске по ответам, пользователю выдан ответ в случайном "
                                             f"порядке c отсчением окончаний по запросу:\n{message.text}")
@@ -694,7 +696,7 @@ def conversation(message):
         if len(results) >= 8:
             bot.send_message(message.chat.id,
                              f"{name}, вероятно, на Ваш вопрос нет однозначного ответа. Пожалуйста, уточните свой вопрос.")
-            bot.send_message(user_id, 'Если Вам не удалось найти то, что Вы искали - попробуйте упростить или изменить'
+            bot.send_message(user_id, 'Если Вам не удалось найти то, что Вы искали - попробуйте упростить или изменить '
                                       'свой запрос.', reply_markup=general_menu(), parse_mode='Markdown')
             bot.send_message(157758328,
                              f"4 - Пользователя {fio} попросили уточнить вопрос при запросе:\n{message.text}")
@@ -709,11 +711,10 @@ def conversation(message):
 
         if autoconfirm:
             bot.send_message(user_id,
-                             f"`\t\t {name}, cейчас у Вас план работ "
-                             f"подтверждается автоматически. Вы хотите отключить подтверждение ознакомления "
-                             f"с планом работ?", reply_markup=confirm_btns)
+                             f"`\t\t {name}, cейчас у Вас план работ подтверждается автоматически. Вы хотите отключить подтверждение ознакомления с планом работ?",
+                             reply_markup=confirm_btns)
 
-    def check_permissions(user_id):
+    def check_permission(user_id):
         """Проверяет сроки дейсвтвия допусков у одного конкретного проводника по индивидуальному запросу."""
         document_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()  # что такое двоеточие и что оно дает???
         btn = types.InlineKeyboardButton(text="Открыть допуски в OpenSky",
@@ -803,12 +804,34 @@ def conversation(message):
                 modified.write(plan)
             return
 
-    if '/plan' in message.text.lower():  # TODO сделать потом чтобы автоматически менял статус в словаре
+    if '/remind' in message.text:
+        bot.send_message(user_id,
+                         'Функция отправки напоминаний об отзвоне в наряд в разработке/ если она вам прям действительно нужна и уведомлений в телеграм-боте о самих рейсах недостаточно - пожалуйста, напишите мне.')
+        return
+        # city = handler_db.get_city(user_id)
+        # remind_status = handler_db.check_remind_status(user_id)
+        # if remind_status is None or not remind_status:
+        #     handler_db.update_plan_remind(user_id, 1)
+        #     remind_status = handler_db.check_remind_status(user_id)
+        #     if remind_status == 1 and city == "Москва":
+        #         bot.send_message(user_id, 'Вам успешно подключено напоминание об отзвоне в наряд, оно будет приходить во Пн и Чт. Если Вы больше не захотите получать уведомления, нажмите также на ссылку или отправьте команду /remind')
+        #         bot.send_message(157758328, f'пользователь {fio} подключил уведомления об отзвоне в наряд')
+        #     if remind_status == 1 and city == "Санкт-Петерубрг":
+        #         bot.send_message(user_id,
+        #                          'Вам успешно подключено напоминание об отзвоне в наряд, оно будет приходить во Вт и Пт. Если Вы больше не захотите получать уведомления, нажмите также на ссылку или отправьте команду /remind')
+        #         bot.send_message(157758328, f'пользователь {fio} подключил уведомления об отзвоне в наряд')
+        #     if remind_status == 0:
+        #         bot.send_message(user_id,
+        #                          'Напоминание об отзвоне в наряд успешно отключено. Если Вы захотите получать напоминания об отзвоне в наряд, нажмите также на ссылку или отправьте команду /remind')
+        #         bot.send_message(157758328, f'пользователь {fio} отключил уведомления об отзвоне в наряд')
+        # return
+
+    if '/plan' in message.text:
         if not password:
             bot.send_message(user_id, 'Вам не приходят автоматические уведомление о предстоящем плане работ, '
                                       'так как Вы ранее не сообщили свой логин и пароль от OpenSky. Чтобы получать '
                                       'уведомления о предстоящем плане работ, Вам неообходимо сообщить свой логин и '
-                                      'пароль в сообщении по следующему шаблону: логин ...... пароль ........ '
+                                      'пароль в сообщении по следующему шаблону: логин 123456 пароль AbCdEfG '
                                       '(4 слова через пробел в одну строку). Менять старый пароль каждый раз не нужно, '
                                       'достаточно ввести старый пароль в графу нового пароля по ссылке pwd.rossiya-airlines.com')
         if len(password) >= 1 and plan_notify:
@@ -818,6 +841,7 @@ def conversation(message):
                 if result is not None:
                     bot.send_message(user_id, "Рассылка уведомлений о плане работ отключена.")
                     return
+
     if not plan_notify:
         allowed = True
         result = handler_db.update_plan_notify(allowed, user_id)
@@ -826,8 +850,6 @@ def conversation(message):
             return
 
     if message.text.lower() in "мой налет сейчас налёт /nalet":
-        # bot.send_message(user_id, f"{name}, доступ к плану работ, налёту, сечтику рейсов и уведомлениям о новых докуметах в опенскай нам перекрыли.")
-        # return
         if password == '':
             nalet_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()  # что такое двоеточие и что оно дает???
             btn = types.InlineKeyboardButton(text="Просмотреть налёт в OpenSky",
@@ -861,22 +883,38 @@ def conversation(message):
         return
 
     if "изменить город пользователя" in message.text.lower():
-        user = message.text.split()[-2]
+        user_id = message.text.split()[-2]
         city = message.text.split()[-1]
-        handler_db.update_city(city, user)
-        result = handler_db.select_all_data_of_person(user)
+        handler_db.update_city(city, user_id)
+        result = handler_db.select_all_data_of_person(user_id)
+        bot.send_message(157758328, result)
+        return
+
+    if "изменить фамилию" in message.text.lower():
+        user_id = message.text.split()[-2]
+        surname = message.text.split()[-1]
+        handler_db.update_surname(surname, user_id)
+        result = handler_db.select_all_data_of_person(user_id)
         bot.send_message(157758328, result)
         return
 
     if "добавить должность" in message.text.lower():
-        user = message.text.split()[-2]
+        user_id = message.text.split()[-2]
         position = message.text.split()[-1]
         handler_db.update_position(user_id, position)
-        result = handler_db.select_all_data_of_person(user)
+        result = handler_db.select_all_data_of_person(user_id)
         bot.send_message(157758328, result)
         return
 
-    if "просмотреть данные пользователя" in message.text.lower():  # ! РАБОТАЕТ!
+    if "добавить отряд" in message.text.lower():
+        user_id = message.text.split()[-2]
+        oke = message.text.split()[-1]
+        handler_db.update_oke(user_id, oke)
+        result = handler_db.select_all_data_of_person(user_id)
+        bot.send_message(157758328, result)
+        return
+
+    if "просмотреть данные пользователя" in message.text.lower():
         user = message.text.split()
         result = handler_db.select_all_data_of_person(user[-1])
         bot.send_message(157758328, result)
@@ -903,21 +941,11 @@ def conversation(message):
                          f'бортпроводников, подобных аналогов которому нет в других авиакомпаниях. '
                          f'Этот Telegram-бот это очень крутое, нужное многофункциональное '
                          'приложение, интегрированное в Telegram. Telegram-бот развивается каждый день '
-                         'и требует времени и дополнительных расходов. Есть еще много идей, которые хочется '
+                         'и требует времени и дополнительных расходов. Его разрабюотка для меня не обходится бесплатно. В совокупности трачу на его развитие 2500 руб. в месяц.Есть еще много идей, которые хочется '
                          'реализовать. \n\n'
-                         '*Содержание и обслуживание телеграм бота:*\n'
-                         '1. *Доменное имя* = 1000 руб./год;\n'
-                         '2. *Хостинг* - аренда сервера = 3600 руб./год;\n'
-                         '3. *SSL-секртификат* безопасности для защищенной передачи данных = 2900 руб./год;\n'
-                         '*Вознаграждения:*\n'
-                         '4. *За найденные ошибки, новую информацию, приведенного друга* по 100 руб пользователю за каждый факт = 400 руб./мес'
-                         '5. *Аутсорсинг* - переодическое привлечение более опытных программистов 1-2 раза в месяц, час работы их стоит = 1000 руб./час.\n'
-                         'Да, я и так практически всё свободное время занят программированием, исправлением ошибок, '
-                         'занесением информации, но бывает, что не все сам могу разрешить и приходится '
-                         'привлекать других программистов.\n\n'
-                         '*Итого обслуживание телеграм-бота обходится примерно в 2500 руб/мес.*\n\n'
+
                          'Предлагайте свои идеи и свою информацию. Поддержите развитие телеграм-бота, '
-                         'осуществив перевод на любую сумму без комиссии.',
+                         'осуществив перевод на любую сумму без комиссии, нажав на кнопку снизу либо по номеру телефона 89992023315.',
                          parse_mode='Markdown', reply_markup=donate_btn)
         bot.send_message(157758328, f"{fio} Рассказали про донаты")
         return
@@ -925,8 +953,9 @@ def conversation(message):
     if message.text.lower() in ['/document', 'проверить допуски', "сроки", "мои допуски", "мои документы",
                                 "проверить мои документы", "проверить мои допуски"]:
         bot.send_message(user_id, f"{name}, запрос отправлен, ожидайте несколько секунд...")
-        check_permissions(user_id)
+        check_permission(user_id)
         return
+
 
     if 'проверить допуски у всех бортпроводников' in message.text.lower():  # TODO еще не тестировал это
         check_permissions_for_everyone()
@@ -1043,7 +1072,8 @@ def conversation(message):
             bot.send_message(157758328, f"{fio} прислал логин и пароль: \n {message.text}")
             return
 
-    # TODO ВЫХОДНЫЕ №№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№№
+    # TODO ВЫХОДНЫЕ -----------------------------------------------------------------------------------------------
+
     order_dict = {message.chat.id: {}}
 
     def select_action():
@@ -1076,24 +1106,13 @@ def conversation(message):
 
     def otdelenie():
         otdelenie_btn = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
-        oke1 = types.KeyboardButton('ОКЭ 4')
-        oke2 = types.KeyboardButton('ОКЭ 5')
-        otdelenie_btn.add(oke1, oke2)
+        oke1 = types.KeyboardButton('ОКЭ 1')
+        oke2 = types.KeyboardButton('ОКЭ 2 (ЕКБ)')
+        oke3 = types.KeyboardButton('ОКЭ 3')
+        oke4 = types.KeyboardButton('ОКЭ 4')
+        oke5 = types.KeyboardButton('ОКЭ 5')
+        otdelenie_btn.add(oke1, oke2, oke3, oke4, oke5)
         return otdelenie_btn
-
-    def check_or_add_tab_surname_name_to_db(message):
-        """добавляет нового пользователя в случае представления"""
-        mess = message.text.split()
-        if len(mess) == 3 and message.text.split()[0].isdigit() and len(message.text.split()[0]) > 2:
-            user_id = message.chat.id
-            tab_number = message.text.split()[0]
-            name = message.text.split()[2].capitalize()
-            surname = message.text.split()[1].capitalize()
-
-            handler_db.add_new_user_to_db_users_from_day_order(user_id, surname, name, tab_number)
-            return True
-        else:
-            return False
 
     def get_future_date():
         days = {1: 31, 2: 28, 3: 31, 4: 30, 5: 31, 6: 30, 7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31, }
@@ -1101,7 +1120,7 @@ def conversation(message):
                                    8: "АВГУСТ", 9: "СЕНТЯБРЬ", 10: "ОКТЯБРЬ", 11: "НОЯБРЬ", 12: "ДЕКАБРЬ", }
         current_datetime = time.strftime('%d.%m.%Y %H:%M')
         dt_utc = datetime.strptime(current_datetime, '%d.%m.%Y %H:%M').replace(tzinfo=pytz.utc)
-        dt_future = dt_utc.astimezone(pytz.utc) + timedelta(days=60)
+        dt_future = dt_utc.astimezone(pytz.utc) + timedelta(days=55)
         future_month_int = int(dt_future.month)
         future_year = str(dt_future.year)[2:]
         future_month_big_name = future_month_dict_names[future_month_int]
@@ -1121,6 +1140,12 @@ def conversation(message):
     def check_true_oke(message):
         """Проверяет корректность введеного номера отряда"""
         oke = ''
+        if message.text in "1 ОКЭ 1 первый отряд 1 отделение 1окэ1 первое отделение":
+            oke = "1"
+        if message.text in "2 ОКЭ (ЕКБ) 2 второй отряд 2 отделение 2окэ2 второе отделение":
+            oke = "2"
+        if message.text in "3 ОКЭ 3 третий отряд 3 отделение 3окэ3 третье отделение":
+            oke = "3"
         if message.text in "4 ОКЭ 4 четвертый отряд 4 отделение 4окэ4 четвертое отделение":
             oke = "4"
         if message.text in "5 ОКЭ 5 пятый отряд 5 отделение 5окэ5 пятое отделение":
@@ -1138,19 +1163,14 @@ def conversation(message):
         if ' ' in message:
             date = message.split(' ')[0]
             if message.split(' ')[1:]:
-                comment = message.split(' ')[1:]
-                comment = ' '.join(comment)
+                second_part = message.split(' ')[1:]
+                second_part = ' '.join(second_part)
             else:
                 comment = '-'
             for m in months_list:
-                if m in comment:
-                    comment.replace(m, '')
+                if m in second_part:
+                    comment = second_part.replace(m, '')
 
-            if '.' in date:
-                day = date.split('.')[0]
-                requested_month = date.split('.')[1]
-                if requested_month == '' or int(requested_month) != future_month_int:
-                    return f'month_incorrect', False
             if '/' in date:
                 day = date.split('/')[0]
                 requested_month = date.split('/')[1]
@@ -1169,13 +1189,27 @@ def conversation(message):
                     else:
                         future_month = str(future_month_int)
                     return f'{day}.{future_month}.{future_year}', comment
+        if '.' in message:
+            day = message.split('.')[0]
+            requested_month = message.split('.')[1]
+            if message.split(' ')[1:]:
+                comment = message.split(' ')[1:]
+                comment = ' '.join(comment)
+            else:
+                comment = '-'
+                try:
+                    if requested_month == '' or int(requested_month) != future_month_int:
+                        return f'month_incorrect', False
+                except Exception:
+                    return False, False
+
         if message.isdigit():
             day = message
             comment = '-'
         if len(message.split()) > 1:
             if message.split()[0].isdigit():
                 day = message.split()[0]
-                comment = message.split()[1]
+                # comment = message.split()[1]
         if day and len(day) < 2:
             day = '0' + day
         if not day.isdigit():
@@ -1189,11 +1223,177 @@ def conversation(message):
                 future_month = '0' + str(future_month_int)
             else:
                 future_month = str(future_month_int)
-            return f'{day}.{future_month}.{future_year}', comment
+            return f'{day}.{future_month}.{future_year}', comment.strip()
 
-    if "удалить выходной" in message.text.lower():  # есть продублироавнная функция на 200 строк ниже
+    if message.text.lower() in "/day_order заказ\nвыходных заказ выходных":
+        # bot.send_message(message.chat.id, f'На данный момент заказы принимаются на {get_future_date()[2]}.\n\n ФУНКЦИЯ РАБОТАЕТ В ТЕСТОВОМ РЕЖИМЕ. ФАКТИЧЕСКИ ЗАКАЗЫ НЕ ПРИНИМАЮТСЯ')
+        # bot.send_message(message.chat.id, f"{name}, Вы хотите заказать выходной или отменить ранее заказанный выходной?", reply_markup=select_action())
+        # return
+        bot.send_message(message.chat.id,
+                         f'На данный момент заказы не принимаются. Заказы выходных на апрель будут приниматься с 25 февраля по 5 марта.')
+        return
+
+    ask_position = 'Укажите Вашу должность'
+    ask_date = '*На какую дату Вы бы хотели заказать выходной?* \n Укажите дату в любом формате и через пробел ' \
+               'комментарий (Комментарий оставлять необязательно). \n' \
+               'Например: \n25\n25 свадьба \n25.04 английский\n25.04.22 повестка в суд \n25 апреля семейные обстоятельства \n\n' \
+               '' \
+               '\nКаждый запрос может содержать только одну дату. Чтобы заказать второй выходной, нужно еще раз нажать кнопку "Заказать выходной". \n' \
+               'ЗА ОДИН ЗАКАЗ - ОДНА ДАТА.\n'
+    ask_oke = "Укажите Ваше отделение"
+
+    if "удалить" == message.text.lower():
+        bot.send_message(message.chat.id,
+                         f'Чтобы отменить заказанный выходной, напишите слово удалить и число, например:\n\n'
+                         f'удалить 25')  # if "удалить выходной " будет написано в общем коде
+        return
+
+    def output_free_dates1(message):
+        """Выдает список свободных дат по запросу"""
+        if check_true_position(message):
+            message.text = check_true_position(message)
+            position = order_dict[message.chat.id][ask_position] = message.text
+            tab_number = handler_db.get_tab_number(message.chat.id)
+            oke = handler_db.get_oke(tab_number)
+            handler_db.update_position(message.chat.id, position)
+            free_dates = handler_db.check_free_dates(position, oke)
+            ordered_before = handler_db.what_dates_order(tab_number)
+            output_free_dates = None
+
+            for i in free_dates.split('\n'):
+                for j in ordered_before.split('\n'):
+                    if j == '':
+                        continue
+                    if j in i:
+                        output_free_dates = free_dates = free_dates.replace(f'{i}\n', '')
+                if output_free_dates is None:
+                    output_free_dates = free_dates
+            bot.send_message(message.chat.id,
+                             f'Свободные даты, доступные Вам для заказа: \n{output_free_dates}',
+                             reply_markup=select_action_in_cancel(), parse_mode='Markdown')
+            return
+        else:
+            bot.send_message(message.chat.id,
+                             "Необходимо вводить Вашу должность корректно и нажимать на кнопки, представленные ниже. Нажмите Выйти и начните процедуру заново.")
+            return
+
+    def ask_position_func_1(message):
+        """записывает окэ, спрашивает должность для свободных дат"""
+        oke = check_true_oke(message)
+        order_dict[message.chat.id][ask_oke] = oke
+        tab_number = handler_db.get_tab_number(message.chat.id)
+        handler_db.update_oke(tab_number, oke)
+        msg667 = bot.send_message(message.chat.id, ask_position, reply_markup=select_position(),
+                                  parse_mode='Markdown')
+        bot.register_next_step_handler(msg667, output_free_dates1)
+        return
+
+    def start_04(message):
+        """Проверяет дату на корректность, заносит дату в словарь...."""
+        date, comment = check_true_date(message.text)
+        if date == 'month_incorrect':
+            denied = bot.send_message(message.chat.id,
+                                      f"Выходные на этот месяц не принимаются. На данный момент, выходные принимаются на {get_future_date()[2]}.",
+                                      reply_markup=select_action())
+            bot.send_message(message.chat.id, denied)
+            return
+        if type(date) is bool:
+            denied = bot.send_message(message.chat.id, f"Введенная дата некорректна. Начните процедуру заново.",
+                                      reply_markup=select_action())
+            bot.send_message(message.chat.id, denied)
+            return
+
+        order_dict[message.chat.id]['comment'] = comment
+        tab_number = handler_db.get_tab_number(message.chat.id)
+        oke = handler_db.get_oke(tab_number)
+        handler_db.update_oke(tab_number, oke)
+        ordered_days = handler_db.what_dates_order(tab_number)
+        position = handler_db.get_position(tab_number)
+
+        ordered_before = handler_db.check_ordered_before(date=date, tab_number=tab_number)
+
+        if ordered_before:
+            denied = bot.send_message(message.chat.id, f"Сейчас у Вас заказан выходной на:\n{ordered_days}",
+                                      reply_markup=select_action())
+            bot.send_message(message.chat.id, denied)
+            return
+
+        more_two_days_in_row = handler_db.check_two_days_in_row(date=date, tab_number=tab_number)
+        if more_two_days_in_row:
+            bot.send_message(message.chat.id,
+                             f"Заказать можно не более двух дней подряд. \nУ Вас уже заказаны даты:\n{ordered_days}",
+                             reply_markup=select_action())
+            return
+
+        if date:
+            order_dict[message.chat.id][ask_date] = date
+            available = handler_db.check_free_place(date, position, oke)
+
+            free_days_before = int(available)
+            if free_days_before > 0:
+                handler_db.update_date(date, tab_number, surname, name, position, oke,
+                                       comment)  # TODO записывает заказ вместо 4 в 5 отряд (переписыват 4 на 5)
+                bot.send_message(message.chat.id, f'{name}, дата {date} успешна записана.',
+                                 reply_markup=select_action())
+                bot.send_message(157758328, f'Заказан выходной.')
+                # counter_days = handler_db.get_counter_days(tab_number)
+                ordered_days = handler_db.what_dates_order(tab_number)
+                bot.send_message(message.chat.id,
+                                 f'Ваши пожелания на {get_future_date()[2]}:\n{ordered_days}',
+                                 reply_markup=select_action())
+                return
+            else:
+                bot.send_message(message.chat.id,
+                                 f'В эту дату не осталось свободных мест, либо на этот день нельзя заказать выходной день.\n',
+                                 reply_markup=select_action_in_cancel())
+                return
+        else:
+            bot.send_message(message.chat.id,
+                             f'Введенная дата некорректна. Нажмите Выйти и начните процедуру заново.',
+                             reply_markup=select_action())
+            return
+
+    def start_003(message):
+        """записывает оке в общую базу данных и словарь спрашивает желаемую дату"""
+        oke = check_true_oke(message)
+        order_dict[message.chat.id][ask_oke] = oke
+        handler_db.update_oke(tab_number, oke)
+        msg41 = bot.send_message(message.chat.id, ask_date, parse_mode='Markdown')
+        bot.register_next_step_handler(msg41, start_04)
+        return
+
+    def start_03(message):
+        """Проверяет должность на корректность, заносит должность в две базы данных
+        спрашивает желаемую дату"""
+        if check_true_position(message):
+            message.text = check_true_position(message)
+            order_dict[message.chat.id][ask_position] = message.text
+            handler_db.update_position(message.chat.id, message.text)
+            msg58 = bot.send_message(message.chat.id, ask_oke, reply_markup=otdelenie(), parse_mode='Markdown')
+            bot.register_next_step_handler(msg58, start_003)
+            return
+        else:
+            bot.send_message(message.chat.id,
+                             "Необходимо вводить Вашу должность корректно и нажимать на кнопки, представленные ниже. Начните процедуру заново.")
+            return
+
+    def check_limit():
+        """Проверяет исчерпан ли лимит в три дня"""
+        tab_number = handler_db.get_tab_number(message.chat.id)
+        three_days = handler_db.check_three_days_in_row(tab_number)
+        if three_days:
+            ordered_days = handler_db.what_dates_order(tab_number)
+            bot.send_message(message.chat.id,
+                             f"{name}, заказать можно не более трех дней в месяц. \nВаши заказанные дни:\n{ordered_days}",
+                             reply_markup=select_action())
+            return True
+        else:
+            return False
+
+    def delete_day(message):
+        """удаляет ранее заказанный выходной день"""
         message.chat.id = message.chat.id
-        day = message.text.split()[2]
+        day = message.text.split()[1]
         tab_number = handler_db.get_tab_number(message.chat.id)
         date = check_true_date(day)[0]
         ordered_days = handler_db.what_dates_order(tab_number)
@@ -1210,335 +1410,107 @@ def conversation(message):
             else:
                 bot.send_message(message.chat.id, f"{day} числа у Вас не было заказано выходного дня.",
                                  reply_markup=select_action())
+        if dates:
+            bot.send_message(message.chat.id, f"Ваши заказанные даты:\n{dates}", reply_markup=select_action())
+        else:
+            bot.send_message(message.chat.id, f"У Вас нет заказанных выходных.", reply_markup=select_action())
         return
 
-    if message.text.lower() in "/day_order заказ\nвыходных заказ выходных заказать выходной заказать\nвыходной":
-        bot.send_message(message.chat.id, f'Функция разрабатывается для бортпроводников из Санкт-Петербурга, \n\n '
-                                          f'РАБОТАЕТ В ТЕСТОВОМ РЕЖИМЕ \n, фактически заказы пока не принимаются. Заказы будут приниматься с 20 января')
-        bot.send_message(message.chat.id, f'На данный момент заказы принимаются на {get_future_date()[2]}.')
-
-        ask_order_or_cancel = f"{name}, Вы хотите заказать выходной или отменить ранее заказанный выходной?"
-        ask_position = 'Укажите Вашу должность'
-        ask_date = 'На какую дату Вы бы хотели заказать выходной? \n Укажите дату в любом формате и через пробел ' \
-                   'комментарий (если будет введена дата без комментария - автоматически проставится прочерк в графе комментарий). \nКаждый запрос ' \
-                   'может содержать только одну дату, чтобы заказать второй день, нужно после заказа еще раз нажать кнопку "Заказать выходной".' \
-                   '\n например: \n\n25\n25 свадьба \n25.03 английский\n25.03.22 повестка в суд \n25 марта семейные обстоятельства \n'
-        ask_oke = "Укажите Ваше отделение"
-
-        if "удалить выходной" == message.text.lower():
+    if message.text.lower() in "заказать выходной заказать\nвыходной":
+        if check_limit():
+            return
+        else:
             bot.send_message(message.chat.id,
-                             f'Для того чтобы отменить ранее заказанный выходной напишите удалить выходной и число, напрмер:\n\n'
-                             f'удалить выходной 25')  # if "удалить выходной " будет написано в общем коде
-            return
+                             f"Вы можете оставить своё пожелание о предоставлении выходных дней на {get_future_date()[2]} месяц. "
+                             "Обратите внимание, что установлена ежедневная квота на каждое ОКЭ:\n"
+                             "- 2 СБ;\n"
+                             "- 2 BS;\n"
+                             "- 4 БП.\n"
+                             "Вы можете заказать не более трёх выходных в месяц, из них не более двух дней подряд.")
 
-        def start_021(message):
-            '''Выполняет соответсвующее от выбранного действия: либо спрашивает должность, либо выдает заранее заказанные выходные'''
-            if message.text.lower() in "заказать выходной заказать\nвыходной":
-                if check_limit():
-                    return
-                else:
-                    bot.send_message(message.chat.id,
-                                     f"Вы можете оставить своё пожелание о предоставлении выходных дней на {get_future_date()[2]} месяц. "
-                                     "Обратите внимание, что установлена ежедневная квота на каждое ОКЭ:\n"
-                                     "- 2 СБ;\n"
-                                     "- 2 BS;\n"
-                                     "- 4 БП.\n"
-                                     "Вы можете заказать не более трёх выходных в месяц, из них не более двух дней подряд.")
-                    msg2 = bot.send_message(message.chat.id, ask_position, reply_markup=select_position(),
-                                            parse_mode='Markdown')
-                    bot.register_next_step_handler(msg2, start_03)
-                    return
-            if message.text.lower() in "отменить\nвыходной отменить выходной":
-                tab_number = handler_db.get_tab_number(message.chat.id)
-                ordered_days = handler_db.what_dates_order(tab_number)
-
-                bot.send_message(message.chat.id,
-                                 f'Вот Ваши уже заказанные выходные:\n{ordered_days}\n\n'
-                                 f'Для того чтобы удалить выходной в определенную дату, напишите слово удалить выходной и число, напрмер:\n\n'
-                                 f'удалить выходной 25')  # if "удалить выходной " будет написано в общем коде и продублировано ниже
+            if handler_db.get_position(handler_db.get_tab_number(message.chat.id)) is None:
+                msg2 = bot.send_message(message.chat.id, ask_position, reply_markup=select_position(),
+                                        parse_mode='Markdown')
+                bot.register_next_step_handler(msg2, start_03)
                 return
-
-            if "удалить выходной" in message.text.lower():  # есть продублироавнная функция на 200 строк ниже
-                delete_day(message)
-                return
-
-            if message.text.lower() in "заказанные даты":
-                tab_number = handler_db.get_tab_number(message.chat.id)
-                counter_days = handler_db.get_counter_days(tab_number)
-                ordered_days = handler_db.what_dates_order(tab_number)
-                if counter_days != 0:
-                    msg500 = bot.send_message(message.chat.id,
-                                              f'{name}, у Вас заказано на {get_future_date()[2]} месяц {counter_days} дн.:\n{ordered_days}',
-                                              reply_markup=select_action_in_cancel())
-                    bot.register_next_step_handler(msg500, start_02)
-                else:
-                    msg500 = bot.send_message(message.chat.id,
-                                              f'На этот месяц у Вас нет заказнанных выходных дней.',
-                                              reply_markup=select_action_in_cancel())
-                    bot.register_next_step_handler(msg500, start_02)
-            if message.text.lower() in "свободные\nдаты":
-                if check_limit():
-                    return
-                else:
-                    msg66 = bot.send_message(message.chat.id, ask_oke, reply_markup=otdelenie(), parse_mode='Markdown')
-                    bot.register_next_step_handler(msg66, ask_position_func_1)
-                    return
-
-            if message.text.lower() in "выйти отмена":
-                return bot.send_message(message.chat.id, f"{name}, хорошего дня!", reply_markup=select_action())
-
-            else:
-                msg1 = bot.send_message(message.chat.id, "Нажмите на одну из кнопок, представленных ниже.",
-                                        reply_markup=select_action())
-                bot.register_next_step_handler(msg1, start_02)
-
-        def output_free_dates1(message):
-            """Выдает список свободных дат по запросу"""
-            if check_true_position(message):
-                message.text = check_true_position(message)
-                position = order_dict[message.chat.id][ask_position] = message.text
-                oke = order_dict[message.chat.id][ask_oke]
-                tab_number = handler_db.get_tab_number(message.chat.id)
-                handler_db.update_position(message.chat.id, position)
-                free_dates = handler_db.check_free_dates(position, oke)
-                ordered_before = handler_db.what_dates_order(tab_number)
-                output_free_dates = None
-
-                for i in free_dates.split(
-                        '\n'):  # TODO возможно учитывает не все ранее заказнные даты (не все вычитает из итогвого списка) ПРОВЕРИТЬ
-                    for j in ordered_before.split('\n'):
-                        if j == '':
-                            continue
-                        if j in i:
-                            output_free_dates = free_dates.replace(f'{i}\n', '')
-                    if output_free_dates is None:
-                        output_free_dates = free_dates
-                msg700 = bot.send_message(message.chat.id,
-                                          f'Свободные даты, доступные Вам для заказа: \n{output_free_dates}',
-                                          reply_markup=select_action_in_cancel(), parse_mode='Markdown')
-                bot.register_next_step_handler(msg700, start_021)
+            if handler_db.get_oke(handler_db.get_tab_number(message.chat.id)) is None:
+                msg58 = bot.send_message(message.chat.id, ask_oke, reply_markup=otdelenie(), parse_mode='Markdown')
+                bot.register_next_step_handler(msg58, start_003)
                 return
             else:
-                bot.send_message(message.chat.id,
-                                 "Необходимо вводить Вашу должность корректно и нажимать на кнопки, представленные ниже. Начните процедуру заново.")
+                msg41 = bot.send_message(message.chat.id, ask_date, parse_mode='Markdown')
+                bot.register_next_step_handler(msg41, start_04)
                 return
 
-        def ask_position_func_1(message):
-            """записывает окэ, спрашивает должность для свободных дат"""
-            oke = check_true_oke(message)
-            order_dict[message.chat.id][ask_oke] = oke
-            tab_number = handler_db.get_tab_number(message.chat.id)
-            handler_db.update_oke(tab_number, oke)
-            msg66 = bot.send_message(message.chat.id, ask_position, reply_markup=select_position(),
-                                     parse_mode='Markdown')
-            bot.register_next_step_handler(msg66, output_free_dates1)
-            return
+    if message.text.lower() in "отменить\nвыходной отменить выходной":
+        tab_number = handler_db.get_tab_number(message.chat.id)
+        ordered_days = handler_db.what_dates_order(tab_number)
 
-        def start_04(message):
-            """Проверяет дату на корректность, заносит дату в словарь...."""
-            date, comment = check_true_date(message.text)
-            if date == 'month_incorrect':
-                denied = bot.send_message(message.chat.id,
-                                          f"Выходные на этот месяц не принимаются. На данный момент, выходные принимаются на {get_future_date()[2]}.",
-                                          reply_markup=select_action())
-                bot.register_next_step_handler(denied, start_02)
-                return
-            if type(date) is bool:
-                denied = bot.send_message(message.chat.id, f"Введенная дата некорректна. Начните процедуру заново.",
-                                          reply_markup=select_action())
-                bot.register_next_step_handler(denied, start_02)
-                return
-
-            order_dict[message.chat.id]['comment'] = comment
-            oke = order_dict[message.chat.id][ask_oke]
-            tab_number = handler_db.get_tab_number(message.chat.id)
-            handler_db.update_oke(tab_number, oke)
-            ordered_days = handler_db.what_dates_order(tab_number)
-            position = order_dict[message.chat.id][ask_position]
-
-            ordered_before = handler_db.check_ordered_before(date=date, tab_number=tab_number)
-
-            if ordered_before:
-                denied = bot.send_message(message.chat.id, f"Сейчас у Вас заказан выходной на:\n{ordered_days}",
-                                          reply_markup=select_action())
-                bot.register_next_step_handler(denied, start_02)
-                return
-
-            more_two_days_in_row = handler_db.check_two_days_in_row(date=date, tab_number=tab_number)
-            if more_two_days_in_row:
-                denied = bot.send_message(message.chat.id,
-                                          f"Нельзя заказывать более двух дней подряд. У Вас уже заказаны даты:\n{ordered_days}",
-                                          reply_markup=select_action())
-                bot.register_next_step_handler(denied, start_02)
-                return
-
-            if date:
-                order_dict[message.chat.id][ask_date] = date
-                available = handler_db.check_free_place(date, position, oke)
-
-                free_days_before = int(available)
-                if free_days_before > 0:
-                    handler_db.update_date(date, tab_number, surname, name, position, oke,
-                                           comment)  # TODO записывает заказ вместо 4 в 5 отряд (переписыват 4 на 5)
-                    bot.send_message(message.chat.id, f'{name}, дата {date} успешна записана.',
-                                     reply_markup=select_action())
-                    # counter_days = handler_db.get_counter_days(tab_number)
-                    ordered_days = handler_db.what_dates_order(tab_number)
-                    wishes = bot.send_message(message.chat.id,
-                                              f'Ваши пожелания на {get_future_date()[2]}:\n{ordered_days}',
-                                              reply_markup=select_action())
-                    bot.register_next_step_handler(wishes, start_02)
-                    return
-                else:
-                    bot.send_message(message.chat.id,
-                                     f'В эту дату не осталось свободных мест, либо на этот день нельзя заказать выходной день.\n',
-                                     reply_markup=select_action_in_cancel())
-                    return
-            else:
-                bot.send_message(message.chat.id, f'Введенная дата некорректна. Начните процедуру заново.',
-                                 reply_markup=select_action())
-                return
-
-        def start_003(message):
-            """записывает оке в общую базу данных и словарь спрашивает желаемую дату"""
-            oke = check_true_oke(message)
-            order_dict[message.chat.id][ask_oke] = oke
-            handler_db.update_oke(tab_number, oke)
-            msg4 = bot.send_message(message.chat.id, ask_date, parse_mode='Markdown')
-            bot.register_next_step_handler(msg4, start_04)
-
-        def start_03(message):
-            """Проверяет должность на корректность, заносит должность в две базы данных
-            спрашивает желаемую дату"""
-            if check_true_position(message):
-                message.text = check_true_position(message)
-                order_dict[message.chat.id][ask_position] = message.text
-                handler_db.update_position(message.chat.id, message.text)
-                msg5 = bot.send_message(message.chat.id, ask_oke, reply_markup=otdelenie(), parse_mode='Markdown')
-                bot.register_next_step_handler(msg5, start_003)
-                return
-            else:
-                bot.send_message(message.chat.id,
-                                 "Необходимо вводить Вашу должность корректно и нажимать на кнопки, представленные ниже. Начните процедуру заново.")
-                return
-
-        def check_limit():
-            """Проверяет исчерпан ли лимит в три дня"""
-            tab_number = handler_db.get_tab_number(message.chat.id)
-            three_days = handler_db.check_three_days_in_row(tab_number)
-            if three_days:
-                ordered_days = handler_db.what_dates_order(tab_number)
-                denied = bot.send_message(message.chat.id,
-                                          f"{name}, у Вас исчерпан 3-дневный лимит для заказа выходных. Больше трех дней заказывать нельзя. Ваши заказанные дни:\n{ordered_days}",
-                                          reply_markup=select_action())
-                bot.register_next_step_handler(denied, start_02)
-                return True
-            else:
-                return False
-
-        def delete_day(message):
-            """удаляет ранее заказанный выходной день"""
-            message.chat.id = message.chat.id
-            day = message.text.split()[2]
-            tab_number = handler_db.get_tab_number(message.chat.id)
-            date = check_true_date(day)[0]
-            ordered_days = handler_db.what_dates_order(tab_number)
-            # TODO смотреть какие даты были до этого и сравнивать числа
-            was_ordered = None
-
-            if day in ordered_days:
-                was_ordered = True
-            dates = handler_db.delete_date(tab_number, date)
-            if date not in dates:
-                if was_ordered:
-                    bot.send_message(message.chat.id, f"{day} числа выходной успешно удален.",
-                                     reply_markup=select_action())
-                else:
-                    bot.send_message(message.chat.id, f"{day} числа у Вас не было заказано выходного дня.",
-                                     reply_markup=select_action())
-            if dates:
-                msg1 = bot.send_message(message.chat.id, f"Ваши заказанные даты:\n{dates}",
-                                        reply_markup=select_action())
-                bot.register_next_step_handler(msg1, start_02)
-            else:
-                msg1 = bot.send_message(message.chat.id, f"У Вас нет заказанных выходных.",
-                                        reply_markup=select_action())
-                bot.register_next_step_handler(msg1, start_02)
-            return
-
-        def start_02(message):
-            '''Выполняет соответсвующее от выбранного действия: либо спрашивает должность, либо выдает заранее заказанные выходные'''
-            if message.text.lower() in "заказать выходной заказать\nвыходной":
-                if check_limit():
-                    return
-                else:
-                    bot.send_message(message.chat.id,
-                                     f"Вы можете оставить своё пожелание о предоставлении выходных дней на {get_future_date()[2]} месяц. "
-                                     "Обратите внимание, что установлена ежедневная квота на каждое ОКЭ:\n"
-                                     "- 2 СБ;\n"
-                                     "- 2 BS;\n"
-                                     "- 4 БП.\n"
-                                     "Вы можете заказать не более трёх выходных в месяц, из них не более двух дней подряд.")
-                    msg2 = bot.send_message(message.chat.id, ask_position, reply_markup=select_position(),
-                                            parse_mode='Markdown')
-                    bot.register_next_step_handler(msg2, start_03)
-                    return
-            if message.text.lower() in "отменить\nвыходной отменить выходной":
-                tab_number = handler_db.get_tab_number(message.chat.id)
-                ordered_days = handler_db.what_dates_order(tab_number)
-
-                bot.send_message(message.chat.id,
-                                 f'Вот Ваши уже заказанные выходные:\n{ordered_days}\n\n'
-                                 f'Для того чтобы удалить выходной в определенную дату, напишите слово удалить выходной и число, напрмер:\n\n'
-                                 f'удалить выходной 25')  # if "удалить выходной " будет написано в общем коде и продублировано ниже
-                return
-
-            if "удалить выходной" in message.text.lower():  # есть продублироавнная функция на 200 строк ниже
-                delete_day(message)
-                return
-
-            if message.text.lower() in "заказанные даты":
-                tab_number = handler_db.get_tab_number(message.chat.id)
-                counter_days = handler_db.get_counter_days(tab_number)
-                ordered_days = handler_db.what_dates_order(tab_number)
-                if counter_days != 0:
-                    msg500 = bot.send_message(message.chat.id,
-                                              f'{name}, у Вас заказано на {get_future_date()[2]} месяц {counter_days} дн.:\n{ordered_days}',
-                                              reply_markup=select_action_in_cancel())
-                    bot.register_next_step_handler(msg500, start_02)
-                else:
-                    msg500 = bot.send_message(message.chat.id,
-                                              f'На этот месяц у Вас нет заказнанных выходных дней.',
-                                              reply_markup=select_action_in_cancel())
-                    bot.register_next_step_handler(msg500, start_02)
-            if message.text.lower() in "свободные\nдаты":
-                if check_limit():
-                    return
-                else:
-                    msg66 = bot.send_message(message.chat.id, ask_oke, reply_markup=otdelenie(), parse_mode='Markdown')
-                    bot.register_next_step_handler(msg66, ask_position_func_1)
-                    return
-
-            if message.text.lower() in "выйти":
-                return bot.send_message(message.chat.id, f"{name}, хорошего дня!", reply_markup=select_action())
-
-            else:
-                msg1 = bot.send_message(message.chat.id, "Нажмите на одну из кнопок, представленных ниже.",
-                                        reply_markup=select_action())
-                bot.register_next_step_handler(msg1, start_02)
-
-        msg1 = bot.send_message(message.chat.id, ask_order_or_cancel, reply_markup=select_action())
-        bot.register_next_step_handler(msg1, start_02)
+        if ordered_days != '':
+            bot.send_message(message.chat.id,
+                             f'Вот Ваши уже заказанные выходные:\n{ordered_days}\n\n'
+                             f'Чтобы отменить заказанный выходной, напишите слово удалить и число, например:\n\n'
+                             f'удалить 25')  # if "удалить выходной " будет написано в общем коде и продублировано ниже
+        else:
+            bot.send_message(message.chat.id,
+                             f'У Вас не было ранее заказанных выходных дней.')  # if "у
         return
 
-    if "сохранить выходные в excel" in message.text.lower():
+    if message.text.lower() in "заказанные даты":
+        tab_number = handler_db.get_tab_number(message.chat.id)
+        counter_days = handler_db.get_counter_days(tab_number)
+        ordered_days = handler_db.what_dates_order(tab_number)
+        if counter_days != 0:
+            bot.send_message(message.chat.id,
+                             f'{name}, у Вас заказано на {get_future_date()[2]} месяц {counter_days} дн.:\n{ordered_days}',
+                             reply_markup=select_action_in_cancel())
+            return
+        else:
+            bot.send_message(message.chat.id,
+                             f'На этот месяц у Вас нет заказнанных выходных дней.',
+                             reply_markup=select_action_in_cancel())
+            return
+
+    if "свободные\nдаты" in message.text.lower():
+        if check_limit():
+            return
+        else:
+            if handler_db.get_oke(handler_db.get_tab_number(message.chat.id)) is None:
+                msg66555 = bot.send_message(message.chat.id, ask_oke, reply_markup=otdelenie(),
+                                            parse_mode='Markdown')
+                bot.register_next_step_handler(msg66555, ask_position_func_1)
+            else:
+                message.text = handler_db.get_position(handler_db.get_tab_number(message.chat.id))
+                output_free_dates1(message)
+                return
+
+    if "удалить" in message.text.lower():
+        delete_day(message)
+        return
+
+    if message.text.lower() in "выйти":
+        bot.send_message(message.chat.id, f"{name}, хорошего дня!", reply_markup=select_action())
+        return
+
+    if message.text.split()[0].isdigit() and len(message.text.split()[0]) <= 2:
+        if handler_db.get_oke(handler_db.get_tab_number(message.chat.id)) is None:
+            msg58 = bot.send_message(message.chat.id, ask_oke, reply_markup=otdelenie(), parse_mode='Markdown')
+            bot.register_next_step_handler(msg58, start_003)
+            return
+        if check_limit():
+            return
+        else:
+            start_04(message)
+            return
+
+    if "сохранить выходные в excel" in message.text.lower() and message.chat.id in [157758328, 284778202,
+                                                                                    240176167]:
         handler_db.import_daysoff_to_excel()
-        bot.send_document(157758328, open('ordered_days.xlsx', "rb"))
-        bot.send_document(284778202, open('ordered_days.xlsx', "rb"))  # Alekseev
+        bot.send_document(message.chat.id, open('ordered_days.xlsx', "rb"))
         bot.send_message(157758328, f" файл с таблицей отправлен")
         return
 
-    # TODO ВЫХОДНЫЕ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    # TODO ВЫХОДНЫЕ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
     message.text = message.text.replace('ё', 'е')
     message.text = find_punctuation(message.text)
@@ -1553,6 +1525,13 @@ def conversation(message):
     if "нет" == message.text:
         bot.send_message(user_id, f'Почему? что не так?')
         bot.send_message(157758328, f"{fio} сказал {message.text}")
+        return
+
+    if "взаимно" in message.text.lower() or "и тебя" in message.text.lower():
+        answer = "Спасибо большое!)"
+        bot.send_message(user_id, answer)
+        bot.send_message(157758328,
+                         f"{fio} поблагодарил: {message.text} \n А бот ответил: {answer}", reply_markup=general_menu())
         return
 
     if "спасибо" in message.text.lower() or message.text.lower() in baza.good_bye:
@@ -1581,7 +1560,6 @@ def conversation(message):
             bot.send_message(157758328,
                              f'{fio} попытался включить автоматическое подтверждение плана работ, но у нас нет пароля')
         if autoconfirm and len(password) > 0:
-            # """При поступлении этой команды вызывается функция confirm_question(), в которой написан основной текст c двумя кнопками"""
             @bot.callback_query_handler(func=lambda call: True)
             def callback_inline(call):
                 if call.message:
@@ -1617,21 +1595,20 @@ def conversation(message):
 
     if 'отказ от рассылки' in message.text or 'отказаться от рассылки' in message.text or '/newsnote' in message.text:
         if messaging:
-            bot.send_message(user_id, "Хорошо, мы обязательно отключим рассылку сообщений.")
-            bot.send_message(157758328, f'{user_id} {name} {surname} попросил отказаться от рассылки')
             prohibited = False
             result = handler_db.update_messaging(prohibited, user_id)
             if result is not None:
                 bot.send_message(user_id, "Рассылка сообщений отключена.")
-                bot.send_message(157758328, f'{fio} рассылка сообщений отключена автоматически.')
         if not messaging:
-            bot.send_message(user_id, "Хорошо, мы обязательно включим рассылку сообщений.")
-            bot.send_message(157758328, f'{user_id} {name} {surname} попросил включить рассылки')
             allowed = True
             result = handler_db.update_messaging(allowed, user_id)
             if result is not None:
                 bot.send_message(user_id, "Рассылка сообщений включена.")
-                bot.send_message(157758328, f'{fio} рассылка сообщений включена автоматически.')
+        return
+
+    if 'сохранить пользователей в excel' in message.text.lower() and message.chat.id == 157758328:
+        handler_db.import_users_to_excel()
+        bot.send_document(message.chat.id, open('general_db.xlsx', "rb"))
         return
 
     if 'время на сервере' in message.text:
@@ -1654,9 +1631,9 @@ def conversation(message):
                          reply_markup=general_menu())
         return
 
-    if 'добавить' in message.text:  # предложить заменили на добавить так как пересекается с предложить вино на английском языке
-        correct = f"Пользователь {fio} предлоджил информацию: {message.text[8:]}"
-        bot.send_message(user_id, 'Ваша информация успешно отправлена. После ее рассмотрения будут внесены '
+    if 'добавить' in message.text and message.text not in 'как добавиться в группу как добавить друга в группу':  # предложить заменили на добавить так как пересекается с предложить вино на английском языке
+        correct = f"Пользователь {fio} предлоджил информацию: {message.text[9:]}"
+        bot.send_message(user_id, f'{name}, Ваша информация успешно отправлена. После ее рассмотрения будут внесены '
                                   'соответсвующие изменения. \n Большое спасибо за Ваше участие в улучшении '
                                   'Телеграм-Бота!', reply_markup=general_menu())
         bot.send_message(157758328, correct)
