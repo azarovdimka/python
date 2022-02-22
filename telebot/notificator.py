@@ -1,16 +1,13 @@
 import exception_logger
 import getplan
 import os
+import time
 
 
-def write_check_relevance(plan, chat_id, password,
-                          plan_notify):  # TODO НЕ ЗАБУДЬ ПОМЕНЯТЬ АДРЕС!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    file_path = "/usr/local/bin/bot/plans/plans" + str(
-        chat_id) + ".txt"  # "C:\\PycharmProjects\\Probe\\мои примеры\\GitHub\\telebot\\plans\\plans" + str(chat_id) + ".txt" #   "/usr/local/bin/bot/plans/plans" + str(chat_id) + ".txt"
-    #
-
-    if (password == '' or not password or password == '0') or not plan_notify:
-        return None
+def write_check_relevance(plan, chat_id):
+    # TODO НЕ ЗАБУДЬ ПОМЕНЯТЬ АДРЕС!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    file_path = "/usr/local/bin/bot/plans/plans" + str(chat_id) + ".txt"
+    # file_path = "C:\\PycharmProjects\\Probe\\мои примеры\\GitHub\\telebot\\plans\\plans" + str(chat_id) + ".txt" #   "/usr/local/bin/bot/plans/plans" + str(chat_id) + ".txt"
 
     if not os.path.exists(file_path):  # ПЛАН ВПЕРВЫЕ РАНЬШЕ НЕ БВЫЛО
         with open(file_path, 'w', encoding='utf-8') as modified:
@@ -62,18 +59,24 @@ def write_check_relevance(plan, chat_id, password,
 
 # TODO НЕ ЗАБУДЬ ПОМЕНЯТЬ АДРЕС!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-def notify(user_id, tab_number, password, autoconfirm, night_notify, time_depart):
+def notify(user_id, tab_number, password, autoconfirm, time_depart):
+    """Извлекает план: вызывает функцию парсинга плана с сайта, проверяет план на новизну, если план новый, вызывает
+    функцию записи плана, и возвращает уведомление для отправки нового плана"""
     plan = getplan.parser(user_id, tab_number, password, autoconfirm, time_depart)
-    # plan не может сожержать None в результате работы функции getplan.parser
-    # TODO если функция getplan.parser() будет прервана внутренним return ... может л
+
     if plan is not None:
-        result = write_check_relevance(plan, user_id, password,
-                                       night_notify)  # TODO если эта функция возвращает None, то функция просто должна завершиться, но plan=None может послужить причиной исключения
+        # start_time = time.time()
+        result = write_check_relevance(plan, user_id)
+        # finish_time = time.time()
+        # print(finish_time - start_time)
         if result:
             return result
         else:
             return
+# TODO НЕ ЗАБУДЬ ПОМЕНЯТЬ АДРЕС!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# notify(512766466, '122411', 'Rabota6!', False, 'msk_start')  # шемякин
+# notify(157758328, '119221', '2DH64rf2', True, 'msk_start')  # азаров
+# notify(801093934, '5930', 'Voronova090879', False, 'msk_start')
 
-# notify(512766466)
 
 # TODO НЕ ЗАБУДЬ ПОМЕНЯТЬ АДРЕС!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
