@@ -9,12 +9,26 @@ def document_analyze(new_document):
     new_document = new_document[:-23]
     if "Объявление" in new_document:
         new_document = new_document[29:]
+    if "И-" in new_document:
+        if '_' in new_document:
+            new_document = new_document.replace('_', ' ')
+        words_list = new_document.split()
+        for i in words_list:
+            if "И-" in i:
+                words_list.remove(i)
+        new_document = ' '.join(words_list)
+
     if "Т-" in new_document:
         words_list = new_document.split()
-        new_document = ' '.join(words_list[1:-1])
+        for i in words_list:
+            if "Т-" in i:
+                words_list.remove(i)
+        new_document = ' '.join(words_list[4:-1])
+
     if "Бюллетень" in new_document:
         words_list = new_document.split()
         new_document = ' '.join(words_list[2:])
+
     if "Инструкция" in new_document:
         if '_' in new_document:
             words_list = new_document.split('_')
@@ -22,11 +36,31 @@ def document_analyze(new_document):
         else:
             words_list = new_document.split()
             new_document = ' '.join(words_list[1:-1])
+
     if "(изм." in new_document:
-        new_document = new_document[:-10]
+        words_list = new_document.split(' ')
+        new_document = ' '.join(words_list[:-1])
+
     if "изд." in new_document:
-        new_document = new_document[:-10]
+        words_list = new_document.split(' ')
+        new_document = ' '.join(words_list[:-2])
+
+    if ".20" in new_document:
+        words_list = new_document.split()
+        for i in words_list:
+            if ".20" in i:
+                words_list.remove(i)
+            if "от" in i:
+                words_list.remove(i)
+        new_document = ' '.join(
+            words_list)  # если тут писать (words_list_[1:]) то получится при публикации нового города удаление города и пустая строка
+
     if "ГД" in new_document:
+        words_list = new_document.split()
+        for i in words_list:
+            if "ГД" in i:
+                words_list.remove(i)
+        new_document = ' '.join(words_list[1:])
         if '_' in new_document:
             words_list_ = new_document.split('_')
             new_document = ' '.join(words_list_[1:])
@@ -36,8 +70,7 @@ def document_analyze(new_document):
     return new_document
 
 
-def parser(tab_number, password,
-           user_id):  # это надо было все обернуть в функцию чтобы потом при импорте вызвать модуль.функция()
+def parser(tab_number, password, user_id):
     url = 'https://edu.rossiya-airlines.com/'
 
     s = requests.Session()
@@ -104,9 +137,9 @@ def parser(tab_number, password,
         report_for_user = report[:-2]
         report_for_file_temp_list = report_for_user.split('\n')[1:]
         report_for_file = '\n'.join(report_for_file_temp_list)
-
+        # print(report_for_user)  # TODO УБЕРИ ПРИНТ!
         return report_for_user, report_for_file
     else:
         return None, None
 
-# parser('119221', '2DH64rf2', 157758328)
+# parser('119221', '2DH64rf2', 157758328) # TODO УБЕРИ ВЫЗОВ ФУНКЦИИ!
