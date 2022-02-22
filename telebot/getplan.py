@@ -169,6 +169,7 @@ def extract_destination(s):
 
 
 def parser(user_id, tab_number, password, autoconfirm, time_depart):
+    # start_processing_time = time.time()
     url = 'https://edu.rossiya-airlines.com/workplan/'
     s = requests.Session()
 
@@ -187,7 +188,12 @@ def parser(user_id, tab_number, password, autoconfirm, time_depart):
         return
 
     if autoconfirm:
-        work_plan = s.post(url, data=data, headers=dict(Referer=url))  # work_plan = response 200
+        # start_autoconf_signup_time = time.time()
+        try:
+            s.post(url, data=data, headers=dict(Referer=url))  # work_plan = response 200
+        except Exception:
+            time.sleep(50)
+        # finish_autoconf_signup_time = time.time()
         month_year = time.strftime('%m.%Y')
         url = 'https://edu.rossiya-airlines.com/workplan/'
         data = {
@@ -197,7 +203,9 @@ def parser(user_id, tab_number, password, autoconfirm, time_depart):
             'accept': '1',  # подтверждение плана работ
         }
     try:
+        # start_without_autoconf_signup_time = time.time()
         work_plan = s.post(url, data=data, headers=dict(Referer=url))
+        # finish_without_autoconf_signup_time = time.time()
     except Exception as exc:  # ConnectionResetError(10054, 'Удаленный хост принудительно разорвал существующее подключение'
         exception_logger.writer(exc=exc, request=url, fio=user_id)
         return
@@ -227,6 +235,8 @@ def parser(user_id, tab_number, password, autoconfirm, time_depart):
     rows = tbody.contents
     output_info = 'Ваш ближайший план работ:\n'
     string_copy = None
+
+    start_cycle_plan_time = time.time()
 
     for tr in rows:
         event_detected = False
@@ -379,6 +389,8 @@ def parser(user_id, tab_number, password, autoconfirm, time_depart):
             if current_month < plan_month and plan_day < current_dt_minus_4h:
                 output_info += string
 
+    # finish_cycle_plan_time = time.time()
+
     if output_info == 'Ваш ближайший план работ:\n':
         return 'Рейсов на ближайшее время не найдено.'
     if len(start_dt) == 11:
@@ -386,10 +398,18 @@ def parser(user_id, tab_number, password, autoconfirm, time_depart):
             output_info += f'        {time_zona.upper()}               MSK\n'
 
     # print(output_info)
+    # finish_processing_time = time.time()
+    # print(f"время общее на человека: {finish_processing_time - start_processing_time}")
+    # print(f"подключение, авторизация: {finish_autoconf_signup_time - start_autoconf_signup_time}")
+    # print(f"подключение, авторизация: {finish_without_autoconf_signup_time - start_without_autoconf_signup_time}")
+    # print(f"обработка плана: {finish_cycle_plan_time - start_cycle_plan_time}")
     return "<pre>" + output_info + "</pre>"
 
 # # TODO РАСКОМЕНТИЛ ЛИ ТЫ RETURN!!!!!!!!!!!!!!!!!!!!!!!!!
 
 # TODO ПРОВЕРЬ ПРИНТЫ ЛОГИН И ПАРОЛЬ!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
 # parser(512766466, '122411', 'Rabota6!', False, 'msk_start')  # шемякин
-# parser(157758328, '119221', '2DH64rf2', False, 'msk_start')  # азаров
+# parser(157758328, '119221', '2DH64rf2', True, 'msk_start')  # азаров
+# parser(801093934, '5930', 'Voronova090879', False, 'msk_start')
