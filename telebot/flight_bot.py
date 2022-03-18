@@ -23,7 +23,7 @@ import flight_counter
 import check_news
 
 bot = telebot.TeleBot(settings.TOKEN)
-bot.send_message(157758328, f"бот перезапущен")
+# bot.send_message(157758328, f"бот перезапущен")
 
 list_id = handler_db.list_user_id()
 
@@ -218,9 +218,7 @@ def check_permissions_for_everyone():
                 documents_info = get_permissions.parser(user_id, tab_number, password, name)
                 if documents_info is None:
                     continue
-                bot.send_message(user_id, documents_info, reply_markup=document_btn)
-                bot.send_message(157758328, f'Пользователю {fio} отправлен сообщение об истекающих допусках.')
-                bot.send_message(157758328, documents_info, reply_markup=document_btn)  # TODO закомментировать
+                bot.send_message(user_id, documents_info, reply_markup=document_btn, parse_mode='Markdown')
                 counter += 1
                 time.sleep(3)
             except Exception:
@@ -245,11 +243,11 @@ def check_nalet_for_everyone():
         if password and password != '0' and messaging:  # TODO сделать в базе всем одинаково
             try:
                 nalet_info = getnalet.parser(user_id, tab_number, password)
-                if "Не удалось" in nalet_info:
+                if "Не удалось" in nalet_info or nalet_info is None:
                     continue
                 else:
                     bot.send_message(user_id, f'{name}, у Вас в этом месяце\n{nalet_info}', reply_markup=nalet_btn)
-                    bot.send_message(157758328, f'Пользователю {fio} отправлен налёт.')
+                    bot.send_message(157758328, f'{fio} налёт\n{nalet_info}')
                     counter += 1
                     time.sleep(3)
             except Exception as exc:
@@ -360,14 +358,12 @@ def write_new_dict_user(message):  # TODO ВЫНЕСТИ В ОТДЕЛЬНЫЙ �
         return
     if user_id == user_id_from_db:
         try:
-            bot.send_message(user_id,
-                             f'\t    {name}, Вам успешно предоставлен доступ к телеграм-боту. \n')
-            # bot.send_message(user_id,
-            #                  f'\t    Вам присылать напоминание отзвониться в наряд? Если да, то нажмите на ссылку '
-            #                  f'/remind (отключить эти напоминания можно будет также, нажав на эту же ссылку, или отправив ее в поле ввода сообщений, или выбрать в меню слева). ')
-            bot.send_message(user_id,
-                             f'\t    Если хотите получать уведомления об изменениях в плане работ (о новых рейсах), смотреть налет и следить за допусками,'
-                             f' то пришлите логин и пароль от OpenSky в ответном одном сообщении через пробел (4 слова через пробел) по следующему шаблону: логин ....... пароль ......',
+            bot.send_message(user_id, f'\n\t    {name}, Вам успешно предоставлен доступ к телеграм-боту. \n')
+            bot.send_message(user_id, f'\t    - Чем может быть полезен этот телеграм-бот: /faq \n'
+                                      f'\t    - Ответы на частозадаваемые вопросы: /faq2'
+                                      f'\t    - Если выхотите заказать выходной, нажмите на кнопку "Заказ выходных", а затем "Заказать выходной", либо перейдите по ссылке /day_order, \n'
+                                      f'\t    - Если Вы хотите получать уведомления об изменениях в плане работ (о новых рейсах), смотреть налет и следить за допусками,'
+                                      f' то пришлите табельный и пароль от OpenSky в ответном одном сообщении (2 слова через пробел) по следующему шаблону: 123456 AbCdEf',
                              reply_markup=general_menu())
             bot.send_message(157758328, "Сообщение о предоставлении доступа пользователю отправлено успешно.")
             return
@@ -481,9 +477,10 @@ def conversation(message):
             text = baza.dictionary[id].get('answer')
             with open(pic, 'rb') as f:
                 bot.send_photo(user_id, f, caption=text, parse_mode='Markdown')
+                return
         except Exception as exc:
             bot.send_message(user_id,
-                             'Я не знаю, что на это ответить. Уточните или измените свой вопрос, или предложите свой вариант ответа, нажав на кнопку "Добавить информацию".')
+                             'Я не знаю, что на это ответить. Уточните или измените свой вопрос, предложите свой вариант ответа, нажав на кнопку "Добавить информацию".')
             bot.send_message(157758328,
                              f"Ошибка при отправке изображения из функции get_photo() при запросе {message.text}: {exc}")
 
@@ -688,10 +685,13 @@ def conversation(message):
                     bot.send_message(user_id, link, reply_markup=general_menu(), parse_mode='Markdown')
                 found_result = True
                 bot.send_message(user_id,
-                                 'Если Вам не удалось найти то, что Вы искали - попробуйте упростить или изменить '
-                                 'свой запрос.', reply_markup=general_menu(), parse_mode='Markdown')
+                                 'Если Вам не удалось найти то, что Вы искали - попробуйте изменить или упростить '
+                                 'свой запрос. Если у Вас будет что добавить - сообщайте /addinfo',
+                                 reply_markup=general_menu(), parse_mode='Markdown')
                 bot.send_message(157758328, f"4 -{fio} При поиске по ответам, пользователю выдан ответ в случайном "
-                                            f"порядке c отсчением окончаний по запросу:\n{message.text}")
+                                            f"порядке c отсчением окончаний по запросу:\n{message.text}. Ответ выдан примерный, вероятно, требуется дополнительная информация.")
+                bot.send_message(1106606028,
+                                 f"Пользователь {fio}, вероятно, не смог найти запрос: {message.text}. Ответ выдан примерный, вероятно, требуется дополнительная информация.")
                 return found_result
         if len(results) >= 8:
             bot.send_message(message.chat.id,
@@ -725,9 +725,8 @@ def conversation(message):
                              "К сожалению, я не могу проверить сроки действия Ваших документов и допусков, т.к. "
                              "в моей базе нет Вашего логина и пароля от OpenSky. Если Вы не хотите пропустить "
                              "сроки дейтсивя документов и вовремя получить уведомление на телефон, пришлите в "
-                             "ответном одном сообщении 4 слова через пробел по шаблону: логин ...... пароль "
-                             "........  Менять старый пароль каждый раз не нужно, достаточно ввести старый пароль в "
-                             "графу нового пароля по ссылке pwd.rossiya-airlines.com'.", reply_markup=document_btn)
+                             "ответном одном сообщении 2 слова через пробел по шаблону: 123456 AbCdEf \n"
+                             , reply_markup=document_btn)
         else:
             try:
                 documents_info = get_permissions.parser(user_id, tab_number, name, surname)
@@ -760,10 +759,9 @@ def conversation(message):
         if password == '' or not password or password == '0':
             bot.send_message(user_id,
                              "К сожалению, я не могу посчитать сколько рейсов вы отлетали, т.к. в моей базе нет "
-                             "Вашего логина и пароля. Если Вы хотите чтобы я за вас легко и просто посчитал "
-                             "количество рейсов, пришлите мне в ответном одном сообщении 4 слова через пробел по "
-                             "шаблону: логин ...... пароль ........  Менять старый пароль каждый раз не нужно, достаточно "
-                             "ввести старый пароль в графу нового пароля по ссылке pwd.rossiya-airlines.com")
+                             "Вашего логина и пароля. Если Вы хотите чтобы я за вас быстро посчитал "
+                             "количество рейсов, пришлите мне в ответном одном сообщении табельный и пароль (2 слова "
+                             "через пробел) шаблону: 123456 AbCdEf \n")
         else:
             bot.send_message(user_id, "Уже считаю Ваши рейсы. Пожалуйста, подождите...")
             result = flight_counter.parser(user_id, tab_number, password)
@@ -771,12 +769,12 @@ def conversation(message):
             found_result = True
         return found_result
 
-    if message.text.lower() in 'это не нормально это ужасно это очень плохо очень жаль кошмар охренеть':
+    if message.text.lower() in 'это не нормально это ужасно это очень плохо очень жаль кошмар охренеть как же так как жаль что случилось':
         bot.send_message(user_id, f"Ну, что поделать, {name}... Я тебя прекрасно понимаю.")
         bot.send_message(157758328, f"{fio} отправили сочувствие в ответ на {message.text}.")
         return
 
-    if message.text.lower() in "план на завтра мой план работ /getplan мой наряд мои рейсы на 5 дней":
+    if message.text.lower() in "план на завтра мой план работ /getplan мой наряд мои рейсы":
         if password == '' or not password or password == '0':
             plan_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()  # что такое двоеточие и что оно дает???
             btn = types.InlineKeyboardButton(text="Открыть план работ в OpenSky",
@@ -786,15 +784,19 @@ def conversation(message):
                              f'{name}, Ваш логин и пароль от OpenSky отсутсвует в моей базе данных, поэтому я '
                              'не могу запросить ваш план работ и выдать его напрямую сюда. Если Вы '
                              'хотите быстро узнавать свой план работ, получать '
-                             'уведомления о новых рейсах - сообщите свой логин и пароль '
-                             'через пробел в следующем формате: \n логин ...... пароль ...... \n '
-                             '(4 слова через пробел, вместо многоточия ваш логин и пароль). \n Менять старый пароль каждый раз не '
-                             'нужно, достаточно ввести старый пароль в графу нового пароля по ссылке pwd.rossiya-airlines.com)',
+                             'уведомления о новых рейсах - сообщите свой табельный и пароль от OpenSky'
+                             'через пробел в следующем формате: 123456 AbCdEf  \n '
+                             '(2 слова через пробел). \n ',
                              reply_markup=plan_btn)
             return
         else:
             bot.send_message(user_id, f"{name}, запрос отправлен. Ожидайте несколько секунд...")
-            plan = getplan.parser(user_id, tab_number, password, autoconfirm, time_depart)
+            try:
+                plan = getplan.parser(user_id, tab_number, password, autoconfirm, time_depart)
+            except Exception:
+                bot.send_message(user_id,
+                                 f"{name}, не удалось получить план работ. Попробуйте еще раз через некоторое время позже.")
+                return
             plan_btn: InlineKeyboardMarkup = types.InlineKeyboardMarkup()  # что такое двоеточие и что оно дает???
             btn = types.InlineKeyboardButton(text="Открыть подробнее в OpenSky",
                                              url='https://edu.rossiya-airlines.com/workplan/')
@@ -830,10 +832,9 @@ def conversation(message):
         if not password:
             bot.send_message(user_id, 'Вам не приходят автоматические уведомление о предстоящем плане работ, '
                                       'так как Вы ранее не сообщили свой логин и пароль от OpenSky. Чтобы получать '
-                                      'уведомления о предстоящем плане работ, Вам неообходимо сообщить свой логин и '
-                                      'пароль в сообщении по следующему шаблону: логин 123456 пароль AbCdEfG '
-                                      '(4 слова через пробел в одну строку). Менять старый пароль каждый раз не нужно, '
-                                      'достаточно ввести старый пароль в графу нового пароля по ссылке pwd.rossiya-airlines.com')
+                                      'уведомления о предстоящем плане работ, Вам неообходимо сообщить свой табельный и '
+                                      'пароль от Opensky в сообщении по следующему шаблону: 123456 AbCdEfG '
+                                      '(2 слова через пробел в одну строку). ')
         if len(password) >= 1 and plan_notify:
             if plan_notify:
                 prohibited = False
@@ -858,10 +859,8 @@ def conversation(message):
             bot.send_message(user_id,
                              'Ваш логин и пароль от OpenSky отсутсвует в моей базе данных, поэтому я не могу запросить '
                              'ваш налёт и выдать его напрямую сюда в чат. Если вы хотите легко и быстро узнавать свой '
-                             'налёт - в ответном сообщении отправьте свой логин и пароль через пробел в следующем '
-                             'формате: \n логин ...... пароль ...... \n (вместо многоточия ваш логин и пароль - 4 слова через пробел). \n '
-                             ' Менять старый пароль каждый раз не нужно, достаточно ввести старый пароль в графу нового '
-                             'пароля по ссылке pwd.rossiya-airlines.com', reply_markup=nalet_btn)
+                             'налёт - в ответном одном сообщении отправьте свой логин и пароль через пробел в следующем '
+                             'формате: \n123456 AbCdEf \n (2 слова через пробел). \n ', reply_markup=nalet_btn)
             return
         else:
             bot.send_message(user_id, f"{name}, уже считаю Ваш налёт. Пожалуйста, подождите...")
@@ -882,7 +881,7 @@ def conversation(message):
         bot.send_message(157758328, result)
         return
 
-    if "изменить город пользователя" in message.text.lower():
+    if "изменить город" in message.text.lower():
         user_id = message.text.split()[-2]
         city = message.text.split()[-1]
         handler_db.update_city(city, user_id)
@@ -894,6 +893,14 @@ def conversation(message):
         user_id = message.text.split()[-2]
         surname = message.text.split()[-1]
         handler_db.update_surname(surname, user_id)
+        result = handler_db.select_all_data_of_person(user_id)
+        bot.send_message(157758328, result)
+        return
+
+    if "изменить имя" in message.text.lower():
+        user_id = message.text.split()[-2]
+        name = message.text.split()[-1]
+        handler_db.update_name(name, user_id)
         result = handler_db.select_all_data_of_person(user_id)
         bot.send_message(157758328, result)
         return
@@ -923,6 +930,13 @@ def conversation(message):
     if "удалить пользователя" in message.text.lower():
         user = message.text.split()
         handler_db.delete_user_from_db(user[-1])
+        result = handler_db.select_all_data_of_person(user[-1])
+        bot.send_message(157758328, result)
+        return
+
+    if "удалить дубликат" in message.text.lower():
+        user = message.text.split()
+        handler_db.delete_duplicates(user[-1])
         result = handler_db.select_all_data_of_person(user[-1])
         bot.send_message(157758328, result)
         return
@@ -1142,7 +1156,7 @@ def conversation(message):
         oke = ''
         if message.text in "1 ОКЭ 1 первый отряд 1 отделение 1окэ1 первое отделение":
             oke = "1"
-        if message.text in "2 ОКЭ (ЕКБ) 2 второй отряд 2 отделение 2окэ2 второе отделение":
+        if message.text in "2 ОКЭ 2 (ЕКБ) второй отряд 2 отделение 2окэ2 второе отделение":
             oke = "2"
         if message.text in "3 ОКЭ 3 третий отряд 3 отделение 3окэ3 третье отделение":
             oke = "3"
@@ -1226,12 +1240,11 @@ def conversation(message):
             return f'{day}.{future_month}.{future_year}', comment.strip()
 
     if message.text.lower() in "/day_order заказ\nвыходных заказ выходных":
-        # bot.send_message(message.chat.id, f'На данный момент заказы принимаются на {get_future_date()[2]}.\n\n ФУНКЦИЯ РАБОТАЕТ В ТЕСТОВОМ РЕЖИМЕ. ФАКТИЧЕСКИ ЗАКАЗЫ НЕ ПРИНИМАЮТСЯ')
+        bot.send_message(message.chat.id, f'Заказы на МАЙ будут приниматься с 28 марта по 8 апреля.')
+        return  # TODO вторая закрывашка где заказать выходной строка 1442
+        # bot.send_message(message.chat.id, f'С 25 февраля по 5 марта заказы принимаются на {get_future_date()[2]}.')
         # bot.send_message(message.chat.id, f"{name}, Вы хотите заказать выходной или отменить ранее заказанный выходной?", reply_markup=select_action())
         # return
-        bot.send_message(message.chat.id,
-                         f'На данный момент заказы не принимаются. Заказы выходных на апрель будут приниматься с 25 февраля по 5 марта.')
-        return
 
     ask_position = 'Укажите Вашу должность'
     ask_date = '*На какую дату Вы бы хотели заказать выходной?* \n Укажите дату в любом формате и через пробел ' \
@@ -1242,10 +1255,36 @@ def conversation(message):
                'ЗА ОДИН ЗАКАЗ - ОДНА ДАТА.\n'
     ask_oke = "Укажите Ваше отделение"
 
-    if "удалить" == message.text.lower():
-        bot.send_message(message.chat.id,
-                         f'Чтобы отменить заказанный выходной, напишите слово удалить и число, например:\n\n'
-                         f'удалить 25')  # if "удалить выходной " будет написано в общем коде
+    def delete_day(message):
+        """удаляет ранее заказанный выходной день"""
+        day = message.text.split()[2]
+        tab_number = handler_db.get_tab_number(message.chat.id)
+        date = check_true_date(day)[0]
+        ordered_days = handler_db.what_dates_order(tab_number)
+        was_ordered = None
+
+        if day in ordered_days:
+            was_ordered = True
+        dates = handler_db.delete_date(tab_number, date)
+        if date not in dates:
+            if was_ordered:
+                bot.send_message(message.chat.id, f"{day} числа выходной успешно удален.", reply_markup=select_action())
+            else:
+                bot.send_message(message.chat.id, f"{day} числа у Вас не было заказано выходного дня.",
+                                 reply_markup=select_action())
+        if dates:
+            bot.send_message(message.chat.id, f"Ваши заказанные даты:\n{dates}", reply_markup=select_action())
+        else:
+            bot.send_message(message.chat.id, f"У Вас нет заказанных выходных.", reply_markup=select_action())
+        return
+
+    if message.text.lower() in "как удалить выходной":
+        bot.send_message(message.chat.id, f'Чтобы отменить заказанный выходной, напишите слово удалить и число, '
+                                          f'например:\n\n удалить выходной 25')
+        return
+
+    if "удалить выходной" in message.text.lower():
+        delete_day(message)
         return
 
     def output_free_dates1(message):
@@ -1268,10 +1307,16 @@ def conversation(message):
                         output_free_dates = free_dates = free_dates.replace(f'{i}\n', '')
                 if output_free_dates is None:
                     output_free_dates = free_dates
-            bot.send_message(message.chat.id,
-                             f'Свободные даты, доступные Вам для заказа: \n{output_free_dates}',
-                             reply_markup=select_action_in_cancel(), parse_mode='Markdown')
-            return
+            if output_free_dates != '':
+                bot.send_message(message.chat.id,
+                                 f'Свободные даты, доступные Вам для заказа: \n{output_free_dates}',
+                                 reply_markup=select_action_in_cancel(), parse_mode='Markdown')
+                return
+            else:
+                bot.send_message(message.chat.id,
+                                 f'Вам доступен для заказа любой день.',
+                                 reply_markup=select_action_in_cancel(), parse_mode='Markdown')
+                return
         else:
             bot.send_message(message.chat.id,
                              "Необходимо вводить Вашу должность корректно и нажимать на кнопки, представленные ниже. Нажмите Выйти и начните процедуру заново.")
@@ -1282,7 +1327,7 @@ def conversation(message):
         oke = check_true_oke(message)
         order_dict[message.chat.id][ask_oke] = oke
         tab_number = handler_db.get_tab_number(message.chat.id)
-        handler_db.update_oke(tab_number, oke)
+        handler_db.update_oke(message.chat.id, oke)
         msg667 = bot.send_message(message.chat.id, ask_position, reply_markup=select_position(),
                                   parse_mode='Markdown')
         bot.register_next_step_handler(msg667, output_free_dates1)
@@ -1292,21 +1337,19 @@ def conversation(message):
         """Проверяет дату на корректность, заносит дату в словарь...."""
         date, comment = check_true_date(message.text)
         if date == 'month_incorrect':
-            denied = bot.send_message(message.chat.id,
-                                      f"Выходные на этот месяц не принимаются. На данный момент, выходные принимаются на {get_future_date()[2]}.",
-                                      reply_markup=select_action())
-            bot.send_message(message.chat.id, denied)
+            bot.send_message(message.chat.id,
+                             f"Выходные на этот месяц не принимаются. На данный момент, выходные принимаются на {get_future_date()[2]}.",
+                             reply_markup=select_action())
             return
         if type(date) is bool:
-            denied = bot.send_message(message.chat.id, f"Введенная дата некорректна. Начните процедуру заново.",
-                                      reply_markup=select_action())
-            bot.send_message(message.chat.id, denied)
+            bot.send_message(message.chat.id, f"Введенная дата некорректна. Начните процедуру заново.",
+                             reply_markup=select_action())
             return
 
         order_dict[message.chat.id]['comment'] = comment
         tab_number = handler_db.get_tab_number(message.chat.id)
         oke = handler_db.get_oke(tab_number)
-        handler_db.update_oke(tab_number, oke)
+        handler_db.update_oke(message.chat.id, oke)
         ordered_days = handler_db.what_dates_order(tab_number)
         position = handler_db.get_position(tab_number)
 
@@ -1323,6 +1366,9 @@ def conversation(message):
             bot.send_message(message.chat.id,
                              f"Заказать можно не более двух дней подряд. \nУ Вас уже заказаны даты:\n{ordered_days}",
                              reply_markup=select_action())
+            bot.send_message(message.chat.id,
+                             f"Чтобы удалить выходной, в ответном сообщении напишите удалить выходной и число, например: \n\n удалить выходной 25",
+                             reply_markup=select_action())
             return
 
         if date:
@@ -1332,8 +1378,8 @@ def conversation(message):
             free_days_before = int(available)
             if free_days_before > 0:
                 handler_db.update_date(date, tab_number, surname, name, position, oke,
-                                       comment)  # TODO записывает заказ вместо 4 в 5 отряд (переписыват 4 на 5)
-                bot.send_message(message.chat.id, f'{name}, дата {date} успешна записана.',
+                                       comment)
+                bot.send_message(message.chat.id, f'{name}, дата {date} успешно записана.',
                                  reply_markup=select_action())
                 bot.send_message(157758328, f'Заказан выходной.')
                 # counter_days = handler_db.get_counter_days(tab_number)
@@ -1357,7 +1403,7 @@ def conversation(message):
         """записывает оке в общую базу данных и словарь спрашивает желаемую дату"""
         oke = check_true_oke(message)
         order_dict[message.chat.id][ask_oke] = oke
-        handler_db.update_oke(tab_number, oke)
+        handler_db.update_oke(message.chat.id, oke)
         msg41 = bot.send_message(message.chat.id, ask_date, parse_mode='Markdown')
         bot.register_next_step_handler(msg41, start_04)
         return
@@ -1386,37 +1432,16 @@ def conversation(message):
             bot.send_message(message.chat.id,
                              f"{name}, заказать можно не более трех дней в месяц. \nВаши заказанные дни:\n{ordered_days}",
                              reply_markup=select_action())
+            bot.send_message(message.chat.id,
+                             f"Чтобы удалить выходной, в ответном сообщении напишите удалить выходной и число, например: \n\n удалить выходной 25",
+                             reply_markup=select_action())
             return True
         else:
             return False
 
-    def delete_day(message):
-        """удаляет ранее заказанный выходной день"""
-        message.chat.id = message.chat.id
-        day = message.text.split()[1]
-        tab_number = handler_db.get_tab_number(message.chat.id)
-        date = check_true_date(day)[0]
-        ordered_days = handler_db.what_dates_order(tab_number)
-        # TODO смотреть какие даты были до этого и сравнивать числа
-        was_ordered = None
-
-        if day in ordered_days:
-            was_ordered = True
-        dates = handler_db.delete_date(tab_number, date)
-        if date not in dates:
-            if was_ordered:
-                bot.send_message(message.chat.id, f"{day} числа выходной успешно удален.",
-                                 reply_markup=select_action())
-            else:
-                bot.send_message(message.chat.id, f"{day} числа у Вас не было заказано выходного дня.",
-                                 reply_markup=select_action())
-        if dates:
-            bot.send_message(message.chat.id, f"Ваши заказанные даты:\n{dates}", reply_markup=select_action())
-        else:
-            bot.send_message(message.chat.id, f"У Вас нет заказанных выходных.", reply_markup=select_action())
-        return
-
     if message.text.lower() in "заказать выходной заказать\nвыходной":
+        bot.send_message(message.chat.id, f'Заказы на МАЙ будут приниматься с 28 марта по 8 апреля.')
+        return
         if check_limit():
             return
         else:
@@ -1450,7 +1475,7 @@ def conversation(message):
             bot.send_message(message.chat.id,
                              f'Вот Ваши уже заказанные выходные:\n{ordered_days}\n\n'
                              f'Чтобы отменить заказанный выходной, напишите слово удалить и число, например:\n\n'
-                             f'удалить 25')  # if "удалить выходной " будет написано в общем коде и продублировано ниже
+                             f'удалить выходной 25')  # if "удалить выходной " будет написано в общем коде и продублировано ниже
         else:
             bot.send_message(message.chat.id,
                              f'У Вас не было ранее заказанных выходных дней.')  # if "у
@@ -1476,17 +1501,18 @@ def conversation(message):
             return
         else:
             if handler_db.get_oke(handler_db.get_tab_number(message.chat.id)) is None:
-                msg66555 = bot.send_message(message.chat.id, ask_oke, reply_markup=otdelenie(),
-                                            parse_mode='Markdown')
+                msg66555 = bot.send_message(message.chat.id, ask_oke, reply_markup=otdelenie(), parse_mode='Markdown')
                 bot.register_next_step_handler(msg66555, ask_position_func_1)
+                return
+            if handler_db.get_position(handler_db.get_tab_number(message.chat.id)) is None:
+                msg552 = bot.send_message(message.chat.id, ask_position, reply_markup=select_position(),
+                                          parse_mode='Markdown')
+                bot.register_next_step_handler(msg552, output_free_dates1)
+                return
             else:
                 message.text = handler_db.get_position(handler_db.get_tab_number(message.chat.id))
                 output_free_dates1(message)
                 return
-
-    if "удалить" in message.text.lower():
-        delete_day(message)
-        return
 
     if message.text.lower() in "выйти":
         bot.send_message(message.chat.id, f"{name}, хорошего дня!", reply_markup=select_action())
@@ -1500,6 +1526,18 @@ def conversation(message):
         if check_limit():
             return
         else:
+            tab_number = handler_db.get_tab_number(message.chat.id)
+            date = check_true_date(message.text)[0]
+            ordered_days = handler_db.what_dates_order(tab_number)
+            two_days = handler_db.check_two_days_in_row(date, tab_number)
+            counter_days = handler_db.get_counter_days(tab_number)
+            if two_days:
+                bot.send_message(message.chat.id, f'Вы попытались заказть более двух дней подряд.')
+                bot.send_message(message.chat.id,
+                                 f'уже заказано на {get_future_date()[2]} месяц {counter_days} дн.:\n{ordered_days}',
+                                 reply_markup=select_action_in_cancel())
+                bot.send_message(message.chat.id, f'Выходной на {date} не заказн.')
+                return
             start_04(message)
             return
 
@@ -1555,7 +1593,7 @@ def conversation(message):
                              "У нас нет Вашего пароля от OpenSky, "
                              "поэтому мы не сможем ни получать ваш план, ни подтверждить его автоматически. Если вы хотите получать "
                              "план работ и подтверждать его автоматически вам нужно сообщить "
-                             "ответном сообщении: логин ..... пароль .... (4 слова через пробел).",
+                             "ответном сообщении свой табельный и пароль от OpenSky в формате: 123456 AbCdEf",
                              reply_markup=general_menu())
             bot.send_message(157758328,
                              f'{fio} попытался включить автоматическое подтверждение плана работ, но у нас нет пароля')
@@ -1637,46 +1675,39 @@ def conversation(message):
                                   'соответсвующие изменения. \n Большое спасибо за Ваше участие в улучшении '
                                   'Телеграм-Бота!', reply_markup=general_menu())
         bot.send_message(157758328, correct)
+        bot.send_message(1106606028, correct)
         return
 
     if 'инструктор' == message.text or 'инструктора' == message.text:
         bot.send_message(user_id, 'Какой именно инструктор Вас инетересует?', reply_markup=general_menu())
-        bot.send_message(157758328, "Попросили уточнить какой инструктор интересует")
         return
 
     if 'телефон' == message.text or 'номер телефона' == message.text or "добавочный номер" == message.text or 'телефоны' in message.text or 'номера' in message.text:  # TODO наверное не очень семантично здесь размещать обработку этого запроса
         bot.send_message(user_id, 'Чей именно телефон Вас инетересует?', reply_markup=general_menu())
-        bot.send_message(157758328, "Попросили уточнить чей телефон нужен")
         return
 
     if 'почта' == message.text:
         bot.send_message(user_id, 'Чья именно почта Вас инетересует?', reply_markup=general_menu())
-        bot.send_message(157758328, "Попросили уточнить какая именно почта интересует")
         return
 
     if 'особенности' == message.text:
         bot.send_message(user_id, 'Какие именно особенности Вас инетересуют?', reply_markup=general_menu())
-        bot.send_message(157758328, "Попросили уточнить какие именно особенности интересуют")
         return
 
     if 'особенности рейса' == message.text:
         bot.send_message(user_id, 'Какой город Вас инетересует?', reply_markup=general_menu())
-        bot.send_message(157758328, "При запросе особенности рейса, попросили уточнить какой город интересует")
         return
 
     if 'питание' == message.text:
         bot.send_message(user_id, 'Какое питание Вас инетересует?', reply_markup=general_menu())
-        bot.send_message(157758328, "При запросе питание, попросили уточнить какое питание интересует")
         return
 
     if 'самолет' == message.text:
         bot.send_message(user_id, 'Какой самолет Вас инетересует?', reply_markup=general_menu())
-        bot.send_message(157758328, "При запросе самолет, попросили уточнить какой самолет интересует")
         return
 
     if 'супервайзер' == message.text:
         bot.send_message(user_id, 'Какой именно супервайзер Вас инетересует?', reply_markup=general_menu())
-        bot.send_message(157758328, "Попросили уточнить какой именно супервайзер интересуют")
         return
 
     if message.text in "город санкт-петербург":
@@ -1725,18 +1756,17 @@ def conversation(message):
                 elif 'изображение' in question:  # так надо 2 раза
                     get_photo()
                     found_result = True
+
                 else:  # так надо 2 раза
                     try:
                         bot.send_message(user_id, baza.dictionary[id].get('answer'), reply_markup=general_menu(),
                                          parse_mode='Markdown')
-                        # bot.send_message(157758328,
-                        #                  f"Пользователю {fio} выдали информацию в строгом соответствии по запросу: {message.text}")
                     except Exception as exc:
                         bot.send_message(157758328, f"при запросе '{message.text}' при поиске в строгом соответствии "
                                                     f"возникала ошибка {type(exc).__name__} {exc} ")
                     found_result = True
 
-    if "новости" in message.text.lower():
+    if "новости" in message.text.lower() or "/news" in message.text.lower():
         check_new_documents(user_id)
 
     """2.1 - ищет в нестрогом соответсвии"""
@@ -1793,13 +1823,16 @@ def conversation(message):
         if len(message.text) > 6:  # для отправки развернутой аббревиатуры, в случае если расшифровка была найдена, но
             bot.send_message(user_id, message.text)  # подробного ответа на нее не было выдано. Расшифровывает.
         bot.send_message(user_id,
-                         f'\t {name}, я не знаю, что на это ответить. Попробуйте изменить или упростить свой запрос.\n'
-                         '\t Если Вам что-то станет известно на этот счет, пожалуйста, поделитесь информацией и сообщите '
+                         f'\t {name}, я не знаю, что на это ответить. Попробуйте изменить или упростить свой запрос.\n\n'
+                         f'\t Если Вы хотели *отправить пароль* от OpenSky? отправляего нужно в следующем формате: логин 123456 пароль ФиСвУа (4 члова через пробел) \n\n'
+                         f'\t Если Вы хотели *заказать выходной*, то нужно сначала нужно нажать кнопку "Заказ выходных", а затем "Заказать выходной", либо перейдите по ссылке /day_order . \n\n'
+                         f'\t Если Вы *искали какую-то информацию* или ответ на вопрос и не нашли и Вам что-то станет известно на этот счет, пожалуйста, поделитесь информацией и сообщите '
                          'мне, нажав кнопку "Добавить информацию" или @DeveloperAzarov\n'
                          '\n \tЕсли Вы заметите ошибки, устаревшую информцию или обнаружите факты некорректной работы '
                          'бота - просьба написать об этом также разработчику @DeveloperAzarov.\n',
-                         reply_markup=general_menu())
+                         reply_markup=general_menu(), parse_mode='Markdown')
         bot.send_message(157758328, f"Пользователь {fio} не смог найти запрос: {message.text}")
+        bot.send_message(1106606028, f"Пользователь {fio} не смог найти запрос: {message.text}")
 
 
 bot.polling(none_stop=True)  # запускает бота
