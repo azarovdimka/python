@@ -40,7 +40,7 @@ def parser(user_id, tab_number, password, name):
         # error = f"Не удалось проверить сроки действия ваших допусков и документов. Вероятно, в базе указан неверный пароль {password} Если пароль указан устаревший, Вы можете сообщить новый пароль в следующем формате (4 слова через пробел): логин ...... пароль ......."
         # return error
 
-    output_info = f'{name}, истекают сроки действия Ваших документов и допусков:\n'
+    output_info = f'{name}, истекают сроки действия Ваших документов и допусков. Заканчивается:\n'
     found_result = None
 
     tbody = table.contents[1]
@@ -86,7 +86,7 @@ def parser(user_id, tab_number, password, name):
         string = ''
 
         if now.day == deadline.day and now.month == deadline.month and now.year == deadline.year:
-            string += f"- Сегодня истекает {document_name}\n"
+            string += f"- !Сегодня *{document_name}*\n"
             output_info += string
             found_result = True
         else:
@@ -96,11 +96,11 @@ def parser(user_id, tab_number, password, name):
                 if int(days_left) < 0:  # ЕСЛИ ЧТО-ТО ПРОСРОЧЕНО
                     continue
                 if 0 < int(days_left) < 60:
-                    string += f"- заканчивается {document_name}{aircraft_type}. \n\t Действует до {day_str}.{month_str}.{year_str} \n\t Осталось {period.days} дн.\n"
+                    string += f"- *{document_name}{aircraft_type}*. \n\t Действует до {day_str}.{month_str}.{year_str} \n\t Осталось {period.days} дн.\n"
                     output_info += string  # TODO сделать нормальные окончания склонения числительнеых
                     found_result = True
             except Exception as exc:
-                string += f"- заканчивается {document_name}{aircraft_type}. \n\t Действует до {day_str}.{month_str}.{year_str} \n\t Остался 1 день\n"
+                string += f"- *{document_name}{aircraft_type}*. \n\t Действует до {day_str}.{month_str}.{year_str} \n\t Остался 1 день\n"
                 output_info += string  # TODO сделать нормальные окончания склонения числительнеых
                 found_result = True
 
