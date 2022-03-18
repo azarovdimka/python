@@ -2,9 +2,16 @@
 
 import sqlite3
 import pandas as pd
-import day_off_31_dict
+
+# import day_off_30_dict
 
 db_root = ""
+
+
+def to_encrypt_password(password):
+    """Зашифровывает пароль пользователя"""
+    if password is not None:
+        return len(password) * 'X'
 
 
 def to_create_day_off_requests_db():
@@ -38,7 +45,7 @@ def from_day_dict_to_sql(dictionary, name_table):
         df.to_sql(name_table, con=con, if_exists='replace')
 
 
-# from_day_dict_to_sql(day_off_31_dict.day_off_dict, 'day_off')
+# from_day_dict_to_sql(day_off_30_dict.day_off_dict, 'day_off')
 
 
 def check_requests_before(user_id):
@@ -129,47 +136,29 @@ def check_ordered_before(date, tab_number):
 
 
 def check_two_days_in_row(date, tab_number):
-    """проверяет наличие более двух дней подряд: к полученной дате прибавляет два раза и отнимает два раза чтобы
-    проверить в две стороны"""
-    date_minus_2 = int(date.split('.')[0]) - 2
-    date_minus_1 = int(date.split('.')[0]) - 1
-    date_ordered = int(date.split('.')[0])
-    date_plus_1 = int(date.split('.')[0]) + 1
-    date_plus_2 = int(date.split('.')[0]) + 2
-    check_dates_list = [date_minus_2, date_minus_1, date_ordered, date_plus_1, date_plus_2]
-    coincidence_counter = 0
-
+    """дает заказывать не более двух дней подряд"""
     with sqlite3.connect(db_root + 'day_off_requests.db') as con:
         cur = con.cursor()
         query = """SELECT date FROM day_off where tab_number = ?"""
         data = (tab_number,)
         cur.execute(query, data)
-        unique_from_db = []
+        ordered_dates_from_db = [date.split('.')[0]]
         for i in cur.fetchall():
-            unique_from_db.append(i)
-        unique_from_db = set(unique_from_db)
-        dates_int_list_from_db = []
-        for tuple_date_db in unique_from_db:
-            for date in tuple_date_db:
-                date = date.split('.')[0]
-                dates_int_list_from_db.append(int(date))
-
-        for int_date_db in dates_int_list_from_db:
-            for int_check_date in check_dates_list:
-                if int_check_date == int_date_db:
-                    coincidence_counter += 1
-        if coincidence_counter >= 2:
-            return True
-        else:
+            ordered_dates_from_db.append(i[0].split('.')[0])
+        if len(ordered_dates_from_db) <= 2:
             return False
+        else:
+            a, b, c = sorted(set(ordered_dates_from_db))
+            a, b, c = int(a), int(b), int(c)
 
-        # return length
+            if b - a == 1 and c - b == 1:
+                return True
+            else:
+                return False
 
-
-# print(check_two_days_in_row(date='05.02.2022', tab_number='119221'))
 
 def check_three_days_in_row(tab_number):
-    """проверяет наличие всего трех дней в сумме"""
+    """проверяет наличие всего трех дней в сумме. Чтобы можно было заказать не более трех дней"""
     with sqlite3.connect(db_root + 'day_off_requests.db') as con:
         cur = con.cursor()
         query = """SELECT date FROM day_off where tab_number = ?"""
@@ -217,25 +206,6 @@ def check_free_dates(position, oke):
         else:
             return "Свободных дат нет."
 
-    # """РАБОТАЕТ!!! выдает заказанные даты по табельному номеру"""
-    # with sqlite3.connect('day_off_requests.db') as con:
-    #     cur = con.cursor()
-    #     query = """SELECT date FROM day_off where tab_number = ?"""
-    #     data = (tab_number,)
-    #     cur.execute(query, data)
-    #     unique = []
-    #     for i in cur.fetchall():
-    #         unique.append(i)
-    #     unique = sorted(set(unique))
-    #     outputinfo = ''
-    #     for i in unique:
-    #         for b in i:
-    #             outputinfo += f'{b}\n'
-    #     return outputinfo
-
-
-# print(check_free_dates(position='СБ', oke='5'))
-
 
 def get_counter_days(tab_number):
     """ПРОВЕРИТЬ!!!! Извлекает количество ранее заказанных выходных из базы и возвращает число"""
@@ -261,25 +231,71 @@ def get_position(tab_number):
             return position
 
 
+def get_oke(tab_number):
+    """Извлекает ОКЭ бортпроводника из основной базы данных по табельному номеру"""
+    with sqlite3.connect(db_root + 'general.db') as con:
+        cur = con.cursor()
+        cur.execute(f"""SELECT oke FROM users 
+                         WHERE tab_number = ?""", (tab_number,))
+        for oke in cur.fetchone():
+            return oke
+
+
+def add_new_column(table, name_column):
+    """добавляет новый столбце в таблицу"""
+    with sqlite3.connect(db_root + 'general.db') as con:
+        cur = con.cursor()
+        data = f'ALTER TABLE {table} ADD {name_column} INT'
+        cur.execute(data)
+
+
+# add_new_column('users', 'plan_remind')
+
+
 def print_all():
     """консольная служебная функция не для вызова из телеграма"""
+    with sqlite3.connect(db_root + 'general.db') as con:
+        cur = con.cursor()
+        cur.execute("PRAGMA table_info(users);")
+        for i in cur.fetchall():
+            print(i)
     with sqlite3.connect(db_root + 'general.db') as con:
         cur = con.cursor()
         cur.execute("SELECT * FROM users")
         for i in cur.fetchall():
             print(i)
+    with sqlite3.connect(db_root + 'general.db') as con:
+        df = pd.read_sql("SELECT * FROM users", con)
+        df = df[['user_id', 'surname', 'name', 'city', 'link', 'exp_date', 'tab_number', 'password', 'access',
+                 'night_notify', 'plan_notify', 'autoconfirm', 'messaging', 'check_permissions', 'time_depart',
+                 'time_arrive', 'position', 'oke', 'plan_remind']]
+        df["password"] = df["password"].apply(lambda x: to_encrypt_password(x))
+        df.to_excel('general_db.xlsx', index=False)
+        print("файл excel general_db.xlsx сохранен в корневую директорию")
 
 
-print_all()
+# print_all()
+
+def import_users_to_excel():
+    """Создает в папке эксель файл с пользователоями"""
+    with sqlite3.connect(db_root + 'general.db') as con:
+        df = pd.read_sql("SELECT * FROM users", con)
+        df = df[['user_id', 'surname', 'name', 'city', 'link', 'exp_date', 'tab_number', 'password', 'access',
+                 'night_notify', 'plan_notify', 'autoconfirm', 'messaging', 'check_permissions', 'time_depart',
+                 'time_arrive', 'position', 'oke', 'plan_remind']]
+        df["password"] = df["password"].apply(lambda x: to_encrypt_password(x))
+        df.to_excel('general_db.xlsx', index=False)
 
 
 def import_daysoff_to_excel():
     """импортирует таблицу заказанных выходных дней в эксель"""
     with sqlite3.connect(db_root + 'day_off_requests.db') as con:
         df = pd.read_sql("SELECT * FROM day_off", con)
-        df = df[['id', 'date', 'tab_number', 'oke', 'surname', 'name', 'position',
-                 'comment']]
+        df = df[['id', 'date', 'tab_number', 'oke', 'surname', 'name', 'position', 'comment']]
         df.to_excel('ordered_days.xlsx', index=False)
+
+
+# import_daysoff_to_excel()
 
 
 def get_tab_number(user_id):
@@ -291,6 +307,24 @@ def get_tab_number(user_id):
         for tab_number in cur.fetchone():
             return tab_number
 
+
+def check_remind_status(user_id):
+    """Проверяет подключены ли уведомления отзвониться в наряд и возвращает 0 или 1 соответсвенно."""
+    with sqlite3.connect(db_root + 'general.db') as con:
+        cur = con.cursor()
+        cur.execute(f"""SELECT plan_remind FROM users 
+                        WHERE user_id = {user_id}""")
+        for plan_remind in cur.fetchone():
+            return plan_remind
+
+
+def update_plan_remind(user_id, plan_remind_status):
+    """Обновляет статус разрешения в general.db в таблице users отправлять уведомления об отзвоне в наряд или нет"""
+    with sqlite3.connect(db_root + 'general.db') as con:
+        cur = con.cursor()
+        sql_update_query = "UPDATE users SET plan_remind = ? WHERE user_id = ?"
+        data_update = (plan_remind_status, user_id)
+        cur.execute(sql_update_query, data_update)
 
 
 def get_name_surname(user_id):
@@ -337,17 +371,6 @@ def to_create_general_db():
             ''')
 
 
-def add_new_column(table, name_column):
-    """добавляет новый столбце в таблицу"""
-    with sqlite3.connect(db_root + 'general.db') as con:
-        cur = con.cursor()
-        data = f'ALTER TABLE {table} ADD {name_column} TEXT'
-        cur.execute(data)
-
-
-# add_new_column('users', 'oke')
-
-
 def check_access(user_id):
     """РАБОТАЕТ!!!!!! Проверяет есть ли пользователь в базе для предоставления доступа
     Возвращает ноль или единицу"""
@@ -382,6 +405,44 @@ def fetch_user_for_plan(user_id):
             user_id, surname, name, tab_number, password, messaging, check_permissions, night_notify, plan_notify, autoconfirm, time_depart = \
                 row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[10]
             return user_id, surname, name, tab_number, password, messaging, check_permissions, night_notify, plan_notify, autoconfirm, time_depart
+
+
+def get_city(user_id):
+    """Извлекает город локации пользователя из общей базы данных по id пользователя"""
+    with sqlite3.connect(db_root + 'general.db') as con:
+        cur = con.cursor()
+        cur.execute(
+            """SELECT city FROM users
+               WHERE user_id = ?""", (user_id,))
+        for city in cur.fetchone():
+            return city
+
+
+def get_user_id_by_tab_number(tab_number):
+    """Извлекает user_id (message.chat.id) по табельному номеру"""
+    with sqlite3.connect(db_root + 'general.db') as con:
+        cur = con.cursor()
+        cur.execute("SELECT user_id FROM users WHERE tab_number = ?", (tab_number,))
+        try:
+            for user_id in cur.fetchone():
+                return user_id  # TODO если не окажется user_id может он сразу None вернет и не нужно будет try except
+        except Exception:
+            return None
+
+
+def update_order_for_other(tab_number, oke, surname, name, position, date):
+    with sqlite3.connect(db_root + 'day_off_requests.db') as con:
+        cur = con.cursor()
+        select = """SELECT id FROM day_off 
+                    WHERE date = ? AND position = ? AND oke = ? AND surname = '' LIMIT 1"""
+        data = (date, position, oke)
+        cur.execute(select, data)
+        index = cur.fetchone()[0]
+
+        sql_update_query = """UPDATE day_off SET tab_number = ?, surname = ?, name = ? 
+                              WHERE id = ? AND date = ? AND position = ? AND oke = ?"""
+        data = (tab_number, surname, name, index, date, position, oke)
+        cur.execute(sql_update_query, data)
 
 
 def from_dict_to_sql(dictionary, name_table):
@@ -475,6 +536,18 @@ def update_position(user_id, position):
         return result
 
 
+def update_oke(user_id, oke):
+    """Добавляет ОКЭ бортпроводника в таблицу users"""
+    with sqlite3.connect(db_root + 'general.db') as con:
+        cur = con.cursor()
+        sql_update_query = "UPDATE users SET oke = ? WHERE user_id = ?"
+        data = (oke, user_id)  # f-строка тут не работает
+        cur.execute(sql_update_query, data)
+
+        result = cur.execute("SELECT EXISTS(select u.oke from users u where u.user_id = ?)", (user_id,))
+        return result
+
+
 def update_position_in_day_off(tab_number, position):
     """РАБОТАЕТ!!!! Добавляет должность бортпроводника в таблицу day_off"""
     with sqlite3.connect(db_root + 'day_off_requests.db') as con:
@@ -535,11 +608,35 @@ def update_city(city, user_id):
         return result
 
 
+def update_surname(surname, user_id):
+    """Меняет фамилию у пользователя в базе данных"""
+    with sqlite3.connect(db_root + 'general.db') as con:
+        cur = con.cursor()
+        sql_update_query = "UPDATE users SET surname = ? WHERE user_id = ?"
+        data = (surname, user_id)
+        cur.execute(sql_update_query, data)
+
+        result = cur.execute("SELECT EXISTS(select u.surname from users u where u.user_id = ?)", (user_id,))
+        return result
+
+
+def update_name(name, user_id):
+    """Меняет имя у пользователя в базе данных"""
+    with sqlite3.connect(db_root + 'general.db') as con:
+        cur = con.cursor()
+        sql_update_query = "UPDATE users SET name = ? WHERE user_id = ?"
+        data = (name, user_id)
+        cur.execute(sql_update_query, data)
+
+        result = cur.execute("SELECT EXISTS(select u.name from users u where u.user_id = ?)", (user_id,))
+        return result
+
+
 def list_user_id():
     """РАБОТАЕТ!!!! Используется в цикле для извлечения списка user_id для дальнейшего переборка списка циклом по порядку для
     проверки планов работ в цикле."""
     with sqlite3.connect(db_root + 'general.db') as con:
-        cur = con.cursor()  # обязательно должно быть с запятой # select exists возвращает true
+        cur = con.cursor()
         cur.execute("select * from users")
         list_id = []
         for row in cur:
@@ -548,7 +645,7 @@ def list_user_id():
 
 
 def check_users_in_db_id(user_id):
-    """ЕДИНСТВЕННАЯ РАБОТАЕТ!!!!!!!! Проверяет есть ли пользователь в базе по id"""
+    """??? нужна ли ?? Проверяет есть ли пользователь в базе по id"""
     with sqlite3.connect(db_root + 'general.db') as con:
         cur = con.cursor()
         cur.execute("select users.* from users where user_id = ?", (user_id,))
@@ -577,11 +674,16 @@ def select_all_data_of_person(user_id):
         cur.execute(request)
         result_set = cur.fetchone()
         string = ''
+        counter = 0
         try:
             for i in result_set:
-                string += f'{i} '
-        except Exception as exc:
-            return f"Пользователя нет в базе!\n\n{exc}"
+                counter += 1
+                if counter == 9:
+                    string += f'{to_encrypt_password(i)} '
+                else:
+                    string += f'{i} '
+        except Exception:
+            return f"Пользователя {user_id} нет в базе!"
         return string
 
 
