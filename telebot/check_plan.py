@@ -76,44 +76,42 @@ def cycle_plan_notify():
                     availability_for_planing = True
                     path_plan = "/usr/local/bin/bot/plans/plans" + str(user_id) + ".txt"
                     # path_plan = "C:\\PycharmProjects\\Probe\\мои примеры\\GitHub\\telebot\\plans\\plans" + str(user_id) + ".txt" #
-                    #  #  #
+                    #
                     if os.path.exists(path_plan):
-                        with open(path_plan, 'r',
-                                  encoding='utf-8') as original:  # TODO выдает ошибку нет такойц директории, хотя файл есть
+                        with open(path_plan, 'r', encoding='utf-8') as original:
                             old_file = original.read()
                             if 'не найдено' in old_file or 'Отпуск' in old_file:
                                 availability_for_planing = False
 
                     if new_document is not None and availability_for_planing:
-                        doc_path = "/usr/local/bin/bot/documents/doc" + str(
-                            user_id) + ".txt"  # "C:\\PycharmProjects\\Probe\\мои примеры\\GitHub\\telebot\\documents\\doc" + str(user_id) + ".txt" #
+                        doc_path = "/usr/local/bin/bot/documents/doc" + str(user_id) + ".txt"
+                        # "C:\\PycharmProjects\\Probe\\мои примеры\\GitHub\\telebot\\documents\\doc" + str(user_id) + ".txt" #
                         #
 
                         if not os.path.exists(doc_path):
                             with open(doc_path, 'w', encoding='utf-8') as new:
                                 new.write(strings_to_file)
-                                bot.send_message(user_id, new_document, reply_markup=document_btn, parse_mode='html')
-                                # bot.send_message(157758328, f'{fio} {new_document}', reply_markup=document_btn,
-                                #                  parse_mode='html')
+                                try:
+                                    bot.send_message(user_id, new_document, reply_markup=document_btn,
+                                                     parse_mode='html')
+                                except Exception:  # TODO необходимо точно определить точно тип ошибки: Error code: 400 Description: Bad Request: message is too long
+                                    bot.send_message(user_id,
+                                                     f"{name}, у Вас слишком много документов в OpenSky, с которыми необходимо ознакомиться.",
+                                                     reply_markup=document_btn)
                                 sent_doc_counter += 1
                                 sent_doc_list.append(fio)
 
                         else:
                             with open(doc_path, 'r', encoding='utf-8') as old_file:
                                 old_file = old_file.read()
-                                if strings_to_file not in old_file:  # TODO нужно более точное сравнение
+                                if strings_to_file not in old_file:
                                     with open(doc_path, 'a', encoding='utf-8') as new_data:
                                         new_data.write(f"\n{strings_to_file}")
                                         bot.send_message(user_id, new_document, reply_markup=document_btn,
                                                          parse_mode='html')
-                                        # bot.send_message(157758328, f'{fio} {new_document}', reply_markup=document_btn,
-                                        #                  parse_mode='html')
                                         sent_doc_counter += 1
                                         sent_doc_list.append(fio)
-            # bot.send_message(157758328, f'бот закончил проверку документов')
-            # if sent_doc_counter > 0:
-            #     bot.send_message(157758328,
-            #                      f'общий отчет: документы высланы {sent_doc_counter} чел. {", ".join(sent_doc_list)}')
+
         except Exception as e:
             exception_logger.writer(exc=e, request="извлечение ключа словаря user_id при автоматической отправке плана",
                                     fio=fio, answer='поймали ошибку во внешнем try except')
