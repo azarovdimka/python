@@ -65,6 +65,8 @@ def parser(user_id, tab_number,
     td = columns[5]
     nalet = td.contents[0]
     plan_hours = nalet.contents[2]
-
-    output_info = f'Фактический налёт: {fact_hours}\nНалёт по плану: {plan_hours}'
-    return output_info
+    if plan_hours == '00,00':
+        return
+    else:
+        output_info = f'Фактический налёт: {fact_hours}\nНалёт по плану: {plan_hours}'
+        return output_info
