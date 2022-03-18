@@ -41,32 +41,28 @@ def document_analyze(new_document):
         words_list = new_document.split(' ')
         new_document = ' '.join(words_list[:-1])
 
-    if "изд." in new_document:
+    if "изд." in new_document or "издание" in new_document:
         words_list = new_document.split(' ')
         new_document = ' '.join(words_list[:-2])
 
     if ".20" in new_document:
         words_list = new_document.split()
         for i in words_list:
-            if ".20" in i:
+            if i in "ГД Пр. от":
                 words_list.remove(i)
-            if "от" in i:
+            if "врио" in i:
                 words_list.remove(i)
-        new_document = ' '.join(
-            words_list)  # если тут писать (words_list_[1:]) то получится при публикации нового города удаление города и пустая строка
-
-    if "ГД" in new_document:
-        words_list = new_document.split()
         for i in words_list:
-            if "ГД" in i:
+            if '.20' in i:
                 words_list.remove(i)
-        new_document = ' '.join(words_list[1:])
+        new_document = ' '.join(words_list[
+                                1:])  # если тут писать (words_list_[1:]) то получится при публикации нового города удаление города и пустая строка
         if '_' in new_document:
             words_list_ = new_document.split('_')
             new_document = ' '.join(words_list_[1:])
         else:
             words_list_space = new_document.split()
-            new_document = ' '.join(words_list_space[1:-1])
+            new_document = ' '.join(words_list_space[1:])
     return new_document
 
 
@@ -124,7 +120,7 @@ def parser(tab_number, password, user_id):
             doc_list.append(name_document)
 
     if len(doc_list) != 0:
-        report += f"Появились новые документы в OpenSky: \n- "
+        report += f"Новый документ в OpenSky:\n- "
         #
         if old_file is not None:
             for doc in doc_list:
