@@ -77,8 +77,7 @@
         #                          'type': 'private'},
         #                  'date': 1607952534,
         #                  'text': 'Всё верно? Есть ошибки?',
-        #                  'reply_markup': {'inline_keyboard': [[{
-        #                                   'text': 'Отредактировать',
-        #                                   'callback_data': 'Отредактировать ответ'},
-        #                                   {'text': 'Всё верно',
-        #                                   'callback_data': 'Всё верно'}]]}}}
+        #                  'reply_markup': {'inline_keyboard': [[{'text': 'Отредактировать',
+        #                                                         'callback_data': 'Отредактировать ответ'},
+        #                                                        {'text': 'Всё верно',
+        #                                                         'callback_data': 'Всё верно'}]]}}}
