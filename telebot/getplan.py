@@ -152,16 +152,21 @@ def extract_city(s):
 
 def extract_arrive(s):
     # TODO добавить проверку если может не быть прилета
-    arrive = s[-21:-5]
-    # print(arrive)
-    dt_utc_arrive = datetime.strptime(arrive, '%d.%m.%Y %H:%M').replace(tzinfo=pytz.utc)
-    dt_msk = dt_utc_arrive.astimezone(pytz.utc) + timedelta(hours=3)
-    day = dt_msk.strftime('%d')
-    month = dt_msk.strftime('%m')
-    year = dt_msk.strftime('%Y')
-    msk_arrive_time = dt_msk.strftime('%H:%M')
-    day_month_arr = f'{day}.{month}'
-    return day_month_arr, msk_arrive_time
+    if 'LOC' in s:
+        msk_arrive_time = s[-10:-5]
+        day_month_arr = s[-21:-16]
+        return day_month_arr, msk_arrive_time
+    if 'UTC' in s:
+        # print(arrive)
+        arrive = s[-21:-5]
+        dt_utc_arrive = datetime.strptime(arrive, '%d.%m.%Y %H:%M').replace(tzinfo=pytz.utc)
+        dt_msk = dt_utc_arrive.astimezone(pytz.utc) + timedelta(hours=3)
+        day = dt_msk.strftime('%d')
+        month = dt_msk.strftime('%m')
+        year = dt_msk.strftime('%Y')
+        msk_arrive_time = dt_msk.strftime('%H:%M')
+        day_month_arr = f'{day}.{month}'
+        return day_month_arr, msk_arrive_time
 
 
 def extract_destination(s):
@@ -253,29 +258,21 @@ def parser(user_id, tab_number, password, autoconfirm, time_depart):
         if utc_start == '':
             time_start = '00:00'
         else:
-            time_start = utc_start  # eval(dict_users.users[user_id]['time_depart'])
+            time_start = msk_start
         time_zona = time_depart[:3]
 
-        depart_utc_dt = f"{day_month_start} {time_start}"
+        depart_msk_dt = f"{day_month_start} {time_start}"
 
-        if time_depart == 'msk_start':
-            dt_object = datetime.strptime(depart_utc_dt, '%d.%m %H:%M').replace(tzinfo=pytz.utc)
-            start_dt = dt_object.astimezone(pytz.utc) + timedelta(hours=3)
+        if time_depart == 'utc_start':
+            dt_object = datetime.strptime(depart_msk_dt, '%d.%m %H:%M').replace(tzinfo=pytz.utc)
+            start_dt = dt_object.astimezone(pytz.utc) - timedelta(hours=3)
             day = start_dt.strftime('%d')
             month = start_dt.strftime('%m')
             hour = start_dt.strftime('%H')
             minute = start_dt.strftime('%M')
             start_dt = f'{day}.{month} {hour}:{minute}'
-        # if time_depart == 'ekb_start':
-        #     dt_object = datetime.strptime(depart_utc_dt, '%d.%m %H:%M').replace(tzinfo=pytz.utc)
-        #     start_dt = dt_object.astimezone(pytz.utc) + timedelta(hours=5)
-        #     day = start_dt.strftime('%d')
-        #     month = start_dt.strftime('%m')
-        #     hour = start_dt.strftime('%H')
-        #     minute = start_dt.strftime('%M')
-        #     start_dt = f'{day}.{month} {hour}:{minute}'
         else:
-            start_dt = depart_utc_dt
+            start_dt = depart_msk_dt
 
         if 'ВХД' in cells[4].text:
             date_end, msk_end = extract_arrive(route_arrive_time)
@@ -412,4 +409,4 @@ def parser(user_id, tab_number, password, autoconfirm, time_depart):
 
 # parser(512766466, '122411', 'Rabota6!', False, 'msk_start')  # шемякин
 # parser(157758328, '119221', '2DH64rf2', True, 'msk_start')  # азаров
-# parser(801093934, '5930', 'Voronova090879', False, 'msk_start')
+# parser(256030196, '38122', 'Ati123456789', False, 'msk_start')
