@@ -1,0 +1,15 @@
+[Unit]
+Description=Telegram bot 'New Year's Roulette'
+After=syslog.target
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/usr/local/bin/roulette
+ExecStart=/usr/bin/python3 /usr/local/bin/roulette/roulette_bot.py
+RestartSec=5
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
