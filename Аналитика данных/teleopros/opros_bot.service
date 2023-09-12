@@ -1,0 +1,15 @@
+[Unit]
+Description=Telegram bot 'For survey flight attendants from Rossiya Airlines'
+After=syslog.target
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/usr/local/bin/teleopros
+ExecStart=/usr/bin/python3 /usr/local/bin/teleopros/opros_bot.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
