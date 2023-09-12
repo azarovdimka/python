@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 import pytz
 from datetime import datetime, timedelta
 import exception_logger
+import crypt
 
 
 current_datetime = time.strftime('%d.%m.%Y %H:%M')
@@ -178,6 +179,8 @@ def parser(user_id, tab_number, password, autoconfirm, time_depart):
     url = 'https://edu.rossiya-airlines.com/workplan/'
     s = requests.Session()
 
+    password = crypt.decrypt_text(password)
+
     data = {
         'refer': 'https://edu.rossiya-airlines.com//',
         'login': '1',
@@ -226,7 +229,7 @@ def parser(user_id, tab_number, password, autoconfirm, time_depart):
         error = f"\t    Проблема с получением плана работ. Причин может быть три: \n" \
                 f"- либо сервер перегружен количеством обращений, и нужно немного подождать;\n" \
                 f"- либо у Вас еще нет допуска к рейсам; \n" \
-                f"- либо в базе указан неверный логин {tab_number} и пароль {password} \n" \
+                f"- либо в базе указан неверный логин {tab_number} или пароль {password} \n" \
                 f"    Если это действиетльно так, то Вы можете сообщить " \
                 f"новый логин и пароль в ответном сообщении в следующем формате: логин ....... пароль ....... \n " \
                 f"(4 слова через пробел) \n" \
@@ -257,6 +260,10 @@ def parser(user_id, tab_number, password, autoconfirm, time_depart):
         # print(tr)
         if utc_start == '':
             time_start = '00:00'
+        # if time_depart == 'utc_start':
+        #     time_start = utc_start
+        # if time_depart == 'msk_start':
+        #     time_start = msk_start
         else:
             time_start = msk_start
         time_zona = time_depart[:3]
@@ -264,15 +271,22 @@ def parser(user_id, tab_number, password, autoconfirm, time_depart):
         depart_msk_dt = f"{day_month_start} {time_start}"
 
         if time_depart == 'utc_start':
-            dt_object = datetime.strptime(depart_msk_dt, '%d.%m %H:%M').replace(tzinfo=pytz.utc)
-            start_dt = dt_object.astimezone(pytz.utc) - timedelta(hours=3)
+            # dt_object = datetime.strptime(depart_msk_dt, '%d.%m %H:%M').replace(tzinfo=pytz.utc)
+            # start_dt = dt_object.astimezone(pytz.utc) - timedelta(hours=3)
+            # day = start_dt.strftime('%d')
+            # month = start_dt.strftime('%m')
+            # hour = start_dt.strftime('%H')
+            # minute = start_dt.strftime('%M')
+            start_dt = f'{day_month_start} {utc_start}'
+        if time_depart == 'msk_start':
+            depart_utc_dt = f'{day_month_start} {utc_start}'
+            dt_object = datetime.strptime(depart_utc_dt, '%d.%m %H:%M').replace(tzinfo=pytz.utc)
+            start_dt = dt_object.astimezone(pytz.utc) + timedelta(hours=3)
             day = start_dt.strftime('%d')
             month = start_dt.strftime('%m')
-            hour = start_dt.strftime('%H')
-            minute = start_dt.strftime('%M')
-            start_dt = f'{day}.{month} {hour}:{minute}'
-        else:
-            start_dt = depart_msk_dt
+            # hour = start_dt.strftime('%H')
+            # minute = start_dt.strftime('%M')
+            start_dt = f'{day}.{month} {msk_start}'
 
         if 'ВХД' in cells[4].text:
             date_end, msk_end = extract_arrive(route_arrive_time)
@@ -408,5 +422,5 @@ def parser(user_id, tab_number, password, autoconfirm, time_depart):
 
 
 # parser(512766466, '122411', 'Rabota6!', False, 'msk_start')  # шемякин
-# parser(157758328, '119221', '2DH64rf2', True, 'msk_start')  # азаров
+# parser(157758328, '119221', 'Rabota1234567', True, 'utc_start')  # азаров
 # parser(256030196, '38122', 'Ati123456789', False, 'msk_start')

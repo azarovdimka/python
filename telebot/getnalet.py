@@ -2,6 +2,7 @@ import requests
 import dict_users
 import time
 from bs4 import BeautifulSoup
+import crypt
 
 import exception_logger
 
@@ -11,6 +12,7 @@ def parser(user_id, tab_number,
     url = 'https://edu.rossiya-airlines.com/nalet/'
 
     s = requests.Session()
+    password = crypt.decrypt_text(password)
 
     data = {
         'refer': 'https://edu.rossiya-airlines.com//',
