@@ -1,0 +1,15 @@
+[Unit]
+Description=Telegram bot 'For ordering vacations'
+After=syslog.target
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/usr/local/bin/dob_vacations_bot
+ExecStart=/usr/bin/python3 /usr/local/bin/dob_vacations_bot/dob_vacations_bot.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
